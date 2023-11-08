@@ -1,0 +1,37 @@
+Avtor: Martin Horvat, 27.jun 2023
+
+Tema magistrske naloge:
+
+  ANN in dinamika FPUT
+
+Groba ideja:
+
+  Kako dobro lahko ANN aproksimrajo dinamične lastnosti FPUT-ja oz. če to dinamiko izmerimo kako dobro lahko prepoznamo ključne parametre?
+
+Trenuten plan dela:
+
+I. Delovanje integratorjev
+
+II. Fokusiramo se na eno variatno FPUT'jev, recimo alpha-FPUT
+
+Tri pod teme:
+
+  1. Forward problem: Napoved z ANN iz znanega stanja čim dlje v prihodnost
+
+  2. Forward problem: ANN kot nadomestni dinamični sistem in njegove lastnosti
+
+  3. Inverse problem: Ali lahko ANN napove kljucne parametre verige, recimo alpha in energijo?
+
+
+Vse tri teme lahko raziskujemo v treh dinamičnih režimih FPUT-ja in sicer v režimu ponavljanja (recurrent regime) (a), metastabilnih stanja (b) ali koasa (c). Vsako od teh režimov ima svoje zanimivosti na katere se lahko fokusiramo pri analizi:
+
+a) V režimu ponavljanja lahko preučujemo kako dobro ANN reproducira ponovitev.
+
+b) Ali ima tudi ANN lastnost metastabilnih stanj?
+
+c) Kako dobro ANN ujame kratkoročne lastnosti dinamike, ki jih merimo recimo z
+  odstopanjem trajektorij, in dolgoročne (= statistične) lastnosti dinamike?
+
+
+
+

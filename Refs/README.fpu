@@ -1,0 +1,60 @@
+Author: Martin Horvat, May 2023
+
+Fermi–Pasta–Ulam–Tsingou problem
+
+Wiki:
+* http://www.scholarpedia.org/article/Fermi_Pasta_Ulam_systems_%28FPU%29:_mathematical_aspects
+* http://www.scholarpedia.org/article/Fermi-Pasta-Ulam_nonlinear_lattice_oscillations
+* https://en.wikipedia.org/wiki/Fermi%E2%80%93Pasta%E2%80%93Ulam%E2%80%93Tsingou_problem
+
+
+Some modern references:
+
+* The Fermi-Pasta-Ulam-Tsingou Paradox Reveals Astonishing Insights into Nonlinear Dynamics
+  https://www.transcontinentaltimes.com/the-fermi-pasta-ulam-tsingou-paradox/
+
+* Long way from the FPU-problem to chaos, G. M. Zaslavsky,
+  http://dx.doi.org/10.1063/1.1858115
+
+* The Metastable State of Fermi–Pasta–Ulam–Tsingou Models
+  by Kevin A. Reiss  and David K. Campbell
+  https://www.mdpi.com/1099-4300/25/2/300#B13-entropy-25-00300
+
+* Route to thermalization in theα-Fermi–Pasta–Ulam system
+  Miguel Onoratoa, Lara Vozellaa, Davide Promentb, and Yuri V. Lvovc,
+  https://www.pnas.org/doi/epdf/10.1073/pnas.1404397112
+
+
+Phenomena:
+
+I. FPUT Recurrences:
+
+  The Metastable State of Fermi–Pasta–Ulam–Tsingou Models
+  https://www.mdpi.com/1099-4300/25/2/300
+  (a) 𝛼-FPUT model with initial 𝐸1=10−4 and 𝑁=127 (with 𝛼=1).
+  (b) 𝛽-FPUT model with initial 𝐸1=0.15 and 𝑁=127 (with 𝛽=1).
+
+  The Fermi—Pasta—Ulam Problem and the Metastability Perspective
+  https://www.researchgate.net/publication/225587332_The_Fermi-Pasta-Ulam_Problem_and_the_Metastability_Perspective
+  Here, N = 32 and E = 0.05 (and thus specific energy  = E/N  0.0015).
+
+II. Metastable State
+
+  The Metastable State of Fermi–Pasta–Ulam–Tsingou Models
+  https://www.mdpi.com/1099-4300/25/2/300#B13-entropy-25-00300
+
+  (a) alpha-FPUT model with 𝐸𝛼2=0.02 and 𝑁=63
+  (b) beta-FPUT model with 𝐸𝛽=0.57 and 𝑁=31
+
+
+  The Fermi–Pasta–Ulam Problem and the Metastability Perspective, G. Benettin,1 A. Carati,2 L. Galgani2 and A. Giorgilli2
+
+  ... relaxation times of quite different orders of magnitude may show up.
+  This actually constitutes what we now call the metastability scenario: The time-averages of the relevant physical quantities are expected to agree with the predictions of classical equilibrium statistical mechanics at any energy after a sufficiently long time-scale, the “final” one (which is the one described by the limit t → ∞), and the paradox is interpreted as corresponding to the existence of another, shorter, time-scale (the fast scale), within which a relaxation is produced to some intermediate state. Such an intermediate state at first sight appears as an equilibrium one, although it is destined to subsequently relax, on a much longer timescale, to the “final” quilibrium state. The way in which the existence of an energy threshold can be conceived within such a metastability scenario was understood much later (see [14]).
+
+III. Chaos
+
+  Statistical properties of a nonlinear string
+  https://www.quantware.ups-tlse.fr/chirikov/refs/chi1966e.pdf
+
+  Limit/boundry of stochatisticty:  beta > beta_c
