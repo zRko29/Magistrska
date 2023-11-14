@@ -1,87 +1,32 @@
-stdm:
-    init_points: 20
-    steps: 200
+stdm_parameters:
+    init_points: 10
+    steps: 500
     K: 0.2
+    sampling: linear
 
-model:
-    hidden_units: 64
+model_parameters:
+    hidden_units: 20
+    num_layers: 2
+    dropout: 0.0
+
+machine_learning_parameters:
     window_size: 50
     step_size: 1
-    num_layers: 1
     train_size: 0.8
-    val_size: 0.2
-    dropout: 0.01
-    shuffle: False
-    sequences: "linear"
+    epochs: 10
+    batch_size: 200
+    loss: mse
+    learn_rate: 0.01
 
-train:
-    epochs: 100
-    batch_size: 100
-    loss: "mse"
-    learn_rate: 0.005
-
-hyper_par: {
-    "init_points": [5, 10, 30],
-    "steps": [600, 800],
-    "hidden_units": [40, 70, 100],
-    "window_size": [300, 400],
-    "step_size": [1],
-    "num_layers": [3, 4, 5],
-    "epochs": [200],
-    "batch_size": [200, 250],
-    "learn_rate": [0.001, 0.003],
-    "dropout": [0.001, 0.005, 0.0005],
-    "model": ["RNN"],
-    "shuffle": [True],
-    "sequences": ["linear"]
-}
-#----------------------------------------------------------------
-Parameters: {
-    init_points: 10
-    steps: 800
-    hidden_units: 40
-    window_size: 400
-    num_layers: 4
-    learn_rate: 0.003
-    dropout: 0.0005
-}
-
-Parameters: {
-    init_points: 30
-    steps: 800
-    hidden_units: 70
-    window_size: 400
-    num_layers: 3
-    learn_rate: 0.001
-    dropout: 0.005
-}
-
-Parameters: {
-    init_points: 30
-    steps: 800
-    hidden_units: 40
-    window_size: 400
-    num_layers: 3
-    learn_rate: 0.001
-    dropout: 0.005
-}
-
-Parameters: {
-    init_points: 30
-    steps: 600
-    hidden_units: 40
-    window_size: 300
-    num_layers: 3
-    learn_rate: 0.001
-    dropout: 0.005
-}
-
-Parameters: {
-    init_points: 30
-    steps: 800
-    hidden_units: 40
-    window_size: 300
-    num_layers: 3
-    learn_rate: 0.001
-    dropout: 0.001
+parameter_tuning: {
+    init_points: [5, 10, 30],
+    steps: [600, 800],
+    hidden_units: [40, 70, 100],
+    window_size: [300, 400],
+    step_size: [1],
+    num_layers: [3, 4, 5],
+    epochs: [200],
+    batch_size: [200, 250],
+    learn_rate: [0.001, 0.003],
+    dropout: [0.001, 0.005, 0.0005],
 }
