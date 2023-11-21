@@ -1,12 +1,15 @@
 import numpy as np
-from helper_functions import validate_data_type
+from utils.general_helper import validate_data_type
 import os
 import matplotlib.pyplot as plt
 import yaml
 
-MAIN_DIR = os.path.dirname(__file__)
+ROOT_DIR = os.getcwd()
+MAIN_DIR = os.path.join(ROOT_DIR, "standard_map")
+DATA_DIR = os.path.join(MAIN_DIR, "data")
+CONFIG_DIR = os.path.join(MAIN_DIR, "config")
 
-with open(os.path.join(MAIN_DIR, "config_stdm.yaml"), "r") as file:
+with open(os.path.join(CONFIG_DIR,  "parameters.yaml"), "r") as file:
     PARAMETERS = yaml.safe_load(file)
 
 
@@ -74,12 +77,9 @@ class StandardMap:
             self.theta_values[iter] = theta
             self.p_values[iter] = p
 
-    def save_data(self, data_path: str = None):
-        if data_path is None:
-            data_path = ""
-
-        thetas_path = os.path.join(MAIN_DIR, data_path, "theta_values.npy")
-        ps_path = os.path.join(MAIN_DIR, data_path, "p_values.npy")
+    def save_data(self):
+        thetas_path = os.path.join(DATA_DIR, "theta_values.npy")
+        ps_path = os.path.join(DATA_DIR, "p_values.npy")
 
         np.save(thetas_path, self.theta_values)
         np.save(ps_path, self.p_values)

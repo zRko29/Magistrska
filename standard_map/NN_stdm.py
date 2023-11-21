@@ -4,24 +4,25 @@
 # drive.mount('/content/drive')
 # os.chdir("/content/drive/My Drive/Colab Notebooks")
 
-from stdm_helper import StandardMap
-from machine_learning_helper import Training, Validation, Model
+from utils.mapping_helper import StandardMap
+from utils.machine_learning_helper import Training, Validation
+from utils.Model import Model
 
 # --------------------------------------------------------------
 # Training
 
-map_train = StandardMap()
-map_train.do_mapping()
+map = StandardMap()
+map.do_mapping()
 
-thetas_train, ps_train = map_train.get_data()
+thetas_train, ps_train = map.get_data()
 
 model = Model()
 model.get_total_number_of_params()
 
 train = Training(thetas_train, ps_train, model)
 
-train.set_criterion()
-train.set_optimizer()
+train.set_criterion(loss="huber")
+train.set_optimizer(optimizer="adamw")
 train.set_device()
 
 train.prepare_data(shuffle=True)
@@ -44,7 +45,7 @@ validate.set_device()
 
 validate.prepare_data()
 
-test_preds = validate.validate_model(verbose=True)
+validate.validate_model(verbose=True)
 
 validate.plot_2d()
 

@@ -3,9 +3,9 @@
 # drive.mount('/content/drive')
 # os.chdir("/content/drive/My Drive/Colab Notebooks")
 
-from stdm_helper import StandardMap
+from utils.mapping_helper import StandardMap
 
-map = StandardMap(init_points=100)
+map = StandardMap()
 
 map.do_mapping()
 map.save_data()

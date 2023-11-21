@@ -4,7 +4,8 @@
 # os.chdir("/content/drive/My Drive/Colab Notebooks")
 
 import yaml
-from functions_stdm import standard_map
+from stdm_helper import StandardMap
+from machine_learning_helper import Model, Training, Validation
 
 with open('config_stdm.yaml', 'r') as file:
     cfg = yaml.safe_load(file)
@@ -82,31 +83,18 @@ for iteration, params in enumerate(all_parameter_comb):
         print(f"    {key}: {params[key]}")
     print("}")
 
-    if params["sequences"] == "linear":
-        num_plots = test_preds.shape[0]
-        num_rows = (num_plots + 1) // 2
-        for k in range(num_plots):
-            plt.subplot(num_rows, 2, k + 1)
-            plt.plot(test_preds[k, :, 0], test_preds[k, :, 1], "bo", markersize=1)
-            plt.plot(y_test[k, :, 0], y_test[k, :, 1], "ro", markersize=0.5)
-            plt.plot(test_preds[k, 0, 0], test_preds[k, 0, 1], "bo", markersize=5)
+    num_plots = test_preds.shape[0]
+    num_rows = (num_plots + 1) // 2
+    for k in range(num_plots):
+        plt.subplot(num_rows, 2, k + 1)
+        plt.plot(test_preds[k, :, 0], test_preds[k, :, 1], "bo", markersize=1)
+        plt.plot(y_test[k, :, 0], y_test[k, :, 1], "ro", markersize=0.5)
+        plt.plot(test_preds[k, 0, 0], test_preds[k, 0, 1], "bo", markersize=5)
 
-            plt.xlim(-1.1, 1.1)
-            plt.ylim(-1.5, 1.5)
-            plt.tight_layout()
-
-    elif params["sequences"] == "parallel":
-        for k in range(4):
-            plt.subplot(2, 2, k + 1)
-            plt.plot(test_preds[:, :, 2 * k], test_preds[:, :, 2 * k + 1], "bo", markersize=1)
-            plt.plot(y_test[:, :, 2 * k], y_test[:, :, 2 * k + 1], "ro", markersize=0.5)
-
-            plt.xlim(-1.1, 1.1)
-            plt.ylim(-1.5, 1.5)
-            plt.tight_layout()
+        plt.xlim(-1.1, 1.1)
+        plt.ylim(-1.5, 1.5)
+        plt.tight_layout()
 
     plt.show()
 
     print("-------------------------------------------------------------")
-
-    iteration += 1

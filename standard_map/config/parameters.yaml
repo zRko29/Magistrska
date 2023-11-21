@@ -1,11 +1,11 @@
 stdm_parameters:
     init_points: 10
-    steps: 500
+    steps: 200
     K: 0.2
-    sampling: linear
+    sampling: normal
 
 model_parameters:
-    hidden_units: 20
+    hidden_units: 10
     num_layers: 2
     dropout: 0.0
 

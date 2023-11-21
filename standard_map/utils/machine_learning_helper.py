@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from helper_functions import validate_data_type, HelperClass
+from utils.general_helper import validate_data_type, HelperClass
 from sklearn.model_selection import train_test_split
 import os
 import yaml
@@ -9,9 +9,16 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
-MAIN_DIR = os.path.dirname(__file__)
+torch.manual_seed(42)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = True
 
-with open(os.path.join(MAIN_DIR, "config_stdm.yaml"), "r") as file:
+ROOT_DIR = os.getcwd()
+MAIN_DIR = os.path.join(ROOT_DIR, "standard_map")
+DATA_DIR = os.path.join(MAIN_DIR, "data")
+CONFIG_DIR = os.path.join(MAIN_DIR, "config")
+
+with open(os.path.join(CONFIG_DIR, "parameters.yaml"), "r") as file:
     PARAMETERS = yaml.safe_load(file)
 
 
@@ -44,27 +51,56 @@ class Training(HelperClass):
     learn_rate : float, optional
         The learning rate used for training.
     """
-    def __init__(self, thetas, ps, model, parameters: dict = None, window_size: int = None, step_size: int = None, train_size: float = None, epochs: int = None, batch_size: int = None, loss: str = None, learn_rate: float = None):
+
+    def __init__(
+        self,
+        thetas: np.ndarray,
+        ps: np.ndarray,
+        model,
+        parameters: dict = None,
+        window_size: int = None,
+        step_size: int = None,
+        train_size: float = None,
+        epochs: int = None,
+        batch_size: int = None,
+        loss: str = None,
+        learn_rate: float = None,
+    ):
         params = PARAMETERS.get("machine_learning_parameters")
 
         validate_data_type(params, dict, error_prefix="Config parameters dictionary")
 
         if parameters is not None:
-            validate_data_type(parameters, dict, error_prefix="Input parameters dictionary")
+            validate_data_type(
+                parameters, dict, error_prefix="Input parameters dictionary"
+            )
         if parameters is None:
             parameters = {}
 
         self.thetas = thetas
         self.ps = ps
         self.model = model
-        self.window_size = window_size or params.get("window_size") or params.get("window_size")
-        self.step_size = step_size or parameters.get("step_size") or params.get("step_size")
-        self.train_size = train_size or parameters.get("train_size") or params.get("train_size")
+        # self.model = torch.compile(model)
+        self.window_size = (
+            window_size or parameters.get("window_size") or params.get("window_size")
+        )
+        self.step_size = (
+            step_size or parameters.get("step_size") or params.get("step_size")
+        )
+        self.train_size = (
+            train_size or parameters.get("train_size") or params.get("train_size")
+        )
         self.epochs = epochs or parameters.get("epochs") or params.get("epochs")
-        self.batch_size = batch_size or parameters.get("batch_size") or params.get("batch_size")
+        self.batch_size = (
+            batch_size or parameters.get("batch_size") or params.get("batch_size")
+        )
         self.loss = loss or parameters.get("loss") or params.get("loss")
-        self.learn_rate = learn_rate or parameters.get("learn_rate") or params.get("learn_rate")
+        self.learn_rate = (
+            learn_rate or parameters.get("learn_rate") or params.get("learn_rate")
+        )
 
+        validate_data_type(self.thetas, np.ndarray, error_prefix="thetas array")
+        validate_data_type(self.ps, np.ndarray, error_prefix="ps array")
         validate_data_type(self.window_size, int, error_prefix="window size")
         validate_data_type(self.step_size, int, error_prefix="step size")
         validate_data_type(self.train_size, float, error_prefix="training size")
@@ -109,7 +145,9 @@ class Training(HelperClass):
         self._preprocess_thetas()
 
         X, y = self._make_sequences()
-        X_train, X_val, y_train, y_val = train_test_split(X, y, train_size=self.train_size)
+        X_train, X_val, y_train, y_val = train_test_split(
+            X, y, train_size=self.train_size
+        )
 
         X_train = torch.Tensor(X_train)
         X_val = torch.Tensor(X_val)
@@ -119,10 +157,16 @@ class Training(HelperClass):
         self.train_dataset = TensorDataset(X_train, y_train)
         self.val_dataset = TensorDataset(X_val, y_val)
 
-        self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=shuffle)
-        self.val_loader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=shuffle)
+        self.train_loader = DataLoader(
+            self.train_dataset, batch_size=self.batch_size, shuffle=shuffle
+        )
+        self.val_loader = DataLoader(
+            self.val_dataset, batch_size=self.batch_size, shuffle=shuffle
+        )
 
-    def train_model(self,
+    # @torch.compile
+    def train_model(
+        self,
         verbose: bool = False,
         patience: int = None,
     ):
@@ -193,8 +237,8 @@ class Training(HelperClass):
 
     def plot_losses(self):
         plt.figure(figsize=(5, 3))
-        plt.plot(self.train_losses, color='tab:blue')
-        plt.plot(self.validation_losses, color='tab:orange')
+        plt.plot(self.train_losses, color="tab:blue")
+        plt.plot(self.validation_losses, color="tab:orange")
         plt.grid(alpha=0.1)
         plt.show()
 
@@ -220,23 +264,43 @@ class Validation(HelperClass):
     train_size : float, optional
         The size of the training set, by default None.
     """
-    def __init__(self, thetas, ps, model, parameters: dict = None, window_size: int = None, step_size: int = None, train_size: float = None):
+
+    def __init__(
+        self,
+        thetas: np.ndarray,
+        ps: np.ndarray,
+        model,
+        parameters: dict = None,
+        window_size: int = None,
+        step_size: int = None,
+        train_size: float = None,
+    ):
         params = PARAMETERS.get("machine_learning_parameters")
 
         validate_data_type(params, dict, error_prefix="Parameters dictionary")
 
         if parameters is not None:
-            validate_data_type(parameters, dict, error_prefix="Input parameters dictionary")
+            validate_data_type(
+                parameters, dict, error_prefix="Input parameters dictionary"
+            )
         if parameters is None:
             parameters = {}
 
         self.thetas = thetas
         self.ps = ps
         self.model = model
-        self.window_size = window_size or params.get("window_size") or params.get("window_size")
-        self.step_size = step_size or parameters.get("step_size") or params.get("step_size")
-        self.train_size = train_size or parameters.get("train_size") or params.get("train_size")
+        self.window_size = (
+            window_size or params.get("window_size") or params.get("window_size")
+        )
+        self.step_size = (
+            step_size or parameters.get("step_size") or params.get("step_size")
+        )
+        self.train_size = (
+            train_size or parameters.get("train_size") or params.get("train_size")
+        )
 
+        validate_data_type(self.thetas, np.ndarray, error_prefix="thetas array")
+        validate_data_type(self.ps, np.ndarray, error_prefix="ps array")
         validate_data_type(self.window_size, int, error_prefix="window size")
         validate_data_type(self.step_size, int, error_prefix="step size")
         validate_data_type(self.train_size, float, error_prefix="training size")
@@ -277,7 +341,14 @@ class Validation(HelperClass):
         self.X = torch.Tensor(X)
         self.y = y
 
-    def validate_model(self, verbose: bool = False):
+    # @torch.compile
+    def validate_model(self, X=None, verbose: bool = False, model=None):
+        if model is not None:
+            self.model = model
+
+        if X is not None:
+            self.X = X
+
         self.model.eval()
 
         window_size = self.X.shape[1]
@@ -290,14 +361,24 @@ class Validation(HelperClass):
             hidden = None
             temp_pred = np.copy(self.X[i])
 
+            # with torch.no_grad():
+            #     for _ in range(num_predictions):
+            #         inputs = torch.Tensor(temp_pred[np.newaxis, -window_size:]).to(
+            #             self.device
+            #         )
+            #         pred, hidden = self.model(inputs, hidden)
+            #         pred = pred.cpu().numpy()
+            #         temp_pred = np.concatenate((temp_pred, pred), axis=0)
+
+            temp_pred = torch.Tensor(temp_pred).to(self.device)
+
             with torch.no_grad():
                 for _ in range(num_predictions):
-                    inputs = torch.Tensor(temp_pred[np.newaxis, -window_size:]).to(
-                        self.device
-                    )
+                    inputs = temp_pred[np.newaxis, -window_size:]
                     pred, hidden = self.model(inputs, hidden)
-                    pred = pred.cpu().numpy()
-                    temp_pred = np.concatenate((temp_pred, pred), axis=0)
+                    temp_pred = torch.cat((temp_pred, pred), dim=0)
+
+            temp_pred = temp_pred.cpu.numpy()
 
             if verbose:
                 progress_bar.set_postfix()
@@ -309,23 +390,46 @@ class Validation(HelperClass):
 
         self.final_preds = np.array(final_preds)
 
-    def get_data(self):
-        return np.array(self.X), np.array(self.y)
+    def compare_predictions(self, model, X_test, y_test):
+        test_preds = self.validate_model(model=model, X=X_test)
 
-    def get_predictions(self):
-        return self.final_preds
+        return np.mse(test_preds, y_test)
 
     def plot_2d(self):
-        for k in range(self.final_preds.shape[0]):
-            plt.figure(figsize=(4, 2))
-            plt.plot(self.final_preds[k, :, 0], self.final_preds[k, :, 1], "bo", markersize=1)
-            plt.plot(self.y[k, :, 0], self.y[k, :, 1], "ro", markersize=0.5)
-            plt.plot(self.final_preds[k, 0, 0], self.final_preds[k, 0, 1], "bo", markersize=5)
+        num_subplots = self.final_preds.shape[0]
+        plots_per_image = 4
 
-            plt.xlim(-0.1, 2.05 * np.pi)
-            plt.ylim(-1.5, 1.5)
+        for k in range(0, num_subplots, plots_per_image):
+            plt.figure(figsize=(8, 8))
 
-        plt.show()
+            for i in range(plots_per_image):
+                subplot_index = k + i + 1
+                if subplot_index <= num_subplots:
+                    plt.subplot(2, 2, i + 1)
+                    plt.plot(
+                        self.final_preds[subplot_index - 1, :, 0],
+                        self.final_preds[subplot_index - 1, :, 1],
+                        "bo",
+                        markersize=1,
+                    )
+                    plt.plot(
+                        self.y[subplot_index - 1, :, 0],
+                        self.y[subplot_index - 1, :, 1],
+                        "ro",
+                        markersize=0.5,
+                    )
+                    plt.plot(
+                        self.final_preds[subplot_index - 1, 0, 0],
+                        self.final_preds[subplot_index - 1, 0, 1],
+                        "bo",
+                        markersize=5,
+                    )
+
+                    plt.xlim(-0.1, 2.05 * np.pi)
+                    plt.ylim(-1.5, 1.5)
+
+            plt.tight_layout()
+            plt.show()
 
     def plot_1d(self):
         num_plots = 3
@@ -336,41 +440,14 @@ class Validation(HelperClass):
         for k in range(num_plots):
             ax[k, 0].set_title(f"Thetas {k+1}")
             ax[k, 0].plot(np.arange(steps), self.y[k, :steps, 0], "tab:blue")
-            ax[k, 0].plot(np.arange(steps), self.final_preds[k, :steps, 0], "tab:orange")
+            ax[k, 0].plot(
+                np.arange(steps), self.final_preds[k, :steps, 0], "tab:orange"
+            )
             ax[k, 1].set_title(f"Ps {k+1}")
             ax[k, 1].plot(np.arange(steps), self.y[k, :steps, 1], "tab:blue")
-            ax[k, 1].plot(np.arange(steps), self.final_preds[k, :steps, 1], "tab:orange")
+            ax[k, 1].plot(
+                np.arange(steps), self.final_preds[k, :steps, 1], "tab:orange"
+            )
 
         plt.tight_layout()
         plt.show()
-
-
-class Model(torch.nn.Module):
-    def __init__(self):
-        super(Model, self).__init__()
-
-        params = PARAMETERS.get("model_parameters")
-
-        self.input_size = 2
-        self.hidden_size = params.get("hidden_units")
-        self.num_layers = params.get("num_layers")
-        self.dropout = params.get("dropout")
-
-        self.RNN = torch.nn.RNN(
-            input_size=self.input_size,
-            hidden_size=self.hidden_size,
-            batch_first=True,
-            dropout=self.dropout,
-            num_layers=self.num_layers,
-        )
-
-        self.dense = torch.nn.Linear(in_features=self.hidden_size, out_features=self.input_size)
-
-    def get_total_number_of_params(self):
-        pytorch_total_params = sum(p.numel() for p in self.parameters())
-        print(f"Total number of parameters = {pytorch_total_params}")
-
-    def forward(self, input, hidden):
-        out, hidden = self.RNN(input, hidden)
-        out = self.dense(out[:, -1, :])
-        return out, hidden
