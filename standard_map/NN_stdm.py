@@ -22,7 +22,7 @@ model.get_total_number_of_params()
 train = Training(thetas_train, ps_train, model)
 
 train.set_criterion(loss="huber")
-train.set_optimizer(optimizer="adamw")
+train.set_optimizer(optimizer="radam")
 train.set_device()
 
 train.prepare_data(shuffle=True)

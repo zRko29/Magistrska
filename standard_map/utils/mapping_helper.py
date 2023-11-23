@@ -1,5 +1,4 @@
 import numpy as np
-from utils.general_helper import validate_data_type
 import os
 import matplotlib.pyplot as plt
 import yaml
@@ -41,24 +40,16 @@ class StandardMap:
     def __init__(self, init_points: int = None, steps: int = None, K: float = None, sampling: str = None, seed: bool = None):
         params = PARAMETERS.get("stdm_parameters")
 
-        validate_data_type(params, dict, error_prefix="Parameters dictionary")
-
         self.init_points = init_points or params.get("init_points")
         self.steps = steps or params.get("steps")
         self.K = K or params.get("K")
         self.sampling = sampling or params.get("sampling")
         self.seed = seed or params.get("seed")
 
-        validate_data_type(self.init_points, int, error_prefix="init_points")
-        validate_data_type(self.steps, int, error_prefix="steps")
-        validate_data_type(self.K, float, error_prefix="K")
-        validate_data_type(self.sampling, str, error_prefix="sampling")
-
         self.theta_values = np.array([])
         self.p_values = np.array([])
 
         if self.seed is not None:
-            validate_data_type(self.seed, int, error_prefix="seed")
             np.random.seed(seed=self.seed)
 
     def get_data(self):
@@ -108,3 +99,10 @@ class StandardMap:
             p_init = np.random.normal(mu, sigma, self.init_points)
 
         return theta_init, p_init
+
+
+if __name__ == "__main__":
+    map = StandardMap()
+    map.do_mapping()
+    map.save_data()
+    map.plot_data()

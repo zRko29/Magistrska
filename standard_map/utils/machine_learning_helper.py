@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from utils.general_helper import validate_data_type, HelperClass
+from utils.general_helper import HelperClass
 from sklearn.model_selection import train_test_split
 import os
 import yaml
@@ -68,12 +68,6 @@ class Training(HelperClass):
     ):
         params = PARAMETERS.get("machine_learning_parameters")
 
-        validate_data_type(params, dict, error_prefix="Config parameters dictionary")
-
-        if parameters is not None:
-            validate_data_type(
-                parameters, dict, error_prefix="Input parameters dictionary"
-            )
         if parameters is None:
             parameters = {}
 
@@ -99,16 +93,6 @@ class Training(HelperClass):
             learn_rate or parameters.get("learn_rate") or params.get("learn_rate")
         )
 
-        validate_data_type(self.thetas, np.ndarray, error_prefix="thetas array")
-        validate_data_type(self.ps, np.ndarray, error_prefix="ps array")
-        validate_data_type(self.window_size, int, error_prefix="window size")
-        validate_data_type(self.step_size, int, error_prefix="step size")
-        validate_data_type(self.train_size, float, error_prefix="training size")
-        validate_data_type(self.epochs, int, error_prefix="epochs")
-        validate_data_type(self.batch_size, int, error_prefix="batch size")
-        validate_data_type(self.loss, str, error_prefix="loss function")
-        validate_data_type(self.learn_rate, float, error_prefix="learning rate")
-
         if self.window_size > PARAMETERS.get("stdm_parameters").get("steps"):
             raise ValueError("Window size cannot be larger than steps")
 
@@ -123,8 +107,8 @@ class Training(HelperClass):
                 X.append(
                     np.stack(
                         (
-                            thetas_temp[i: i + self.window_size, k],
-                            ps_temp[i: i + self.window_size, k],
+                            thetas_temp[i : i + self.window_size, k],
+                            ps_temp[i : i + self.window_size, k],
                         ),
                         axis=1,
                     )
@@ -277,12 +261,6 @@ class Validation(HelperClass):
     ):
         params = PARAMETERS.get("machine_learning_parameters")
 
-        validate_data_type(params, dict, error_prefix="Parameters dictionary")
-
-        if parameters is not None:
-            validate_data_type(
-                parameters, dict, error_prefix="Input parameters dictionary"
-            )
         if parameters is None:
             parameters = {}
 
@@ -298,12 +276,6 @@ class Validation(HelperClass):
         self.train_size = (
             train_size or parameters.get("train_size") or params.get("train_size")
         )
-
-        validate_data_type(self.thetas, np.ndarray, error_prefix="thetas array")
-        validate_data_type(self.ps, np.ndarray, error_prefix="ps array")
-        validate_data_type(self.window_size, int, error_prefix="window size")
-        validate_data_type(self.step_size, int, error_prefix="step size")
-        validate_data_type(self.train_size, float, error_prefix="training size")
 
     def _make_sequences(self):
         thetas_temp = self.thetas[:: self.step_size]
@@ -324,8 +296,8 @@ class Validation(HelperClass):
             y.append(
                 np.stack(
                     [
-                        thetas_temp[self.window_size:, k],
-                        ps_temp[self.window_size:, k],
+                        thetas_temp[self.window_size :, k],
+                        ps_temp[self.window_size :, k],
                     ],
                     axis=-1,
                 )
@@ -361,24 +333,24 @@ class Validation(HelperClass):
             hidden = None
             temp_pred = np.copy(self.X[i])
 
-            # with torch.no_grad():
-            #     for _ in range(num_predictions):
-            #         inputs = torch.Tensor(temp_pred[np.newaxis, -window_size:]).to(
-            #             self.device
-            #         )
-            #         pred, hidden = self.model(inputs, hidden)
-            #         pred = pred.cpu().numpy()
-            #         temp_pred = np.concatenate((temp_pred, pred), axis=0)
-
-            temp_pred = torch.Tensor(temp_pred).to(self.device)
-
             with torch.no_grad():
                 for _ in range(num_predictions):
-                    inputs = temp_pred[np.newaxis, -window_size:]
+                    inputs = torch.Tensor(temp_pred[np.newaxis, -window_size:]).to(
+                        self.device
+                    )
                     pred, hidden = self.model(inputs, hidden)
-                    temp_pred = torch.cat((temp_pred, pred), dim=0)
+                    pred = pred.cpu().numpy()
+                    temp_pred = np.concatenate((temp_pred, pred), axis=0)
 
-            temp_pred = temp_pred.cpu.numpy()
+            # temp_pred = torch.Tensor(temp_pred).to(self.device)
+
+            # with torch.no_grad():
+            #     for _ in range(num_predictions):
+            #         inputs = temp_pred[np.newaxis, -window_size:]
+            #         pred, hidden = self.model(inputs, hidden)
+            #         temp_pred = torch.cat((temp_pred, pred), dim=0)
+
+            # temp_pred = temp_pred.cpu.numpy()
 
             if verbose:
                 progress_bar.set_postfix()
