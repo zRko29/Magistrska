@@ -1,20 +1,18 @@
 stdm_parameters:
-    init_points: 10
-    steps: 100
+    init_points: 20
+    steps: 200
     K: 0.2
     sampling: normal
+    seed: 42
 
 model_parameters:
-    hidden_units: 8
-    num_layers: 4
-    dropout: 0.01
+    hidden_size1: 64
+    hidden_size2: 64
 
 machine_learning_parameters:
-    window_size: 50
-    step_size: 1
     train_size: 0.8
-    epochs: 10
-    batch_size: 200
+    epochs: 1000
+    batch_size: 10
     loss: mse
     learn_rate: 0.01
 

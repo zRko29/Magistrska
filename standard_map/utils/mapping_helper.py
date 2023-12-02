@@ -14,29 +14,8 @@ with open(os.path.join(CONFIG_DIR,  "parameters.yaml"), "r") as file:
 
 class StandardMap:
     """
-    A class representing the Standard Map, a two-dimensional area-preserving map.
-
-    Parameters:
-    -----------
-    init_points : int
-        The number of initial points to use for the map.
-    steps : int
-        The number of iterations to perform.
-    K : float
-        The value of the control parameter for the map.
-    seed : int, optional
-        The random seed to use for the map.
-    sampling : str, optional
-        The method to use for selecting initial points. Can be "random" or "linear".
-
-    Attributes:
-    -----------
-    theta_values : numpy.ndarray
-        The values of the theta variable for each iteration of the map.
-    p_values : numpy.ndarray
-        The values of the p variable for each iteration of the map.
+    A class representing the Standard Map dynamical system.
     """
-
     def __init__(self, init_points: int = None, steps: int = None, K: float = None, sampling: str = None, seed: bool = None):
         params = PARAMETERS.get("stdm_parameters")
 
@@ -52,11 +31,11 @@ class StandardMap:
         if self.seed is not None:
             np.random.seed(seed=self.seed)
 
-    def get_data(self):
+    def retrieve_data(self):
         return self.theta_values, self.p_values
 
-    def do_mapping(self):
-        theta, p = self._select_initial_points()
+    def generate_data(self):
+        theta, p = self._get_initial_points()
 
         self.theta_values = np.zeros((self.steps, self.init_points))
         self.p_values = np.zeros((self.steps, self.init_points))
@@ -68,13 +47,6 @@ class StandardMap:
             self.theta_values[iter] = theta
             self.p_values[iter] = p
 
-    def save_data(self):
-        thetas_path = os.path.join(DATA_DIR, "theta_values.npy")
-        ps_path = os.path.join(DATA_DIR, "p_values.npy")
-
-        np.save(thetas_path, self.theta_values)
-        np.save(ps_path, self.p_values)
-
     def plot_data(self):
         plt.figure(figsize=(10, 6))
         plt.plot(self.theta_values, self.p_values, "bo", markersize=0.3)
@@ -84,7 +56,7 @@ class StandardMap:
         plt.ylim(-1.5, 1.5)
         plt.show()
 
-    def _select_initial_points(self):
+    def _get_initial_points(self):
         if self.sampling == "random":
             theta_init = np.random.uniform(0, 2 * np.pi, self.init_points)
             p_init = np.random.uniform(-1, 1, self.init_points)
@@ -94,15 +66,14 @@ class StandardMap:
             p_init = np.linspace(-1, 1, self.init_points)
 
         elif self.sampling == "normal":
-            mu, sigma = 0, 0.5
-            theta_init = np.random.normal(mu + np.pi, sigma, self.init_points)
+            mu, sigma = 0, 0.8
+            theta_init = np.random.normal(mu + np.pi, 2*sigma, self.init_points)
             p_init = np.random.normal(mu, sigma, self.init_points)
 
         return theta_init, p_init
 
 
 if __name__ == "__main__":
-    map = StandardMap()
-    map.do_mapping()
-    map.save_data()
+    map = StandardMap(init_points=100, steps=100, sampling="normal")
+    map.generate_data()
     map.plot_data()

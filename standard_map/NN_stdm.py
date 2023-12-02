@@ -5,54 +5,41 @@
 # os.chdir("/content/drive/My Drive/Colab Notebooks")
 
 from utils.mapping_helper import StandardMap
-from utils.machine_learning_helper import Training, Validation
+from utils.training_helper import ModelTrainer
 from utils.Model import Model
 
-
 # --------------------------------------------------------------
-# Training
+# Training phase
 
-map = StandardMap(seed=42)
-map.do_mapping()
+map = StandardMap(init_points=100, steps=300, seed=42)
+map.generate_data()
+map.plot_data()
 
-thetas_train, ps_train = map.get_data()
+thetas, ps = map.retrieve_data()
 
-train = Training()
-train.set_training_parameters(thetas_train, ps_train)
+trainer = ModelTrainer()
 
-train.prepare_data(shuffle=True)
+trainer.prepare_data(thetas, ps, shuffle=True)
 
 model = Model()
-model.get_total_number_of_params()
-train.set_model(model)
 
-train.set_criterion(loss="huber")
-train.set_optimizer(optimizer="radam")
+trainer.set_model(model)
+trainer.set_criterion("mse")
+trainer.set_optimizer("adam")
+trainer.set_device()
 
-train.set_device()
+trainer.train_model(verbose=True)
+trainer.plot_losses()
 
-train.train_model(verbose=True, patience=50)
-
-train.plot_losses()
 
 # --------------------------------------------------------------
-# Validation
+# Testing phase
 
-map_test = StandardMap(init_points=10, steps=500, seed=42)
-map_test.do_mapping()
+map = StandardMap(init_points=20, steps=200, seed=42)
+map.generate_data()
 
-thetas_test, ps_test = map_test.get_data()
+thetas, ps = map.retrieve_data()
 
-validate = Validation()
-validate.set_validation_parameters(thetas_test, ps_test)
-validate.set_model(train.model)
+trainer.do_autoregression(thetas, ps)
 
-validate.set_device()
-
-validate.prepare_data()
-
-validate.validate_model(verbose=True)
-
-validate.plot_2d()
-
-validate.plot_1d()
+trainer.plot_2d()
