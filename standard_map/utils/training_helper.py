@@ -15,17 +15,19 @@ class ModelTrainer(Miscellaneous):
     A class for training a machine learning model.
     """
 
-    def __init__(self):
+    def __init__(self, device):
         super(ModelTrainer, self).__init__()
+        self.device = device
 
-    def prepare_data(self, thetas: np.ndarray, ps: np.ndarray, shuffle: bool = False):
+    def prepare_data(self, thetas: np.ndarray, ps: np.ndarray, shuffle: bool = None):
+        self.shuffle = shuffle or self.shuffle
         thetas = self.preprocess_thetas(thetas)
 
         # data.shape = [init_points, 2, steps]
         data = np.stack([thetas.T, ps.T], axis=1)
         t = int(len(data) * self.train_size)
 
-        if shuffle:
+        if self.shuffle:
             np.random.shuffle(data)
 
         train_inputs = torch.from_numpy(data[:t, :, :-1])
@@ -120,32 +122,38 @@ class ModelTrainer(Miscellaneous):
         return val_loss
 
     def plot_losses(self):
-        plt.figure(figsize=(5, 3))
+        plt.figure(figsize=(10, 7))
         plt.plot(self.train_losses, color="tab:blue", label="Training loss")
         plt.plot(self.validation_losses, color="tab:orange", label="Validation loss")
         plt.grid(alpha=0.1)
         plt.legend()
         plt.show()
 
-    def do_autoregression(self, thetas: np.ndarray, ps: np.ndarray):
+    def do_autoregression(self, thetas: np.ndarray, ps: np.ndarray, regression_seed: int = 1):
         thetas = self.preprocess_thetas(thetas)
 
+        # data.shape = [init_points, 2, steps]
         data = np.stack([thetas.T, ps.T], axis=1)
 
-        inputs = torch.from_numpy(data[:, :, :1])
-        self.outputs = torch.from_numpy(data[:, :, 1:])
+        assert data.shape[2] > regression_seed, "regression_seed must be smaller than number of steps"
+
+        inputs = torch.from_numpy(data[:, :, :regression_seed])
+        self.outputs = torch.from_numpy(data[:, :, regression_seed:])
 
         with torch.inference_mode():
             inputs = inputs.to(self.device)
             self.outputs = self.outputs.to(self.device)
 
-            self.predicted = self.model(inputs, future=data.shape[2] - 1)
-            self.predicted = self.predicted[:, :, 1:]  # remove first point, because it wasn't predicted
+            self.predicted = self.model(inputs, future=data.shape[2] - regression_seed)
+            self.predicted = self.predicted[:, :, regression_seed:]  # remove regression_seed, because it wasn't predicted
             loss = self.criterion(self.predicted, self.outputs)
 
         print(f"Loss: {loss.item():.5f}")
 
     def plot_2d(self):
+        self.predicted = self.predicted.cpu().numpy()
+        self.outputs = self.outputs.cpu().numpy()
+
         plt.figure(figsize=(10, 7))
         for k in range(self.predicted.shape[0]):
             plt.plot(self.predicted[k, 0], self.predicted[k, 1], "bo", markersize=1)

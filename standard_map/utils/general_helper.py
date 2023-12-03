@@ -24,7 +24,9 @@ class Miscellaneous:
         epochs: int = None,
         batch_size: int = None,
         loss: str = None,
+        optimizer: str = None,
         learn_rate: float = None,
+        shuffle: bool = None,
     ):
         params = PARAMETERS.get("machine_learning_parameters")
 
@@ -32,17 +34,22 @@ class Miscellaneous:
         self.epochs = epochs or params.get("epochs")
         self.batch_size = batch_size or params.get("batch_size")
         self.loss = loss or params.get("loss")
+        self.optimizer = optimizer or params.get("optimizer")
         self.learn_rate = learn_rate or params.get("learn_rate")
+        self.shuffle = shuffle or params.get("shuffle")
 
     def set_model(self, model=None):
         model.double()
+        model = model.to(self.device)
         self.model = model
         # self.model = torch.compile(model)
 
     def set_criterion(self, loss: str = None):
-        if loss is None or loss == "mse":
+        self.loss = loss or self.loss
+
+        if self.loss is None or self.loss == "mse":
             self.criterion = torch.nn.MSELoss()
-        elif loss == "huber":
+        elif self.loss == "huber":
             self.criterion = torch.nn.HuberLoss()
         else:
             raise ValueError(
@@ -50,26 +57,24 @@ class Miscellaneous:
             )
 
     def set_optimizer(self, optimizer: str = None):
-        if optimizer is None or optimizer == "adam":
+        self.optimizer = optimizer or self.optimizer
+
+        if self.optimizer is None or self.optimizer == "adam":
             self.optimizer = optim.Adam(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "adamw":
+        elif self.optimizer == "adamw":
             self.optimizer = optim.AdamW(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "radam":
+        elif self.optimizer == "radam":
             self.optimizer = optim.RAdam(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "adamax":
+        elif self.optimizer == "adamax":
             self.optimizer = optim.Adamax(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "nadam":
+        elif self.optimizer == "nadam":
             self.optimizer = optim.NAdam(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "rprop":
+        elif self.optimizer == "rprop":
             self.optimizer = optim.Rprop(self.model.parameters(), lr=self.learn_rate)
         else:
             raise ValueError(
                 "Invalid optimizer. Valid options are 'adam', 'adamw', 'radam', 'adamax', 'nadam', and 'rprop'."
             )
-
-    def set_device(self):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(self.device)
 
     def preprocess_thetas(self, thetas: np.ndarray):
         return thetas / np.pi - 1

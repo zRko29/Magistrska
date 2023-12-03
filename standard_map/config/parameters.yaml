@@ -1,27 +1,29 @@
 stdm_parameters:
-    init_points: 20
+    init_points: 100
     steps: 200
     K: 0.2
     sampling: normal
     seed: 42
 
 model_parameters:
-    hidden_size1: 64
-    hidden_size2: 64
+    hidden_size1: 256
+    hidden_size2: 256
+    dropout_prob: 0.05
 
 machine_learning_parameters:
     train_size: 0.8
-    epochs: 1000
-    batch_size: 10
-    loss: mse
-    learn_rate: 0.01
+    epochs: 100
+    batch_size: 30
+    loss: huber
+    optimizer: radam
+    learn_rate: 0.001
+    shuffle: False
 
 parameter_tuning: {
     init_points: [5, 10, 30],
     steps: [600, 800],
-    hidden_units: [40, 70, 100],
-    window_size: [300, 400],
-    step_size: [1],
+    hidden_size1: [40, 70, 100],
+    hidden_size2: [40, 70, 100],
     num_layers: [3, 4, 5],
     epochs: [200],
     batch_size: [200, 250],

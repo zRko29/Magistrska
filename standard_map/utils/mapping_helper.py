@@ -48,7 +48,7 @@ class StandardMap:
             self.p_values[iter] = p
 
     def plot_data(self):
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(8, 5))
         plt.plot(self.theta_values, self.p_values, "bo", markersize=0.3)
         plt.xlabel(r"$\theta$")
         plt.ylabel("p")
