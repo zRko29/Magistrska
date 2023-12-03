@@ -1,10 +1,89 @@
-import six
 import numpy as np
 import torch
 import torch.optim as optim
+import os
+import yaml
+
+ROOT_DIR = os.getcwd()
+MAIN_DIR = os.path.join(ROOT_DIR, "standard_map")
+DATA_DIR = os.path.join(MAIN_DIR, "data")
+CONFIG_DIR = os.path.join(MAIN_DIR, "config")
+
+with open(os.path.join(CONFIG_DIR, "parameters.yaml"), "r") as file:
+    PARAMETERS = yaml.safe_load(file)
 
 
 class HelperClass:
+    def set_training_parameters(
+        self,
+        thetas: np.ndarray,
+        ps: np.ndarray,
+        parameters: dict = None,
+        window_size: int = None,
+        step_size: int = None,
+        train_size: float = None,
+        epochs: int = None,
+        batch_size: int = None,
+        loss: str = None,
+        learn_rate: float = None,
+    ):
+        params = PARAMETERS.get("machine_learning_parameters")
+
+        if parameters is None:
+            parameters = {}
+
+        self.thetas = thetas
+        self.ps = ps
+        self.window_size = (
+            window_size or parameters.get("window_size") or params.get("window_size")
+        )
+        self.step_size = (
+            step_size or parameters.get("step_size") or params.get("step_size")
+        )
+        self.train_size = (
+            train_size or parameters.get("train_size") or params.get("train_size")
+        )
+        self.epochs = epochs or parameters.get("epochs") or params.get("epochs")
+        self.batch_size = (
+            batch_size or parameters.get("batch_size") or params.get("batch_size")
+        )
+        self.loss = loss or parameters.get("loss") or params.get("loss")
+        self.learn_rate = (
+            learn_rate or parameters.get("learn_rate") or params.get("learn_rate")
+        )
+
+        if self.window_size > PARAMETERS.get("stdm_parameters").get("steps"):
+            raise ValueError("Window size cannot be larger than steps")
+
+    def set_validation_parameters(
+        self,
+        thetas: np.ndarray,
+        ps: np.ndarray,
+        parameters: dict = None,
+        window_size: int = None,
+        step_size: int = None,
+        train_size: float = None,
+    ):
+        params = PARAMETERS.get("machine_learning_parameters")
+
+        if parameters is None:
+            parameters = {}
+
+        self.thetas = thetas
+        self.ps = ps
+        self.window_size = (
+            window_size or params.get("window_size") or params.get("window_size")
+        )
+        self.step_size = (
+            step_size or parameters.get("step_size") or params.get("step_size")
+        )
+        self.train_size = (
+            train_size or parameters.get("train_size") or params.get("train_size")
+        )
+
+    def set_model(self, model=None):
+        self.model = model
+        # self.model = torch.compile(model)
 
     def set_criterion(self, loss: str = None):
         """
@@ -18,7 +97,9 @@ class HelperClass:
         elif loss == "huber":
             self.criterion = torch.nn.HuberLoss()
         else:
-            raise ValueError("Invalid loss function. Valid options are 'mse' and 'huber'.")
+            raise ValueError(
+                "Invalid loss function. Valid options are 'mse' and 'huber'."
+            )
 
     def set_optimizer(self, optimizer: str = None):
         """
@@ -40,7 +121,9 @@ class HelperClass:
         elif optimizer == "rprop":
             self.optimizer = optim.Rprop(self.model.parameters(), lr=self.learn_rate)
         else:
-            raise ValueError("Invalid optimizer. Valid options are 'adam', 'adamw', 'radam', 'adamax', 'nadam', and 'rprop'.")
+            raise ValueError(
+                "Invalid optimizer. Valid options are 'adam', 'adamw', 'radam', 'adamax', 'nadam', and 'rprop'."
+            )
 
     def set_device(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -51,22 +134,3 @@ class HelperClass:
 
     def _postprocess_thetas(self):
         return (self.thetas + 1) * np.pi
-
-
-def type_name(expected_type):
-    messages = {
-        six.string_types: 'string',
-        np.ndarray: 'numpy array',
-        list: 'list',
-        bool: 'bool',
-        int: 'int',
-        dict: 'dictionary',
-        str: 'str',
-    }
-    return messages[expected_type]
-
-
-def validate_data_type(input_object, expected_type, error_prefix='Input object'):
-    if not isinstance(input_object, expected_type):
-        error_message = '{0}: {1} \nis not of type {2}'.format(error_prefix, str(input_object), type_name(expected_type))
-        raise AssertionError(error_message)
