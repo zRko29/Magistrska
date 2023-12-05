@@ -1,8 +1,8 @@
-import numpy as np
 import torch
 import torch.optim as optim
 import os
 import yaml
+import numpy as np
 
 ROOT_DIR = os.getcwd()
 MAIN_DIR = os.path.join(ROOT_DIR, "standard_map")
@@ -13,88 +13,43 @@ with open(os.path.join(CONFIG_DIR, "parameters.yaml"), "r") as file:
     PARAMETERS = yaml.safe_load(file)
 
 
-class HelperClass:
-    def set_training_parameters(
+class Miscellaneous:
+    """
+    A class for miscellaneous methods.
+    """
+
+    def __init__(
         self,
-        thetas: np.ndarray,
-        ps: np.ndarray,
-        parameters: dict = None,
-        window_size: int = None,
-        step_size: int = None,
         train_size: float = None,
         epochs: int = None,
         batch_size: int = None,
         loss: str = None,
+        optimizer: str = None,
         learn_rate: float = None,
+        shuffle: bool = None,
     ):
         params = PARAMETERS.get("machine_learning_parameters")
 
-        if parameters is None:
-            parameters = {}
-
-        self.thetas = thetas
-        self.ps = ps
-        self.window_size = (
-            window_size or parameters.get("window_size") or params.get("window_size")
-        )
-        self.step_size = (
-            step_size or parameters.get("step_size") or params.get("step_size")
-        )
-        self.train_size = (
-            train_size or parameters.get("train_size") or params.get("train_size")
-        )
-        self.epochs = epochs or parameters.get("epochs") or params.get("epochs")
-        self.batch_size = (
-            batch_size or parameters.get("batch_size") or params.get("batch_size")
-        )
-        self.loss = loss or parameters.get("loss") or params.get("loss")
-        self.learn_rate = (
-            learn_rate or parameters.get("learn_rate") or params.get("learn_rate")
-        )
-
-        if self.window_size > PARAMETERS.get("stdm_parameters").get("steps"):
-            raise ValueError("Window size cannot be larger than steps")
-
-    def set_validation_parameters(
-        self,
-        thetas: np.ndarray,
-        ps: np.ndarray,
-        parameters: dict = None,
-        window_size: int = None,
-        step_size: int = None,
-        train_size: float = None,
-    ):
-        params = PARAMETERS.get("machine_learning_parameters")
-
-        if parameters is None:
-            parameters = {}
-
-        self.thetas = thetas
-        self.ps = ps
-        self.window_size = (
-            window_size or params.get("window_size") or params.get("window_size")
-        )
-        self.step_size = (
-            step_size or parameters.get("step_size") or params.get("step_size")
-        )
-        self.train_size = (
-            train_size or parameters.get("train_size") or params.get("train_size")
-        )
+        self.train_size = train_size or params.get("train_size")
+        self.epochs = epochs or params.get("epochs")
+        self.batch_size = batch_size or params.get("batch_size")
+        self.loss = loss or params.get("loss")
+        self.optimizer = optimizer or params.get("optimizer")
+        self.learn_rate = learn_rate or params.get("learn_rate")
+        self.shuffle = shuffle or params.get("shuffle")
 
     def set_model(self, model=None):
+        model.double()
+        model = model.to(self.device)
         self.model = model
         # self.model = torch.compile(model)
 
     def set_criterion(self, loss: str = None):
-        """
-        Sets the loss criterion for the model.
+        self.loss = loss or self.loss
 
-        Args:
-            loss (str): The name of the loss function to use. If None or "mse", the mean squared error loss will be used. If "huber", the Huber loss will be used.
-        """
-        if loss is None or loss == "mse":
+        if self.loss is None or self.loss == "mse":
             self.criterion = torch.nn.MSELoss()
-        elif loss == "huber":
+        elif self.loss == "huber":
             self.criterion = torch.nn.HuberLoss()
         else:
             raise ValueError(
@@ -102,35 +57,24 @@ class HelperClass:
             )
 
     def set_optimizer(self, optimizer: str = None):
-        """
-        Sets the optimizer for the model based on the given optimizer string.
+        self.optimizer = optimizer or self.optimizer
 
-        Args:
-            optimizer (str): The optimizer to use. Valid options are "adam", "adamw", "radam", "adamax", "nadam", and "rprop". If None, defaults to "adam".
-        """
-        if optimizer is None or optimizer == "adam":
+        if self.optimizer is None or self.optimizer == "adam":
             self.optimizer = optim.Adam(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "adamw":
+        elif self.optimizer == "adamw":
             self.optimizer = optim.AdamW(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "radam":
+        elif self.optimizer == "radam":
             self.optimizer = optim.RAdam(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "adamax":
+        elif self.optimizer == "adamax":
             self.optimizer = optim.Adamax(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "nadam":
+        elif self.optimizer == "nadam":
             self.optimizer = optim.NAdam(self.model.parameters(), lr=self.learn_rate)
-        elif optimizer == "rprop":
+        elif self.optimizer == "rprop":
             self.optimizer = optim.Rprop(self.model.parameters(), lr=self.learn_rate)
         else:
             raise ValueError(
                 "Invalid optimizer. Valid options are 'adam', 'adamw', 'radam', 'adamax', 'nadam', and 'rprop'."
             )
 
-    def set_device(self):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(self.device)
-
-    def _preprocess_thetas(self):
-        return self.thetas / np.pi - 1
-
-    def _postprocess_thetas(self):
-        return (self.thetas + 1) * np.pi
+    def preprocess_thetas(self, thetas: np.ndarray):
+        return thetas / np.pi - 1
