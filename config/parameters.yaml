@@ -1,0 +1,21 @@
+stdm_parameters:
+    init_points: 20
+    steps: 20
+    K: 0.2
+    sampling: linear
+    inner_outer: full
+
+model_parameters:
+    hidden_size: 32
+    num_layers: 1
+    dropout_prob: 0.0
+
+machine_learning_parameters:
+    epochs: 4
+    batch_size: 128
+    sequence_length: 10
+    loss: mse
+    optimizer: adam
+    learn_rate: 0.0001
+
+seed: 42
