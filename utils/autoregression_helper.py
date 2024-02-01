@@ -338,8 +338,9 @@ class Gridsearch:
         self.num_vertices = num_vertices
 
     def get_params(self):
-        print()
-        with open(os.path.join(self.path, "parameters.yaml"), "r") as file:
+        with open(
+            os.path.join(self.path, "autoregression_parameters.yaml"), "r"
+        ) as file:
             params = yaml.safe_load(file)
             if self.num_vertices > 0:
                 params = self._update_params(params)
