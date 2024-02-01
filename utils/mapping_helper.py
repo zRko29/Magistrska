@@ -7,7 +7,7 @@ ROOT_DIR = os.getcwd()
 CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 
 with open(os.path.join(CONFIG_DIR, "parameters.yaml"), "r") as file:
-    PARAMETERS = yaml.safe_load(file)
+    PARAMS = yaml.safe_load(file)
 
 
 class StandardMap:
@@ -23,20 +23,25 @@ class StandardMap:
         sampling: str = None,
         seed: bool = None,
         inner_outer: str = None,
+        params: dict = None,
     ):
-        params = PARAMETERS.get("stdm_parameters")
+        if params is None:
+            params = {}
 
-        self.init_points = init_points or params.get("init_points")
-        self.steps = steps or params.get("steps")
-        self.K = K or params.get("K")
-        self.sampling = sampling or params.get("sampling")
-        self.inner_outer = inner_outer or params.get("inner_outer")
+        self.init_points = (
+            init_points or params.get("init_points") or PARAMS.get("init_points")
+        )
+        self.steps = steps or params.get("steps") or PARAMS.get("steps")
+        self.K = K or params.get("K") or PARAMS.get("K")
+        self.sampling = sampling or params.get("sampling") or PARAMS.get("sampling")
+        self.inner_outer = (
+            inner_outer or params.get("inner_outer") or PARAMS.get("inner_outer")
+        )
 
         self.theta_values = np.array([])
         self.p_values = np.array([])
 
-        if seed is not None:
-            np.random.seed(seed=seed)
+        self.rng = np.random.default_rng(seed=seed)
 
     def retrieve_data(self):
         return self.theta_values, self.p_values
@@ -61,7 +66,7 @@ class StandardMap:
         plt.ylabel("p")
         plt.xlim(-0.1, 2.05 * np.pi)
         plt.ylim(-1.5, 1.5)
-        plt.show()
+        plt.show(block=True)
 
     def _get_initial_points(self):
         edge = 1e-1
@@ -76,10 +81,10 @@ class StandardMap:
             p_params_upper = [0.5 + edge, 1, init_points_upper]
 
             if self.sampling == "random":
-                theta_init_lower = np.random.uniform(*theta_params_lower)
-                theta_init_upper = np.random.uniform(*theta_params_upper)
-                p_init_lower = np.random.uniform(*p_params_lower)
-                p_init_upper = np.random.uniform(*p_params_upper)
+                theta_init_lower = self.rng.uniform(*theta_params_lower)
+                theta_init_upper = self.rng.uniform(*theta_params_upper)
+                p_init_lower = self.rng.uniform(*p_params_lower)
+                p_init_upper = self.rng.uniform(*p_params_upper)
             elif self.sampling == "linear":
                 theta_init_lower = np.linspace(*theta_params_lower) + shift
                 theta_init_upper = np.linspace(*theta_params_upper) + shift
@@ -99,8 +104,8 @@ class StandardMap:
             p_params = [-1, 1, self.init_points]
 
         if self.sampling == "random":
-            theta_init = np.random.uniform(*theta_params)
-            p_init = np.random.uniform(*p_params)
+            theta_init = self.rng.uniform(*theta_params)
+            p_init = self.rng.uniform(*p_params)
 
         elif self.sampling == "linear":
             theta_init = np.linspace(*theta_params) + shift
@@ -111,7 +116,7 @@ class StandardMap:
 
 if __name__ == "__main__":
     map = StandardMap(
-        init_points=100, steps=500, sampling="random", K=0.2, inner_outer="full"
+        init_points=100, steps=500, sampling="random", K=1, inner_outer="full"
     )
     map.generate_data()
     map.plot_data()

@@ -5,51 +5,82 @@ import numpy as np
 from utils.mapping_helper import StandardMap
 from utils.ltraining_helper import lModel, plot_2d
 
-ROOT_DIR = os.getcwd()
-CONFIG_DIR = os.path.join(ROOT_DIR, "config")
+if __name__ == "__main__":
+    version = None
+    name = "overfitting_10"
 
+    directory_path = f"logs/{name}"
 
-log_path = "logs/masters/1704712903"
+    if version is not None:
+        folders = [os.path.join(directory_path, f"version_{version}")]
+    else:
+        folders = [
+            os.path.join(directory_path, folder)
+            for folder in os.listdir(directory_path)
+            if os.path.isdir(os.path.join(directory_path, folder))
+        ]
+        folders.sort()
 
-with open(os.path.join(log_path, "hparams.yaml")) as f:
-    params = yaml.load(f, Loader=yaml.FullLoader)
+    for log_path in folders:
+        print(f"log_path: {log_path}")
+        with open(os.path.join(log_path, "hparams.yaml")) as f:
+            params = yaml.safe_load(f)
 
-model_path = os.path.join(log_path, "lmodel.ckpt")
+        regression_seed = params["seq_length"]
+        model_suffixes = [
+            "",
+            "-v1",
+            "-v2",
+        ]
 
-model = lModel(**params).load_from_checkpoint(model_path)
-map = StandardMap(init_points=5, steps=100, sampling="random")
+        maps = [
+            StandardMap(seed=42, params=params),
+            StandardMap(seed=41, params=params),
+        ]
+        input_suffixes = ["standard", "random"]
 
-model.eval()
-with torch.inference_mode():
-    map.generate_data()
-    thetas, ps = map.retrieve_data()
-    regression_seed = params.get("machine_learning_parameters").get(
-        "sequence_length"
-    )  # seems to work best
+        for map, input_suffix in zip(maps, input_suffixes):
+            for model_suffix in model_suffixes:
+                try:
+                    model_path = os.path.join(log_path, f"lmodel{model_suffix}.ckpt")
+                    model = lModel(**params).load_from_checkpoint(model_path)
+                except FileNotFoundError:
+                    continue
 
-    # preprocess_thetas
-    thetas = thetas / np.pi - 1
-    # data.shape = [init_points, 2, steps]
-    data = np.stack([thetas.T, ps.T], axis=1)
+                model.eval()
+                with torch.inference_mode():
+                    map.generate_data()
+                    thetas, ps = map.retrieve_data()
 
-    assert (
-        data.shape[2] > regression_seed
-    ), "regression_seed must be smaller than the number of steps"
+                    thetas = thetas - np.pi
+                    thetas /= np.max(np.abs(thetas))
+                    ps /= np.max(np.abs(ps))
 
-    predicted = torch.from_numpy(data[:, :, :regression_seed]).clone()
-    outputs = torch.from_numpy(data).clone()
+                    # data.shape = [init_points, 2, steps]
+                    data = np.stack([thetas.T, ps.T], axis=1)
+                    data = torch.from_numpy(data).to(torch.double)
 
-    model.eval()
-    for i in range(data.shape[2] - regression_seed):
-        predicted_value = model(predicted[:, :, i:])
-        predicted_value = predicted_value[:, :, -1:]
+                    predicted = data[:, :, :regression_seed]
+                    targets = data[:, :, regression_seed:]
 
-        predicted = torch.cat([predicted, predicted_value], axis=2)
+                    for i in range(data.shape[2] - regression_seed):
+                        # removing up to i-th value for many-to-one
+                        predicted_value = model(predicted[:, :, i:])[:, :, -1:]
 
-    predicted = predicted[:, :, regression_seed:]
-    outputs = outputs[:, :, regression_seed:]
+                        predicted = torch.cat([predicted, predicted_value], axis=2)
 
-    loss = torch.nn.functional.mse_loss(predicted, outputs)
-    print(f"Loss: {loss.item():.3e}")
+                    predicted = predicted[:, :, regression_seed:]
 
-plot_2d(predicted, outputs)
+                loss = torch.nn.functional.mse_loss(predicted, targets)
+
+                print(f"{input_suffix}{model_suffix} loss: {loss.item():.3e}")
+
+                plot_2d(
+                    predicted,
+                    targets,
+                    show_plot=False,
+                    save_path=os.path.join(log_path, input_suffix + model_suffix),
+                    title=loss.item(),
+                )
+
+        print("-" * 60)

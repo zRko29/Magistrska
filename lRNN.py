@@ -7,66 +7,99 @@
 import pytorch_lightning as pl
 from pytorch_lightning import callbacks
 from pytorch_lightning.loggers import TensorBoardLogger
-import time, os, yaml
+from lightning.pytorch.profilers import SimpleProfiler
+import os
 
 from utils.mapping_helper import StandardMap
-from utils.ltraining_helper import lModel, Data, return_elapsed_time
+from utils.ltraining_helper import lModel, Data, Gridsearch, CustomCallback
+
+import warnings
+
+warnings.filterwarnings(
+    "ignore", ".*Consider increasing the value of the `num_workers` argument*"
+)
+warnings.filterwarnings(
+    "ignore",
+    ".*The number of training batches*",
+)
 
 ROOT_DIR = os.getcwd()
 CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 
-with open(os.path.join(CONFIG_DIR, "parameters.yaml"), "r") as file:
-    params = yaml.safe_load(file)
 
 if __name__ == "__main__":
-    map = StandardMap(seed=42)
-    data = Data(map, plot_data=False, **params)
-    data.prepare_data(shuffle=True, t=0.8, input_size=1.0, plot_data_split=True)
+    # necessary to continue training from checkpoint, else set to None
+    version = None
+    name = "overfitting_10"
+    num_vertices = 2
 
-    model = lModel(**params)
+    gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
-    logs_path = "logs"
-    version = str(int(time.time()))
-    name = "masters"
-    save_path = os.path.join(logs_path, name, version)
+    for _ in range(num_vertices):
+        params = gridsearch.get_params()
 
-    checkpoint_callback = callbacks.ModelCheckpoint(
-        dirpath=save_path,
-        filename="lmodel",
-        save_on_train_epoch_end=True,
-        save_top_k=1,
-        save_weights_only=True,
-        monitor="val_loss",
-        mode="min",
-    )
+        map = StandardMap(seed=42, params=params)
 
-    early_stopping_callback = callbacks.EarlyStopping(
-        monitor="val_loss",
-        min_delta=1e-3,
-        patience=10,
-        verbose=False,
-        mode="min",
-    )
+        datamodule = Data(
+            map_object=map,
+            train_size=1.0,
+            if_plot_data=False,
+            if_plot_data_split=False,
+            params=params,
+        )
 
-    tb_logger = TensorBoardLogger(
-        logs_path, version=version, name=name, default_hp_metric=False
-    )
+        model = lModel(**params)
 
-    timer_callback = callbacks.Timer()
+        logs_path = "logs"
 
-    progress_bar_callback = callbacks.TQDMProgressBar(refresh_rate=50)
+        # **************** callbacks ****************
 
-    trainer = pl.Trainer(
-        max_epochs=params.get("machine_learning_parameters").get("epochs"),
-        enable_progress_bar=True,
-        logger=tb_logger,
-        callbacks=[
-            checkpoint_callback,
-            early_stopping_callback,
-            progress_bar_callback,
-            timer_callback,
-        ],
-    )
+        tb_logger = TensorBoardLogger(logs_path, name=name, default_hp_metric=False)
 
-    trainer.fit(model, data.train_loader, data.val_loader)
-    return_elapsed_time(timer_callback.time_elapsed())
+        save_path = os.path.join(logs_path, name, "version_" + str(tb_logger.version))
+
+        print(f"Running version_{tb_logger.version}")
+        print()
+
+        checkpoint_callback = callbacks.ModelCheckpoint(
+            monitor="loss/train",  # careful
+            mode="min",
+            dirpath=save_path,
+            filename="lmodel",
+            save_on_train_epoch_end=True,
+            save_top_k=1,
+        )
+
+        early_stopping_callback = callbacks.EarlyStopping(
+            monitor="loss/val",
+            mode="min",
+            min_delta=1e-7,
+            patience=15,
+            verbose=False,
+        )
+
+        gradient_avg_callback = callbacks.StochasticWeightAveraging(swa_lrs=1e-3)
+
+        progress_bar_callback = callbacks.TQDMProgressBar(refresh_rate=10)
+
+        profiler_callback = SimpleProfiler(
+            dirpath=save_path, filename="profiler_report"
+        )
+
+        # **************** trainer ****************
+
+        trainer = pl.Trainer(
+            profiler=profiler_callback,
+            max_epochs=params.get("epochs"),
+            enable_progress_bar=True,
+            logger=tb_logger,
+            callbacks=[
+                checkpoint_callback,
+                # early_stopping_callback,
+                progress_bar_callback,
+                # gradient_avg_callback,
+                CustomCallback(),
+            ],
+        )
+
+        trainer.fit(model=model, datamodule=datamodule, ckpt_path=None)
