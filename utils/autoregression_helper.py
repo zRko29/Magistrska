@@ -9,12 +9,12 @@ from datetime import timedelta
 import os, yaml
 
 
-class lModel(pl.LightningModule):
+class Model(pl.LightningModule):
     def __init__(
         self,
         **params: dict,
     ):
-        super(lModel, self).__init__()
+        super(Model, self).__init__()
         self.save_hyperparameters()
 
         self.hidden_sizes = params.get("rnn_sizes")

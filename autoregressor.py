@@ -3,7 +3,7 @@ import os, yaml
 import numpy as np
 
 from utils.mapping_helper import StandardMap
-from utils.ltraining_helper import lModel, plot_2d
+from utils.autoregression_helper import Model, plot_2d
 
 if __name__ == "__main__":
     version = None
@@ -43,7 +43,7 @@ if __name__ == "__main__":
             for model_suffix in model_suffixes:
                 try:
                     model_path = os.path.join(log_path, f"lmodel{model_suffix}.ckpt")
-                    model = lModel(**params).load_from_checkpoint(model_path)
+                    model = Model(**params).load_from_checkpoint(model_path)
                 except FileNotFoundError:
                     continue
 

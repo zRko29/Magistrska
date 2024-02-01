@@ -11,7 +11,7 @@ from lightning.pytorch.profilers import SimpleProfiler
 import os
 
 from utils.mapping_helper import StandardMap
-from utils.ltraining_helper import lModel, Data, Gridsearch, CustomCallback
+from utils.autoregression_helper import Model, Data, Gridsearch, CustomCallback
 
 import warnings
 
@@ -30,7 +30,7 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
-    name = "overfitting_12"
+    name = "overfitting_10"
     num_vertices = 2
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
@@ -48,7 +48,7 @@ if __name__ == "__main__":
             params=params,
         )
 
-        model = lModel(**params)
+        model = Model(**params)
 
         logs_path = "logs"
 
