@@ -1,5 +1,3 @@
-deprecated/
+/logs
 
-t
-
-standard_map/__pycache__
+**/__pycache__/

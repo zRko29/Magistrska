@@ -30,7 +30,7 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
-    name = "overfitting_10"
+    name = "overfitting_12"
     num_vertices = 2
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
