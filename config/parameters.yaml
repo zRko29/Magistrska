@@ -24,10 +24,20 @@ shuffle_sequences: False # shuffle sequences
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
 gridsearch:
-  hidden_size: { lower: 120, upper: 210, dtype: int }
-  linear_size: { lower: 20, upper: 80, dtype: int }
-  num_rnn_layers: { lower: 4, upper: 7, dtype: int }
-  num_lin_layers: { lower: 1, upper: 4, dtype: int }
   batch_size: { lower: 150, upper: 230, dtype: int }
   seq_length: { lower: 25, upper: 35, dtype: int }
   lr: { lower: 0.0006, upper: 0.002, dtype: float }
+  num_rnn_layers:
+    {
+      lower: 2,
+      upper: 4,
+      dtype: int,
+      layer_sizes: { lower: 120, upper: 210, layer_type: rnn, varied: True },
+    }
+  num_lin_layers:
+    {
+      lower: 2,
+      upper: 4,
+      dtype: int,
+      layer_sizes: { lower: 20, upper: 80, layer_type: lin, varied: True },
+    }

@@ -17,8 +17,8 @@ class lModel(pl.LightningModule):
         super(lModel, self).__init__()
         self.save_hyperparameters()
 
-        self.hidden_size = params.get("hidden_size")
-        self.linear_size = params.get("linear_size")
+        self.hidden_sizes = params.get("rnn_sizes")
+        self.linear_sizes = params.get("lin_sizes")
         self.num_rnn_layers = params.get("num_rnn_layers")
         self.num_lin_layers = params.get("num_lin_layers")
         self.sequence_type = params.get("sequence_type")
@@ -31,34 +31,42 @@ class lModel(pl.LightningModule):
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
-        self.rnns.append(torch.nn.RNNCell(2, self.hidden_size))
+        self.rnns.append(torch.nn.RNNCell(2, self.hidden_sizes[0]))
         for layer in range(self.num_rnn_layers - 1):
-            self.rnns.append(torch.nn.RNNCell(self.hidden_size, self.hidden_size))
+            self.rnns.append(
+                torch.nn.RNNCell(self.hidden_sizes[layer], self.hidden_sizes[layer + 1])
+            )
 
         # Create the linear layers
         self.lins = torch.nn.ModuleList([])
         if self.num_lin_layers == 1:
-            self.lins.append(torch.nn.Linear(self.hidden_size, 2))
+            self.lins.append(torch.nn.Linear(self.hidden_sizes[-1], 2))
         elif self.num_lin_layers > 1:
-            self.lins.append(torch.nn.Linear(self.hidden_size, self.linear_size))
+            self.lins.append(
+                torch.nn.Linear(self.hidden_sizes[-1], self.linear_sizes[0])
+            )
             for layer in range(self.num_lin_layers - 2):
-                self.lins.append(torch.nn.Linear(self.linear_size, self.linear_size))
-            self.lins.append(torch.nn.Linear(self.linear_size, 2))
+                self.lins.append(
+                    torch.nn.Linear(
+                        self.linear_sizes[layer], self.linear_sizes[layer + 1]
+                    )
+                )
+            self.lins.append(torch.nn.Linear(self.linear_sizes[-1], 2))
         self.dropout = torch.nn.Dropout(p=dropout)
 
         # takes care of dtype
         self.to(torch.double)
 
-    def _init_hidden(self, shape0: int, shape1: int):
+    def _init_hidden(self, shape0: int, hidden_shapes: int):
         return [
-            torch.zeros(shape0, shape1, dtype=torch.double).to(self.device)
-            for layer in range(self.num_rnn_layers)
+            torch.zeros(shape0, hidden_shape, dtype=torch.double).to(self.device)
+            for hidden_shape in hidden_shapes
         ]
 
     def forward(self, input_t):
         outputs = []
-        # h_ts[i].shape = [features, hidden_size]
-        h_ts = self._init_hidden(input_t.shape[0], self.hidden_size)
+        # h_ts[i].shape = [features, hidden_sizes]
+        h_ts = self._init_hidden(input_t.shape[0], self.hidden_sizes)
 
         for input in input_t.split(1, dim=2):
             input = input.squeeze(2)
@@ -210,6 +218,7 @@ class Data(pl.LightningDataModule):
             raise ValueError("Invalid type.")
 
     def train_dataloader(self):
+        print("--->", self.batch_size)
         return DataLoader(
             Dataset(self.train_data),
             batch_size=self.batch_size,
@@ -329,6 +338,7 @@ class Gridsearch:
         self.num_vertices = num_vertices
 
     def get_params(self):
+        print()
         with open(os.path.join(self.path, "parameters.yaml"), "r") as file:
             params = yaml.safe_load(file)
             if self.num_vertices > 0:
@@ -340,20 +350,30 @@ class Gridsearch:
         return params
 
     def _update_params(self, params):
+        rng = np.random.default_rng()
         for key, space in params.get("gridsearch").items():
-            if isinstance(space, dict):
-                dtype = space["dtype"]
-                if dtype == "int":
-                    lower = space["lower"]
-                    upper = space["upper"]
-                    params[key] = np.random.randint(lower, upper + 1)
-                elif dtype == "bool":
-                    params[key] = np.random.choice([True, False])
-                elif dtype == "float":
-                    lower = space["lower"]
-                    upper = space["upper"]
-                    params[key] = np.random.uniform(lower, upper)
+            dtype = space.get("dtype")
+            if dtype == "int":
+                params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
+            elif dtype == "bool":
+                params[key] = rng.choice([True, False])
+            elif dtype == "float":
+                params[key] = rng.uniform(space["lower"], space["upper"])
             print(f"{key} = {params[key]}")
+
+            if "layers" in key:
+                num_layers = params[key]
+                space = space["layer_sizes"]
+                layer_type = space["layer_type"] + "_sizes"
+                params[layer_type] = []
+                for _ in range(num_layers):
+                    layer_size = rng.integers(space["lower"], space["upper"] + 1)
+                    params[layer_type].append(int(layer_size))
+                    if not space["varied"]:
+                        params[layer_type][-1] = params[layer_type][0]
+                if layer_type == "lin_sizes":
+                    params[layer_type] = params[layer_type][:-1]
+                print(f"{layer_type}: {params[layer_type]}")
 
         print("-" * 80)
         print(f"Gridsearch step: {self.grid_step} / {self.num_vertices}")
