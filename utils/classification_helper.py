@@ -136,7 +136,6 @@ class Data(pl.LightningDataModule):
         self.shuffle_paths = params.get("shuffle_paths")
         self.shuffle_batches = params.get("shuffle_batches")
         self.shuffle_sequences = params.get("shuffle_sequences")
-        sequence_type = params.get("sequence_type")
 
         self.rng = np.random.default_rng(seed=42)
 
@@ -154,13 +153,13 @@ class Data(pl.LightningDataModule):
             self.rng.shuffle(data)
 
         # many-to-many or many-to-one types of sequences
-        sequences = self._make_sequences(data, type=sequence_type)
+        sequences = self._make_sequences(data)
 
         if if_plot_data_split:
             self.plot_data_split(sequences, train_size)
 
         print(f"Sequences shape: {sequences.shape}")
-        xy_pairs = self._make_xy_pairs(sequences, type=sequence_type)
+        xy_pairs = self._make_xy_pairs(sequences)
 
         t = int(len(xy_pairs) * train_size)
         self.train_data = xy_pairs[:t]
@@ -175,39 +174,20 @@ class Data(pl.LightningDataModule):
             )
         print()
 
-    def _make_sequences(self, data, type: str):
+    def _make_sequences(self, data):
         init_points, features, steps = data.shape
-        if type == "many-to-many":
-            # sequences.shape = [init_points*(steps//seq_len), 2, seq_len]
-            sequences = np.split(data, steps // self.seq_len, axis=2)
-
-            if not self.shuffle_sequences:
-                sequences = np.array(
-                    [seq[i] for i in range(init_points) for seq in sequences]
-                )
-            else:
-                sequences = np.concatenate((sequences), axis=0)
-                self.rng.shuffle(sequences)
-        elif type == "many-to-one":
-            # sequences.shape = [init_points * (steps - seq_len), features, seq_len + 1]
-            sequences = np.lib.stride_tricks.sliding_window_view(
-                data, (1, features, self.seq_len + 1)
-            )
-            sequences = sequences.reshape(
-                init_points * (steps - self.seq_len), features, self.seq_len + 1
-            )
-        else:
-            raise ValueError("Invalid type.")
+        # sequences.shape = [init_points * (steps - seq_len), features, seq_len + 1]
+        sequences = np.lib.stride_tricks.sliding_window_view(
+            data, (1, features, self.seq_len + 1)
+        )
+        sequences = sequences.reshape(
+            init_points * (steps - self.seq_len), features, self.seq_len + 1
+        )
 
         return sequences
 
-    def _make_xy_pairs(self, sequences, type: str):
-        if type == "many-to-many":
-            return [(seq[:, :-1], seq[:, 1:]) for seq in sequences]
-        elif type == "many-to-one":
-            return [(seq[:, :-1], seq[:, -1:]) for seq in sequences]
-        else:
-            raise ValueError("Invalid type.")
+    def _make_xy_pairs(self, sequences):
+        return [(seq[:, :-1], seq[:, -1:]) for seq in sequences]
 
     def train_dataloader(self):
         return DataLoader(
@@ -223,30 +203,6 @@ class Data(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def plot_data_split(self, dataset, train_ratio):
-        train_size = int(len(dataset) * train_ratio)
-        train_data = dataset[:train_size]
-        val_data = dataset[train_size:]
-        plt.figure(figsize=(6, 4))
-        plt.plot(
-            train_data[:, 0, 0],
-            train_data[:, 1, 0],
-            "bo",
-            markersize=2,
-            label="Training data",
-        )
-        plt.plot(
-            val_data[:, 0, 0],
-            val_data[:, 1, 0],
-            "ro",
-            markersize=2,
-            label="Validation data",
-        )
-        plt.plot(train_data[:, 0, 1:], train_data[:, 1, 1:], "bo", markersize=0.3)
-        plt.plot(val_data[:, 0, 1:], val_data[:, 1, 1:], "ro", markersize=0.3)
-        plt.legend()
-        plt.show()
-
 
 class CustomCallback(pl.Callback):
     def __init__(self):
@@ -259,7 +215,6 @@ class CustomCallback(pl.Callback):
             pl_module.hparams,
             {"metrics/min_val_loss": np.inf, "metrics/min_train_loss": np.inf},
         )
-
 
     def on_train_epoch_end(self, trainer, pl_module):
         mean_loss = torch.stack(pl_module.training_step_outputs).mean()
@@ -313,7 +268,9 @@ class Gridsearch:
         self.num_vertices = num_vertices
 
     def get_params(self):
-        with open(os.path.join(self.path, "classification_parameters.yaml"), "r") as file:
+        with open(
+            os.path.join(self.path, "classification_parameters.yaml"), "r"
+        ) as file:
             params = yaml.safe_load(file)
             if self.num_vertices > 0:
                 params = self._update_params(params)

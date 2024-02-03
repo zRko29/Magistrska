@@ -7,7 +7,7 @@ from utils.autoregression_helper import Model, plot_2d
 
 if __name__ == "__main__":
     version = None
-    name = "overfitting_10"
+    name = "overfitting_11"
 
     directory_path = f"logs/{name}"
 

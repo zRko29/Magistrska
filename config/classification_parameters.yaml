@@ -11,16 +11,12 @@ dropout: 0.0 # doesn't seem necessary
 
 epochs: 8000
 batch_size: 64
-seq_length: 5
-loss: mse
+loss: binary_crossentropy
 optimizer: adam
 lr: 0.0003
 
 shuffle_paths: True # makes sense for linear sampling
 shuffle_batches: False # shuffle batches between epochs
-shuffle_sequences: False # shuffle sequences
-
-sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
 gridsearch:
   hidden_size: { lower: 120, upper: 210, dtype: int }
@@ -28,5 +24,4 @@ gridsearch:
   num_rnn_layers: { lower: 4, upper: 7, dtype: int }
   num_lin_layers: { lower: 1, upper: 4, dtype: int }
   batch_size: { lower: 150, upper: 230, dtype: int }
-  seq_length: { lower: 25, upper: 35, dtype: int }
   lr: { lower: 0.0006, upper: 0.002, dtype: float }
