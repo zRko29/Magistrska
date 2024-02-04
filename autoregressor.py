@@ -52,10 +52,6 @@ if __name__ == "__main__":
                     map.generate_data()
                     thetas, ps = map.retrieve_data()
 
-                    thetas = thetas - np.pi
-                    thetas /= np.max(np.abs(thetas))
-                    ps /= np.max(np.abs(ps))
-
                     # data.shape = [init_points, 2, steps]
                     data = np.stack([thetas.T, ps.T], axis=1)
                     data = torch.from_numpy(data).to(torch.double)

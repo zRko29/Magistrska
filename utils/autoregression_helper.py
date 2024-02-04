@@ -148,12 +148,6 @@ class Data(pl.LightningDataModule):
 
         self.rng = np.random.default_rng(seed=42)
 
-        # preprocess data
-        # thetas = thetas / np.pi - 1  # way 1
-        thetas = thetas - np.pi  # way 2
-        thetas /= np.max(np.abs(thetas))
-        ps /= np.max(np.abs(ps))
-
         # data.shape = [init_points, 2, steps]
         data = np.stack([thetas.T, ps.T], axis=1)
 

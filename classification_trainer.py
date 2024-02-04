@@ -30,8 +30,8 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
-    name = "overfitting_10"
-    num_vertices = 2
+    name = "classification_1"
+    num_vertices = 1
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         datamodule = Data(
             map_object=map,
             train_size=1.0,
-            if_plot_data=False,
+            if_plot_data=True,
             if_plot_data_split=False,
             params=params,
         )
@@ -62,8 +62,8 @@ if __name__ == "__main__":
         print()
 
         checkpoint_callback = callbacks.ModelCheckpoint(
-            monitor="loss/train",  # careful
-            mode="min",
+            monitor="acc/train",  # careful
+            mode="max",
             dirpath=save_path,
             filename="lmodel",
             save_on_train_epoch_end=True,
@@ -71,8 +71,8 @@ if __name__ == "__main__":
         )
 
         early_stopping_callback = callbacks.EarlyStopping(
-            monitor="loss/val",
-            mode="min",
+            monitor="acc/val",
+            mode="max",
             min_delta=1e-7,
             patience=15,
             verbose=False,

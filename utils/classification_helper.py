@@ -21,13 +21,14 @@ class Model(pl.LightningModule):
         self.linear_size = params.get("linear_size")
         self.num_rnn_layers = params.get("num_rnn_layers")
         self.num_lin_layers = params.get("num_lin_layers")
-        self.sequence_type = params.get("sequence_type")
         dropout = params.get("dropout")
         self.lr = params.get("lr")
         self.optimizer = params.get("optimizer")
 
-        self.training_step_outputs = []
-        self.validation_step_outputs = []
+        self.training_step_losses = []
+        self.validation_step_losses = []
+        self.training_step_accs = []
+        self.validation_step_accs = []
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
@@ -38,12 +39,12 @@ class Model(pl.LightningModule):
         # Create the linear layers
         self.lins = torch.nn.ModuleList([])
         if self.num_lin_layers == 1:
-            self.lins.append(torch.nn.Linear(self.hidden_size, 2))
+            self.lins.append(torch.nn.Linear(self.hidden_size, 1))
         elif self.num_lin_layers > 1:
             self.lins.append(torch.nn.Linear(self.hidden_size, self.linear_size))
             for layer in range(self.num_lin_layers - 2):
                 self.lins.append(torch.nn.Linear(self.linear_size, self.linear_size))
-            self.lins.append(torch.nn.Linear(self.linear_size, 2))
+            self.lins.append(torch.nn.Linear(self.linear_size, 1))
         self.dropout = torch.nn.Dropout(p=dropout)
 
         # takes care of dtype
@@ -56,7 +57,6 @@ class Model(pl.LightningModule):
         ]
 
     def forward(self, input_t):
-        outputs = []
         # h_ts[i].shape = [features, hidden_size]
         h_ts = self._init_hidden(input_t.shape[0], self.hidden_size)
 
@@ -68,17 +68,17 @@ class Model(pl.LightningModule):
             h_ts[0] = self.dropout(h_ts[0])
             for i in range(1, self.num_rnn_layers):
                 h_ts[i] = self.rnns[i](h_ts[i - 1], h_ts[i])
-                if i < self.num_rnn_layers - 1:
-                    h_ts[i] = self.dropout(h_ts[i])
+                h_ts[i] = self.dropout(h_ts[i])
 
             # linear layers
-            output = self.lins[0](h_ts[-1])
+            output = torch.relu(self.lins[0](h_ts[-1]))
             for i in range(1, self.num_lin_layers):
                 output = self.lins[i](output)
+                if i < self.num_lin_layers - 1:
+                    output = torch.relu(output)
 
-            outputs.append(output)
-
-        return torch.stack(outputs, dim=2)
+        # just take the last output
+        return output
 
     def configure_optimizers(self):
         if self.optimizer == "adam":
@@ -90,28 +90,38 @@ class Model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         inputs, targets = batch
-        predicted = self(inputs)
-        if self.sequence_type == "many-to-one":
-            predicted = predicted[:, :, -1:]
-        loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log(
-            "loss/train",
-            loss,
+        predicted = self(inputs).view(-1)
+        loss = torch.nn.functional.binary_cross_entropy_with_logits(predicted, targets)
+
+        predictions = (predicted >= 0).int()
+        accuracy = (predictions == targets).float().mean()
+
+        self.log_dict(
+            {"loss/train": loss, "acc/train": accuracy},
             on_epoch=True,
             prog_bar=True,
             on_step=False,
         )
-        self.training_step_outputs.append(loss)
+        self.training_step_losses.append(loss)
+        self.training_step_accs.append(accuracy)
         return loss
 
     def validation_step(self, batch, batch_idx):
         inputs, targets = batch
-        predicted = self(inputs)
-        if self.sequence_type == "many-to-one":
-            predicted = predicted[:, :, -1:]
-        loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log("loss/val", loss, on_epoch=True, prog_bar=True, on_step=False)
-        self.validation_step_outputs.append(loss)
+        predicted = self(inputs).view(-1)
+        loss = torch.nn.functional.binary_cross_entropy_with_logits(predicted, targets)
+
+        predictions = (predicted >= 0).int()
+        accuracy = (predictions == targets).float().mean()
+
+        self.log_dict(
+            {"loss/val": loss, "acc/val": accuracy},
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
+        self.validation_step_losses.append(loss)
+        self.validation_step_accs.append(accuracy)
         return loss
 
 
@@ -125,25 +135,19 @@ class Data(pl.LightningDataModule):
         params: dict,
     ):
         super(Data, self).__init__()
-        map_object.generate_data()
+        map_object.generate_data(lyapunov=True)
         thetas, ps = map_object.retrieve_data()
+        spectrum = map_object.retrieve_spectrum()
 
         if if_plot_data:
             map_object.plot_data()
 
-        self.seq_len = params.get("seq_length")
+        self.init_points = params.get("init_points")
         self.batch_size = params.get("batch_size")
         self.shuffle_paths = params.get("shuffle_paths")
         self.shuffle_batches = params.get("shuffle_batches")
-        self.shuffle_sequences = params.get("shuffle_sequences")
 
         self.rng = np.random.default_rng(seed=42)
-
-        # preprocess data
-        # thetas = thetas / np.pi - 1  # way 1
-        thetas = thetas - np.pi  # way 2
-        thetas /= np.max(np.abs(thetas))
-        ps /= np.max(np.abs(ps))
 
         # data.shape = [init_points, 2, steps]
         data = np.stack([thetas.T, ps.T], axis=1)
@@ -152,42 +156,27 @@ class Data(pl.LightningDataModule):
         if self.shuffle_paths:
             self.rng.shuffle(data)
 
-        # many-to-many or many-to-one types of sequences
-        sequences = self._make_sequences(data)
-
         if if_plot_data_split:
-            self.plot_data_split(sequences, train_size)
+            self.plot_data_split(data, train_size)
 
-        print(f"Sequences shape: {sequences.shape}")
-        xy_pairs = self._make_xy_pairs(sequences)
+        print(f"Sequences shape: {data.shape}")
+        xy_pairs = self._make_input_output_pairs(data, spectrum)
 
         t = int(len(xy_pairs) * train_size)
         self.train_data = xy_pairs[:t]
         self.val_data = xy_pairs[t:]
 
         print(
-            f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {len(self.train_data[0][1][0])})"
+            f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {1})"
         )
         if train_size < 1.0:
             print(
-                f"Validation data shape: {len(self.val_data)} pairs of shape ({len(self.val_data[0][0][0])}, {len(self.val_data[0][1][0])})"
+                f"Validation data shape: {len(self.val_data)} pairs of shape ({len(self.val_data[0][0][0])}, {1})"
             )
         print()
 
-    def _make_sequences(self, data):
-        init_points, features, steps = data.shape
-        # sequences.shape = [init_points * (steps - seq_len), features, seq_len + 1]
-        sequences = np.lib.stride_tricks.sliding_window_view(
-            data, (1, features, self.seq_len + 1)
-        )
-        sequences = sequences.reshape(
-            init_points * (steps - self.seq_len), features, self.seq_len + 1
-        )
-
-        return sequences
-
-    def _make_xy_pairs(self, sequences):
-        return [(seq[:, :-1], seq[:, -1:]) for seq in sequences]
+    def _make_input_output_pairs(self, data, spectrum):
+        return [(data[point], spectrum[point]) for point in range(self.init_points)]
 
     def train_dataloader(self):
         return DataLoader(
@@ -209,26 +198,43 @@ class CustomCallback(pl.Callback):
         super(CustomCallback, self).__init__()
         self.min_train_loss = np.inf
         self.min_val_loss = np.inf
+        self.max_train_acc = 0
+        self.max_val_acc = 0
 
     def on_train_start(self, trainer, pl_module):
         trainer.logger.log_hyperparams(
             pl_module.hparams,
-            {"metrics/min_val_loss": np.inf, "metrics/min_train_loss": np.inf},
+            {
+                "metrics/min_val_loss": np.inf,
+                "metrics/min_train_loss": np.inf,
+                "metrics/max_val_acc": 0,
+                "metrics/max_train_acc": 0,
+            },
         )
 
     def on_train_epoch_end(self, trainer, pl_module):
-        mean_loss = torch.stack(pl_module.training_step_outputs).mean()
+        mean_loss = torch.stack(pl_module.training_step_losses).mean()
         if mean_loss < self.min_train_loss:
             self.min_train_loss = mean_loss
             pl_module.log("metrics/min_train_loss", mean_loss)
-        pl_module.training_step_outputs.clear()
+        mean_acc = torch.stack(pl_module.training_step_accs).mean()
+        if mean_acc > self.max_train_acc:
+            self.max_train_acc = mean_acc
+            pl_module.log("metrics/max_train_acc", mean_acc)
+        pl_module.training_step_losses.clear()
+        pl_module.training_step_accs.clear()
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        mean_loss = torch.stack(pl_module.validation_step_outputs).mean()
+        mean_loss = torch.stack(pl_module.validation_step_losses).mean()
         if mean_loss < self.min_val_loss:
             self.min_val_loss = mean_loss
             pl_module.log("metrics/min_val_loss", mean_loss)
-        pl_module.validation_step_outputs.clear()
+        mean_acc = torch.stack(pl_module.validation_step_accs).mean()
+        if mean_acc > self.max_val_acc:
+            self.max_val_acc = mean_acc
+            pl_module.log("metrics/max_val_acc", mean_acc)
+        pl_module.validation_step_losses.clear()
+        pl_module.validation_step_accs.clear()
 
     def on_fit_start(self, trainer, pl_module):
         print()
@@ -242,9 +248,6 @@ class CustomCallback(pl.Callback):
         train_time = time.time() - self.t_start
         print(f"Training time: {timedelta(seconds=train_time)}")
         print()
-        # trainer.logger.experiment.add_scalar(
-        #     "train_time", train_time, trainer.current_epoch
-        # )
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -303,26 +306,26 @@ class Gridsearch:
         return params
 
 
-def plot_2d(predicted, targets, show_plot=True, save_path=None, title=None):
-    predicted = predicted.detach().numpy()
-    targets = targets.detach().numpy()
-    plt.figure(figsize=(6, 4))
-    plt.plot(targets[:, 0, 0], targets[:, 1, 0], "ro", markersize=2, label="targets")
-    plt.plot(
-        predicted[:, 0, 0],
-        predicted[:, 1, 0],
-        "bo",
-        markersize=2,
-        label="predicted",
-    )
-    plt.plot(targets[:, 0, 1:], targets[:, 1, 1:], "ro", markersize=0.5)
-    plt.plot(predicted[:, 0, 1:], predicted[:, 1, 1:], "bo", markersize=0.5)
-    plt.legend()
-    if title is not None:
-        plt.title(f"Loss = {title:.3e}")
-    if save_path is not None:
-        plt.savefig(save_path + ".pdf")
-    if show_plot:
-        plt.show()
-    else:
-        plt.close()
+# def plot_2d(predicted, targets, show_plot=True, save_path=None, title=None):
+#     predicted = predicted.detach().numpy()
+#     targets = targets.detach().numpy()
+#     plt.figure(figsize=(6, 4))
+#     plt.plot(targets[:, 0, 0], targets[:, 1, 0], "ro", markersize=2, label="targets")
+#     plt.plot(
+#         predicted[:, 0, 0],
+#         predicted[:, 1, 0],
+#         "bo",
+#         markersize=2,
+#         label="predicted",
+#     )
+#     plt.plot(targets[:, 0, 1:], targets[:, 1, 1:], "ro", markersize=0.5)
+#     plt.plot(predicted[:, 0, 1:], predicted[:, 1, 1:], "bo", markersize=0.5)
+#     plt.legend()
+#     if title is not None:
+#         plt.title(f"Loss = {title:.3e}")
+#     if save_path is not None:
+#         plt.savefig(save_path + ".pdf")
+#     if show_plot:
+#         plt.show()
+#     else:
+#         plt.close()
