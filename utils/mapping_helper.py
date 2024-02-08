@@ -14,6 +14,7 @@ class StandardMap:
         K: float = None,
         sampling: str = None,
         seed: bool = None,
+        n: int = None,
         params: dict = None,
     ):
         self.init_points = init_points or params.get("init_points")
@@ -22,6 +23,8 @@ class StandardMap:
         self.sampling = sampling or params.get("sampling")
 
         self.rng = np.random.default_rng(seed=seed)
+        self.n = n
+        self.spectrum = np.array([])
 
     def retrieve_data(self):
         return self.theta_values, self.p_values
@@ -29,12 +32,19 @@ class StandardMap:
     def retrieve_spectrum(self):
         return self.spectrum
 
+    def save_data(self):
+        data_path = "data"
+        np.save(f"{data_path}/theta_values.npy", self.theta_values)
+        np.save(f"{data_path}/p_values.npy", self.p_values)
+        np.save(f"{data_path}/spectrum.npy", self.spectrum)
+
     def generate_data(self, lyapunov: bool = False, n: int = 10**5):
+        n = self.n if self.n is not None else n
         theta, p = self._get_initial_points()
         steps = n if lyapunov else self.steps
 
-        self.theta_values = np.empty((steps, self.init_points))
-        self.p_values = np.empty((steps, self.init_points))
+        self.theta_values = np.empty((steps, theta.shape[0]))
+        self.p_values = np.empty((steps, p.shape[0]))
 
         for step in range(steps):
             theta = np.mod(theta + p, 1)
@@ -56,8 +66,8 @@ class StandardMap:
         return np.array([[1, 1], [der, 1 + der]])
 
     def _lyapunov(self, n, treshold=1e3):
-        spectrum = np.empty(self.init_points)
-        for column in range(self.init_points):
+        spectrum = np.empty(self.theta_values.shape[1])
+        for column in range(self.theta_values.shape[1]):
             M = np.identity(2)
             exp = np.zeros(2)
 
@@ -80,7 +90,7 @@ class StandardMap:
         return spectrum
 
     def _get_initial_points(self):
-        params = [0, 1, self.init_points]
+        params = [0.01, 0.99, self.init_points]
 
         if self.sampling == "random":
             theta_init = self.rng.uniform(*params)
@@ -89,6 +99,12 @@ class StandardMap:
         elif self.sampling == "linear":
             theta_init = np.linspace(*params)
             p_init = np.linspace(*params)
+
+        elif self.sampling == "grid":
+            params = [0.01, 0.99, int(np.sqrt(self.init_points))]
+            theta_init, p_init = np.meshgrid(np.linspace(*params), np.linspace(*params))
+            theta_init = theta_init.flatten()
+            p_init = p_init.flatten()
 
         return theta_init, p_init
 
@@ -124,6 +140,7 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    map = StandardMap(init_points=30, steps=5000, sampling="random", K=1.0, seed=42)
+    map = StandardMap(init_points=900, steps=1000, sampling="grid", K=1.0, seed=42)
     map.generate_data(lyapunov=True)
     map.plot_data()
+    map.save_data()

@@ -43,8 +43,9 @@ if __name__ == "__main__":
         datamodule = Data(
             map_object=map,
             train_size=1.0,
-            if_plot_data=True,
-            if_plot_data_split=False,
+            plot_data=False,
+            plot_data_split=False,
+            print_split=True,
             params=params,
         )
 
@@ -65,16 +66,18 @@ if __name__ == "__main__":
             monitor="acc/train",  # careful
             mode="max",
             dirpath=save_path,
-            filename="lmodel",
+            filename="model",
             save_on_train_epoch_end=True,
             save_top_k=1,
+            verbose=False,
         )
 
         early_stopping_callback = callbacks.EarlyStopping(
-            monitor="acc/val",
+            monitor="acc/train",
             mode="max",
-            min_delta=1e-7,
-            patience=15,
+            min_delta=1e-3,
+            check_on_train_epoch_end=True,
+            patience=10,
             verbose=False,
         )
 

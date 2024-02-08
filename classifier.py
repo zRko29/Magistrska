@@ -1,9 +1,8 @@
 import torch
 import os, yaml
-import numpy as np
 
 from utils.mapping_helper import StandardMap
-from utils.classification_helper import Model  # , plot_2d
+from utils.classification_helper import Model, Data  # , plot_2d
 
 if __name__ == "__main__":
     version = None
@@ -12,7 +11,7 @@ if __name__ == "__main__":
     directory_path = f"logs/{name}"
 
     if version is not None:
-        folders = [os.path.join(directory_path, f"version_{version}")]
+        folders = [os.path.join(directory_path, f"version_{str(version)}")]
     else:
         folders = [
             os.path.join(directory_path, folder)
@@ -26,12 +25,6 @@ if __name__ == "__main__":
         with open(os.path.join(log_path, "hparams.yaml")) as f:
             params = yaml.safe_load(f)
 
-        model_suffixes = [
-            "",
-            "-v1",
-            "-v2",
-        ]
-
         maps = [
             StandardMap(seed=42, params=params),
             StandardMap(seed=41, params=params),
@@ -39,41 +32,22 @@ if __name__ == "__main__":
         input_suffixes = ["standard", "random"]
 
         for map, input_suffix in zip(maps, input_suffixes):
-            map.generate_data(lyapunov=True)
-            thetas, ps = map.retrieve_data()
-            spectrum = map.retrieve_spectrum()
+            datamodule = Data(
+                map_object=map,
+                train_size=1.0,
+                plot_data=False,
+                plot_data_split=False,
+                print_split=False,
+                params=params,
+            )
 
-            # data.shape = [init_points, 2, steps]
-            data = np.stack([thetas.T, ps.T], axis=1)
-            data = torch.from_numpy(data).to(torch.double)
-            targets = torch.tensor(spectrum, dtype=torch.double)
+            dataloader = iter(datamodule.train_dataloader())
 
-            for model_suffix in model_suffixes:
-                try:
-                    model_path = os.path.join(log_path, f"lmodel{model_suffix}.ckpt")
-                    model = Model(**params).load_from_checkpoint(model_path)
-                except FileNotFoundError:
-                    continue
+            model_path = os.path.join(log_path, f"model.ckpt")
+            model = Model(**params).load_from_checkpoint(model_path)
 
-                model.eval()
-                with torch.inference_mode():
-                    predicted = model(data).view(-1)
-
-                loss = torch.nn.functional.binary_cross_entropy_with_logits(
-                    predicted, targets
-                )
-                predictions = (predicted >= 0).int()
-                accuracy = (predictions == targets).float().mean()
-
-                print(f"{input_suffix}{model_suffix} loss: {loss.item():.3e}")
-                print(f"{input_suffix}{model_suffix} accuracy: {accuracy.item():.3f}")
-
-                # plot_2d(
-                #     predicted,
-                #     targets,
-                #     show_plot=False,
-                #     save_path=os.path.join(log_path, input_suffix + model_suffix),
-                #     title=loss.item(),
-                # )
+            model.eval()
+            with torch.inference_mode():
+                model.predict(next(dataloader), input_suffix)
 
         print("-" * 60)

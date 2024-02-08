@@ -1,6 +1,7 @@
 import torch.optim as optim
 import pytorch_lightning as pl
 import torch
+import torchmetrics
 from torch.utils.data import DataLoader
 import numpy as np
 import matplotlib.pyplot as plt
@@ -39,12 +40,12 @@ class Model(pl.LightningModule):
         # Create the linear layers
         self.lins = torch.nn.ModuleList([])
         if self.num_lin_layers == 1:
-            self.lins.append(torch.nn.Linear(self.hidden_size, 1))
+            self.lins.append(torch.nn.Linear(self.hidden_size, 2))
         elif self.num_lin_layers > 1:
             self.lins.append(torch.nn.Linear(self.hidden_size, self.linear_size))
             for layer in range(self.num_lin_layers - 2):
                 self.lins.append(torch.nn.Linear(self.linear_size, self.linear_size))
-            self.lins.append(torch.nn.Linear(self.linear_size, 1))
+            self.lins.append(torch.nn.Linear(self.linear_size, 2))
         self.dropout = torch.nn.Dropout(p=dropout)
 
         # takes care of dtype
@@ -90,11 +91,11 @@ class Model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         inputs, targets = batch
-        predicted = self(inputs).view(-1)
-        loss = torch.nn.functional.binary_cross_entropy_with_logits(predicted, targets)
-
-        predictions = (predicted >= 0).int()
-        accuracy = (predictions == targets).float().mean()
+        predicted = self(inputs)
+        loss = torch.nn.functional.cross_entropy(predicted, targets)
+        accuracy = torchmetrics.functional.accuracy(
+            predicted.softmax(dim=1), targets, task="binary"
+        )
 
         self.log_dict(
             {"loss/train": loss, "acc/train": accuracy},
@@ -108,11 +109,11 @@ class Model(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         inputs, targets = batch
-        predicted = self(inputs).view(-1)
-        loss = torch.nn.functional.binary_cross_entropy_with_logits(predicted, targets)
-
-        predictions = (predicted >= 0).int()
-        accuracy = (predictions == targets).float().mean()
+        predicted = self(inputs)
+        loss = torch.nn.functional.cross_entropy(predicted, targets)
+        accuracy = torchmetrics.functional.accuracy(
+            predicted.softmax(dim=1), targets, task="binary"
+        )
 
         self.log_dict(
             {"loss/val": loss, "acc/val": accuracy},
@@ -124,14 +125,26 @@ class Model(pl.LightningModule):
         self.validation_step_accs.append(accuracy)
         return loss
 
+    def predict(self, batch, input_suffix):
+        inputs, targets = batch
+        predicted = self(inputs)
+        loss = torch.nn.functional.cross_entropy(predicted, targets)
+        accuracy = torchmetrics.functional.accuracy(
+            predicted.softmax(dim=1), targets, task="binary"
+        )
+
+        print(f"{input_suffix} loss: {loss:.3e}")
+        print(f"{input_suffix} accuracy: {accuracy:.3f}")
+
 
 class Data(pl.LightningDataModule):
     def __init__(
         self,
         map_object,
         train_size: float,
-        if_plot_data: bool,
-        if_plot_data_split: bool,
+        plot_data: bool,
+        plot_data_split: bool,
+        print_split: bool,
         params: dict,
     ):
         super(Data, self).__init__()
@@ -139,7 +152,7 @@ class Data(pl.LightningDataModule):
         thetas, ps = map_object.retrieve_data()
         spectrum = map_object.retrieve_spectrum()
 
-        if if_plot_data:
+        if plot_data:
             map_object.plot_data()
 
         self.init_points = params.get("init_points")
@@ -156,27 +169,34 @@ class Data(pl.LightningDataModule):
         if self.shuffle_paths:
             self.rng.shuffle(data)
 
-        if if_plot_data_split:
+        if plot_data_split:
             self.plot_data_split(data, train_size)
 
-        print(f"Sequences shape: {data.shape}")
         xy_pairs = self._make_input_output_pairs(data, spectrum)
 
         t = int(len(xy_pairs) * train_size)
         self.train_data = xy_pairs[:t]
         self.val_data = xy_pairs[t:]
 
-        print(
-            f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {1})"
-        )
-        if train_size < 1.0:
+        if print_split:
+            print(f"Sequences shape: {data.shape}")
             print(
-                f"Validation data shape: {len(self.val_data)} pairs of shape ({len(self.val_data[0][0][0])}, {1})"
+                f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {1})"
             )
-        print()
+            if train_size < 1.0:
+                print(
+                    f"Validation data shape: {len(self.val_data)} pairs of shape ({len(self.val_data[0][0][0])}, {1})"
+                )
+            print()
+
+        self.data = data
+        self.spectrum = spectrum
 
     def _make_input_output_pairs(self, data, spectrum):
-        return [(data[point], spectrum[point]) for point in range(self.init_points)]
+        return [
+            (data[point], [1 - spectrum[point], spectrum[point]])
+            for point in range(self.init_points)
+        ]
 
     def train_dataloader(self):
         return DataLoader(
@@ -304,28 +324,3 @@ class Gridsearch:
         print()
 
         return params
-
-
-# def plot_2d(predicted, targets, show_plot=True, save_path=None, title=None):
-#     predicted = predicted.detach().numpy()
-#     targets = targets.detach().numpy()
-#     plt.figure(figsize=(6, 4))
-#     plt.plot(targets[:, 0, 0], targets[:, 1, 0], "ro", markersize=2, label="targets")
-#     plt.plot(
-#         predicted[:, 0, 0],
-#         predicted[:, 1, 0],
-#         "bo",
-#         markersize=2,
-#         label="predicted",
-#     )
-#     plt.plot(targets[:, 0, 1:], targets[:, 1, 1:], "ro", markersize=0.5)
-#     plt.plot(predicted[:, 0, 1:], predicted[:, 1, 1:], "bo", markersize=0.5)
-#     plt.legend()
-#     if title is not None:
-#         plt.title(f"Loss = {title:.3e}")
-#     if save_path is not None:
-#         plt.savefig(save_path + ".pdf")
-#     if show_plot:
-#         plt.show()
-#     else:
-#         plt.close()
