@@ -140,20 +140,30 @@ class Model(pl.LightningModule):
 class Data(pl.LightningDataModule):
     def __init__(
         self,
-        map_object,
         train_size: float,
         plot_data: bool,
         plot_data_split: bool,
         print_split: bool,
         params: dict,
+        map_object=None,
+        data_path=None,
     ):
         super(Data, self).__init__()
-        map_object.generate_data(lyapunov=True)
-        thetas, ps = map_object.retrieve_data()
-        spectrum = map_object.retrieve_spectrum()
+        if map_object is not None:
+            map_object.generate_data(lyapunov=True)
+            thetas, ps = map_object.retrieve_data()
+            spectrum = map_object.retrieve_spectrum()
 
-        if plot_data:
-            map_object.plot_data()
+            if plot_data:
+                map_object.plot_data()
+        else:
+            thetas = np.load(f"{data_path}/theta_values.npy")
+            ps = np.load(f"{data_path}/p_values.npy")
+            spectrum = np.load(f"{data_path}/spectrum.npy")
+
+            thetas = thetas[: params.get("steps")]
+            ps = ps[: params.get("steps")]
+            spectrum = spectrum[: params.get("steps")]
 
         self.init_points = params.get("init_points")
         self.batch_size = params.get("batch_size")

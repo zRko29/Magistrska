@@ -41,7 +41,8 @@ if __name__ == "__main__":
         map = StandardMap(seed=42, params=params)
 
         datamodule = Data(
-            map_object=map,
+            # map_object=map,
+            data_path="data/1.0",
             train_size=1.0,
             plot_data=False,
             plot_data_split=False,
