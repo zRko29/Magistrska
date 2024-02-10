@@ -30,7 +30,7 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
-    name = "classification_1"
+    name = "classification_4"
     num_vertices = 1
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
@@ -41,13 +41,12 @@ if __name__ == "__main__":
         map = StandardMap(seed=42, params=params)
 
         datamodule = Data(
-            # map_object=map,
-            data_path="data/1.0",
-            train_size=1.0,
-            plot_data=False,
-            plot_data_split=False,
+            data_path="data",
+            train_size=0.8,
+            plot_data=True,
             print_split=True,
             params=params,
+            K_upper_lim=params.get("K_upper_lim"),
         )
 
         model = Model(**params)
@@ -64,7 +63,7 @@ if __name__ == "__main__":
         print()
 
         checkpoint_callback = callbacks.ModelCheckpoint(
-            monitor="acc/train",  # careful
+            monitor="acc/val",  # careful
             mode="max",
             dirpath=save_path,
             filename="model",
@@ -74,11 +73,11 @@ if __name__ == "__main__":
         )
 
         early_stopping_callback = callbacks.EarlyStopping(
-            monitor="acc/train",
+            monitor="acc/val",
             mode="max",
-            min_delta=1e-3,
+            min_delta=1e-4,
             check_on_train_epoch_end=True,
-            patience=10,
+            patience=30,
             verbose=False,
         )
 
@@ -99,7 +98,7 @@ if __name__ == "__main__":
             logger=tb_logger,
             callbacks=[
                 checkpoint_callback,
-                # early_stopping_callback,
+                early_stopping_callback,
                 progress_bar_callback,
                 # gradient_avg_callback,
                 CustomCallback(),

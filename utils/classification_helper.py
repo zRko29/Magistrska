@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import time
 from datetime import timedelta
 import os, yaml
+from tqdm import tqdm
 
 
 class Model(pl.LightningModule):
@@ -125,7 +126,7 @@ class Model(pl.LightningModule):
         self.validation_step_accs.append(accuracy)
         return loss
 
-    def predict(self, batch, input_suffix):
+    def predict_step(self, batch, batch_idx):
         inputs, targets = batch
         predicted = self(inputs)
         loss = torch.nn.functional.cross_entropy(predicted, targets)
@@ -133,18 +134,20 @@ class Model(pl.LightningModule):
             predicted.softmax(dim=1), targets, task="binary"
         )
 
-        print(f"{input_suffix} loss: {loss:.3e}")
-        print(f"{input_suffix} accuracy: {accuracy:.3f}")
+        print()
+        print(f"{batch_idx}: loss= {loss:.2e}, accuracy= {accuracy:.2f}")
+        print()
+        return loss
 
 
 class Data(pl.LightningDataModule):
     def __init__(
         self,
-        train_size: float,
-        plot_data: bool,
-        plot_data_split: bool,
         print_split: bool,
+        plot_data: bool,
         params: dict,
+        K_upper_lim: float,
+        train_size: float = 1.0,
         map_object=None,
         data_path=None,
     ):
@@ -153,19 +156,19 @@ class Data(pl.LightningDataModule):
             map_object.generate_data(lyapunov=True)
             thetas, ps = map_object.retrieve_data()
             spectrum = map_object.retrieve_spectrum()
-
             if plot_data:
                 map_object.plot_data()
+
         else:
-            thetas = np.load(f"{data_path}/theta_values.npy")
-            ps = np.load(f"{data_path}/p_values.npy")
-            spectrum = np.load(f"{data_path}/spectrum.npy")
+            assert K_upper_lim <= 2.0
+            thetas, ps, spectrum = self._load_data(data_path, K_upper_lim)
+            steps = params.get("steps")
+            # too many steps in saved data
+            thetas = thetas[:steps]
+            ps = ps[:steps]
+            if plot_data:
+                self.plot_data(thetas, ps, spectrum)
 
-            thetas = thetas[: params.get("steps")]
-            ps = ps[: params.get("steps")]
-            spectrum = spectrum[: params.get("steps")]
-
-        self.init_points = params.get("init_points")
         self.batch_size = params.get("batch_size")
         self.shuffle_paths = params.get("shuffle_paths")
         self.shuffle_batches = params.get("shuffle_batches")
@@ -179,9 +182,6 @@ class Data(pl.LightningDataModule):
         if self.shuffle_paths:
             self.rng.shuffle(data)
 
-        if plot_data_split:
-            self.plot_data_split(data, train_size)
-
         xy_pairs = self._make_input_output_pairs(data, spectrum)
 
         t = int(len(xy_pairs) * train_size)
@@ -189,7 +189,8 @@ class Data(pl.LightningDataModule):
         self.val_data = xy_pairs[t:]
 
         if print_split:
-            print(f"Sequences shape: {data.shape}")
+            print()
+            print(f"Data shape: {data.shape}")
             print(
                 f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {1})"
             )
@@ -199,13 +200,10 @@ class Data(pl.LightningDataModule):
                 )
             print()
 
-        self.data = data
-        self.spectrum = spectrum
-
     def _make_input_output_pairs(self, data, spectrum):
         return [
             (data[point], [1 - spectrum[point], spectrum[point]])
-            for point in range(self.init_points)
+            for point in range(data.shape[0])
         ]
 
     def train_dataloader(self):
@@ -221,6 +219,70 @@ class Data(pl.LightningDataModule):
             batch_size=2 * self.batch_size,
             shuffle=False,
         )
+
+    def predict_dataloader(self):
+        return DataLoader(
+            Dataset(self.train_data),
+            batch_size=1024,
+        )
+
+    def _load_data(self, path, K_upper_lim):
+        directories = self._get_subdirectories(path, K_upper_lim)
+        bar_loader = tqdm(
+            directories, desc="Loading data", unit=" directories", ncols=80
+        )
+
+        thetas_list, ps_list, spectrum_list = [], [], []
+        for directory in bar_loader:
+            temp_thetas = np.load(os.path.join(directory, "theta_values.npy"))
+            temp_ps = np.load(os.path.join(directory, "p_values.npy"))
+            temp_spectrum = np.load(os.path.join(directory, "spectrum.npy"))
+
+            thetas_list.append(temp_thetas)
+            ps_list.append(temp_ps)
+            spectrum_list.append(temp_spectrum)
+
+        thetas = np.concatenate(thetas_list, axis=1)
+        ps = np.concatenate(ps_list, axis=1)
+        spectrum = np.concatenate(spectrum_list)
+
+        return thetas, ps, spectrum
+
+    def _get_subdirectories(self, directory, K_upper_lim):
+        subdirectories = [
+            os.path.join(directory, d)
+            for d in os.listdir(directory)
+            if os.path.isdir(os.path.join(directory, d)) and float(d) <= K_upper_lim
+        ]
+        subdirectories.sort()
+        return subdirectories
+
+    def plot_data(self, thetas, ps, spectrum):
+        plt.figure(figsize=(7, 4))
+        chaotic_indices = np.where(spectrum == 1)[0]
+        regular_indices = np.where(spectrum == 0)[0]
+        plt.plot(
+            thetas[:, chaotic_indices],
+            ps[:, chaotic_indices],
+            "ro",
+            markersize=0.5,
+        )
+        plt.plot(
+            thetas[:, regular_indices],
+            ps[:, regular_indices],
+            "bo",
+            markersize=0.5,
+        )
+        legend_handles = [
+            plt.scatter([], [], color="red", marker=".", label="Chaotic"),
+            plt.scatter([], [], color="blue", marker=".", label="Regular"),
+        ]
+        plt.legend(handles=legend_handles)
+        plt.xlabel(r"$\theta$")
+        plt.ylabel("p")
+        plt.xlim(-0.05, 1.05)
+        plt.ylim(-0.05, 1.05)
+        plt.show()
 
 
 class CustomCallback(pl.Callback):
@@ -308,13 +370,12 @@ class Gridsearch:
             if self.num_vertices > 0:
                 params = self._update_params(params)
                 self.grid_step += 1
-            if params.get("gridsearch") is not None:
-                del params["gridsearch"]
 
         return params
 
     def _update_params(self, params):
-        for key, space in params.get("gridsearch").items():
+        gridsearch = params.pop("gridsearch")
+        for key, space in gridsearch.items():
             if isinstance(space, dict):
                 dtype = space["dtype"]
                 if dtype == "int":

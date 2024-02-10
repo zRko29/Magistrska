@@ -1,8 +1,14 @@
-import torch
 import os, yaml
+import pytorch_lightning as pl
+
+import warnings
+
+warnings.filterwarnings(
+    "ignore", ".*Consider increasing the value of the `num_workers` argument*"
+)
 
 from utils.mapping_helper import StandardMap
-from utils.classification_helper import Model, Data  # , plot_2d
+from utils.classification_helper import Model, Data
 
 if __name__ == "__main__":
     version = None
@@ -22,32 +28,31 @@ if __name__ == "__main__":
 
     for log_path in folders:
         print(f"log_path: {log_path}")
-        with open(os.path.join(log_path, "hparams.yaml")) as f:
-            params = yaml.safe_load(f)
+        params_path = os.path.join(log_path, "hparams.yaml")
+        with open(params_path, "r") as file:
+            params = yaml.safe_load(file)
 
+        params.update({"init_points": 30, "steps": 60, "sampling": "random"})
         maps = [
-            StandardMap(seed=42, params=params),
-            StandardMap(seed=41, params=params),
+            StandardMap(K=1.5, params=params, seed=42),
+            StandardMap(K=0.2, params=params, seed=41),
+            StandardMap(K=1.0, params=params, seed=40),
+            StandardMap(K=1.9, params=params, seed=39),
         ]
-        input_suffixes = ["standard", "random"]
 
-        for map, input_suffix in zip(maps, input_suffixes):
+        for map in maps:
             datamodule = Data(
                 map_object=map,
                 train_size=1.0,
                 plot_data=False,
-                plot_data_split=False,
                 print_split=False,
                 params=params,
             )
 
-            dataloader = iter(datamodule.train_dataloader())
-
             model_path = os.path.join(log_path, f"model.ckpt")
             model = Model(**params).load_from_checkpoint(model_path)
 
-            model.eval()
-            with torch.inference_mode():
-                model.predict(next(dataloader), input_suffix)
+            trainer = pl.Trainer()
+            trainer.predict(model=model, dataloaders=datamodule)
 
-        print("-" * 60)
+            print("-" * 30)

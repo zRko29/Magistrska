@@ -1,16 +1,14 @@
-init_points: 30
-steps: 60
-K: 1.5
-sampling: random
+steps: 30
+K_upper_lim: 0.1
 
 hidden_size: 64
 linear_size: 32 # used when num_lin_layers > 1
 num_rnn_layers: 2
 num_lin_layers: 2
-dropout: 0.0 # doesn't seem necessary
+dropout: 0.0
 
-epochs: 500
-batch_size: 16
+epochs: 100
+batch_size: 64
 loss: binary_crossentropy
 optimizer: adam
 lr: 0.0001
@@ -19,9 +17,9 @@ shuffle_paths: True # makes sense for linear sampling
 shuffle_batches: False # shuffle batches between epochs
 
 gridsearch:
-  hidden_size: { lower: 50, upper: 210, dtype: int }
-  linear_size: { lower: 10, upper: 80, dtype: int }
-  num_rnn_layers: { lower: 1, upper: 3, dtype: int }
-  num_lin_layers: { lower: 1, upper: 3, dtype: int }
-  batch_size: { lower: 100, upper: 230, dtype: int }
-  lr: { lower: 0.0001, upper: 0.005, dtype: float }
+  hidden_size: { lower: 100, upper: 300, dtype: int }
+  linear_size: { lower: 50, upper: 240, dtype: int }
+  num_rnn_layers: { lower: 2, upper: 5, dtype: int }
+  num_lin_layers: { lower: 2, upper: 5, dtype: int }
+  batch_size: { lower: 30, upper: 80, dtype: int }
+  lr: { lower: 0.0002, upper: 0.005, dtype: float }
