@@ -30,7 +30,9 @@ class StandardMap:
     def retrieve_data(self):
         return self.theta_values, self.p_values
 
-    def retrieve_spectrum(self):
+    def retrieve_spectrum(self, binary: bool = False):
+        if binary:
+            self.spectrum = (self.spectrum > 1e-4).astype(int)
         return self.spectrum
 
     def save_data(self, data_path):
@@ -83,9 +85,6 @@ class StandardMap:
             exp += np.log(np.abs(R.diagonal()))
 
             spectrum[column] = exp[0] / n
-
-        # make binary labels
-        spectrum = (spectrum > 1e-4).astype(int)
 
         return spectrum
 

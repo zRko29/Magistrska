@@ -23,6 +23,10 @@ warnings.filterwarnings(
     ".*The number of training batches*",
 )
 
+import logging
+
+logging.getLogger("pytorch_lightning").setLevel(0)
+
 ROOT_DIR = os.getcwd()
 CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 
@@ -30,8 +34,8 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
-    name = "overfitting_11"
-    num_vertices = 2
+    name = "overfitting_9"
+    num_vertices = 1
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
@@ -43,8 +47,9 @@ if __name__ == "__main__":
         datamodule = Data(
             map_object=map,
             train_size=1.0,
-            if_plot_data=False,
-            if_plot_data_split=False,
+            plot_data=False,
+            plot_data_split=False,
+            print_split=False,
             params=params,
         )
 
@@ -65,7 +70,7 @@ if __name__ == "__main__":
             monitor="loss/train",  # careful
             mode="min",
             dirpath=save_path,
-            filename="lmodel",
+            filename="model",
             save_on_train_epoch_end=True,
             save_top_k=1,
         )
