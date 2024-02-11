@@ -19,8 +19,8 @@ class Model(pl.LightningModule):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
-        self.hidden_size = params.get("hidden_size")
-        self.linear_size = params.get("linear_size")
+        self.hidden_sizes = params.get("rnn_sizes")
+        self.linear_sizes = params.get("lin_sizes")
         self.num_rnn_layers = params.get("num_rnn_layers")
         self.num_lin_layers = params.get("num_lin_layers")
         dropout = params.get("dropout")
@@ -34,33 +34,41 @@ class Model(pl.LightningModule):
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
-        self.rnns.append(torch.nn.RNNCell(2, self.hidden_size))
+        self.rnns.append(torch.nn.RNNCell(2, self.hidden_sizes[0]))
         for layer in range(self.num_rnn_layers - 1):
-            self.rnns.append(torch.nn.RNNCell(self.hidden_size, self.hidden_size))
+            self.rnns.append(
+                torch.nn.RNNCell(self.hidden_sizes[layer], self.hidden_sizes[layer + 1])
+            )
 
         # Create the linear layers
         self.lins = torch.nn.ModuleList([])
         if self.num_lin_layers == 1:
-            self.lins.append(torch.nn.Linear(self.hidden_size, 2))
+            self.lins.append(torch.nn.Linear(self.hidden_sizes[-1], 2))
         elif self.num_lin_layers > 1:
-            self.lins.append(torch.nn.Linear(self.hidden_size, self.linear_size))
+            self.lins.append(
+                torch.nn.Linear(self.hidden_sizes[-1], self.linear_sizes[0])
+            )
             for layer in range(self.num_lin_layers - 2):
-                self.lins.append(torch.nn.Linear(self.linear_size, self.linear_size))
-            self.lins.append(torch.nn.Linear(self.linear_size, 2))
+                self.lins.append(
+                    torch.nn.Linear(
+                        self.linear_sizes[layer], self.linear_sizes[layer + 1]
+                    )
+                )
+            self.lins.append(torch.nn.Linear(self.linear_sizes[-1], 2))
         self.dropout = torch.nn.Dropout(p=dropout)
 
         # takes care of dtype
         self.to(torch.double)
 
-    def _init_hidden(self, shape0: int, shape1: int):
+    def _init_hidden(self, shape0: int, hidden_shapes: int):
         return [
-            torch.zeros(shape0, shape1, dtype=torch.double).to(self.device)
-            for layer in range(self.num_rnn_layers)
+            torch.zeros(shape0, hidden_shape, dtype=torch.double).to(self.device)
+            for hidden_shape in hidden_shapes
         ]
 
     def forward(self, input_t):
         # h_ts[i].shape = [features, hidden_size]
-        h_ts = self._init_hidden(input_t.shape[0], self.hidden_size)
+        h_ts = self._init_hidden(input_t.shape[0], self.hidden_sizes)
 
         for input in input_t.split(1, dim=2):
             input = input.squeeze(2)
@@ -74,10 +82,9 @@ class Model(pl.LightningModule):
 
             # linear layers
             output = torch.relu(self.lins[0](h_ts[-1]))
-            for i in range(1, self.num_lin_layers):
-                output = self.lins[i](output)
-                if i < self.num_lin_layers - 1:
-                    output = torch.relu(output)
+            for i in range(1, self.num_lin_layers - 1):
+                output = torch.relu(self.lins[i](output))
+            output = self.lins[-1](output)
 
         # just take the last output
         return output
@@ -128,16 +135,12 @@ class Model(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         inputs, targets = batch
-        predicted = self(inputs)
-        loss = torch.nn.functional.cross_entropy(predicted, targets)
+        predicted = self(inputs[0])
+        loss = torch.nn.functional.cross_entropy(predicted, targets[0])
         accuracy = torchmetrics.functional.accuracy(
-            predicted.softmax(dim=1), targets, task="binary"
+            predicted.softmax(dim=1), targets[0], task="binary"
         )
-
-        print()
-        print(f"{batch_idx}: loss= {loss:.2e}, accuracy= {accuracy:.2f}")
-        print()
-        return loss
+        return {"loss": loss, "accuracy": accuracy}
 
 
 class Data(pl.LightningDataModule):
@@ -146,7 +149,8 @@ class Data(pl.LightningDataModule):
         print_split: bool,
         plot_data: bool,
         params: dict,
-        K_upper_lim: float,
+        binary: bool,
+        K_upper_lim: float = None,
         train_size: float = 1.0,
         map_object=None,
         data_path=None,
@@ -155,19 +159,20 @@ class Data(pl.LightningDataModule):
         if map_object is not None:
             map_object.generate_data(lyapunov=True)
             thetas, ps = map_object.retrieve_data()
-            spectrum = map_object.retrieve_spectrum()
+            self.spectrum = map_object.retrieve_spectrum(binary=binary)
             if plot_data:
                 map_object.plot_data()
 
         else:
-            assert K_upper_lim <= 2.0
-            thetas, ps, spectrum = self._load_data(data_path, K_upper_lim)
+            thetas, ps, self.spectrum = self._load_data(data_path, K_upper_lim)
             steps = params.get("steps")
             # too many steps in saved data
             thetas = thetas[:steps]
             ps = ps[:steps]
+            if binary:
+                self.spectrum = (self.spectrum > 1e-4).astype(int)
             if plot_data:
-                self.plot_data(thetas, ps, spectrum)
+                self.plot_data(thetas, ps, self.spectrum)
 
         self.batch_size = params.get("batch_size")
         self.shuffle_paths = params.get("shuffle_paths")
@@ -176,13 +181,13 @@ class Data(pl.LightningDataModule):
         self.rng = np.random.default_rng(seed=42)
 
         # data.shape = [init_points, 2, steps]
-        data = np.stack([thetas.T, ps.T], axis=1)
+        self.data = np.stack([thetas.T, ps.T], axis=1)
 
         # first shuffle trajectories and then make sequences
         if self.shuffle_paths:
-            self.rng.shuffle(data)
+            self.rng.shuffle(self.data)
 
-        xy_pairs = self._make_input_output_pairs(data, spectrum)
+        xy_pairs = self._make_input_output_pairs(self.data, self.spectrum)
 
         t = int(len(xy_pairs) * train_size)
         self.train_data = xy_pairs[:t]
@@ -190,7 +195,7 @@ class Data(pl.LightningDataModule):
 
         if print_split:
             print()
-            print(f"Data shape: {data.shape}")
+            print(f"Data shape: {self.data.shape}")
             print(
                 f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {1})"
             )
@@ -221,10 +226,11 @@ class Data(pl.LightningDataModule):
         )
 
     def predict_dataloader(self):
-        return DataLoader(
-            Dataset(self.train_data),
-            batch_size=1024,
-        )
+        self.spectrum = [
+            [1 - self.spectrum[point], self.spectrum[point]]
+            for point in range(self.data.shape[0])
+        ]
+        return DataLoader(Dataset([(self.data, self.spectrum)]))
 
     def _load_data(self, path, K_upper_lim):
         directories = self._get_subdirectories(path, K_upper_lim)
@@ -370,25 +376,36 @@ class Gridsearch:
             if self.num_vertices > 0:
                 params = self._update_params(params)
                 self.grid_step += 1
+            if params.get("gridsearch") is not None:
+                del params["gridsearch"]
 
         return params
 
     def _update_params(self, params):
-        gridsearch = params.pop("gridsearch")
-        for key, space in gridsearch.items():
-            if isinstance(space, dict):
-                dtype = space["dtype"]
-                if dtype == "int":
-                    lower = space["lower"]
-                    upper = space["upper"]
-                    params[key] = np.random.randint(lower, upper + 1)
-                elif dtype == "bool":
-                    params[key] = np.random.choice([True, False])
-                elif dtype == "float":
-                    lower = space["lower"]
-                    upper = space["upper"]
-                    params[key] = np.random.uniform(lower, upper)
+        rng = np.random.default_rng()
+        for key, space in params.get("gridsearch").items():
+            dtype = space.get("dtype")
+            if dtype == "int":
+                params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
+            elif dtype == "bool":
+                params[key] = rng.choice([True, False])
+            elif dtype == "float":
+                params[key] = rng.uniform(space["lower"], space["upper"])
             print(f"{key} = {params[key]}")
+
+            if "layers" in key:
+                num_layers = params[key]
+                space = space["layer_sizes"]
+                layer_type = space["layer_type"] + "_sizes"
+                params[layer_type] = []
+                for _ in range(num_layers):
+                    layer_size = rng.integers(space["lower"], space["upper"] + 1)
+                    params[layer_type].append(int(layer_size))
+                    if not space["varied"]:
+                        params[layer_type][-1] = params[layer_type][0]
+                if layer_type == "lin_sizes":
+                    params[layer_type] = params[layer_type][:-1]
+                print(f"{layer_type}: {params[layer_type]}")
 
         print("-" * 80)
         print(f"Gridsearch step: {self.grid_step} / {self.num_vertices}")

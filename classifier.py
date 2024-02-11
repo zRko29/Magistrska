@@ -7,6 +7,10 @@ warnings.filterwarnings(
     "ignore", ".*Consider increasing the value of the `num_workers` argument*"
 )
 
+import logging
+
+logging.getLogger("pytorch_lightning").setLevel(0)
+
 from utils.mapping_helper import StandardMap
 from utils.classification_helper import Model, Data
 
@@ -34,25 +38,33 @@ if __name__ == "__main__":
 
         params.update({"init_points": 30, "steps": 60, "sampling": "random"})
         maps = [
-            StandardMap(K=1.5, params=params, seed=42),
-            StandardMap(K=0.2, params=params, seed=41),
-            StandardMap(K=1.0, params=params, seed=40),
-            StandardMap(K=1.9, params=params, seed=39),
+            StandardMap(K=0.1, params=params, seed=42),
+            StandardMap(K=0.1, params=params, seed=41),
+            StandardMap(K=0.1, params=params, seed=40),
+            StandardMap(K=0.1, params=params, seed=39),
         ]
 
-        for map in maps:
+        for idx, map in enumerate(maps):
             datamodule = Data(
                 map_object=map,
                 train_size=1.0,
                 plot_data=False,
                 print_split=False,
+                binary=True,
                 params=params,
             )
 
             model_path = os.path.join(log_path, f"model.ckpt")
             model = Model(**params).load_from_checkpoint(model_path)
 
-            trainer = pl.Trainer()
-            trainer.predict(model=model, dataloaders=datamodule)
+            trainer = pl.Trainer(
+                enable_progress_bar=False,
+                logger=False,
+            )
+            predictions = trainer.predict(model=model, dataloaders=datamodule)[0]
+            loss = predictions["loss"]
+            accuracy = predictions["accuracy"]
 
-            print("-" * 30)
+            print(f"{idx}: loss= {loss:.2e}, accuracy= {accuracy:.2f}")
+
+        print("-" * 30)

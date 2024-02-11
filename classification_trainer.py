@@ -10,7 +10,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from lightning.pytorch.profilers import SimpleProfiler
 import os
 
-from utils.mapping_helper import StandardMap
 from utils.classification_helper import Model, Data, Gridsearch, CustomCallback
 
 import warnings
@@ -23,6 +22,10 @@ warnings.filterwarnings(
     ".*The number of training batches*",
 )
 
+import logging
+
+logging.getLogger("pytorch_lightning").setLevel(0)
+
 ROOT_DIR = os.getcwd()
 CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 
@@ -30,7 +33,7 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
-    name = "classification_4"
+    name = "classification_1"
     num_vertices = 1
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
@@ -38,15 +41,14 @@ if __name__ == "__main__":
     for _ in range(num_vertices):
         params = gridsearch.get_params()
 
-        map = StandardMap(seed=42, params=params)
-
         datamodule = Data(
             data_path="data",
-            train_size=0.8,
-            plot_data=True,
-            print_split=True,
-            params=params,
             K_upper_lim=params.get("K_upper_lim"),
+            train_size=0.8,
+            plot_data=False,
+            print_split=False,
+            binary=False,
+            params=params,
         )
 
         model = Model(**params)
@@ -98,7 +100,7 @@ if __name__ == "__main__":
             logger=tb_logger,
             callbacks=[
                 checkpoint_callback,
-                early_stopping_callback,
+                # early_stopping_callback,
                 progress_bar_callback,
                 # gradient_avg_callback,
                 CustomCallback(),

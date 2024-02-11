@@ -76,13 +76,13 @@ class Model(pl.LightningModule):
             h_ts[0] = self.dropout(h_ts[0])
             for i in range(1, self.num_rnn_layers):
                 h_ts[i] = self.rnns[i](h_ts[i - 1], h_ts[i])
-                if i < self.num_rnn_layers - 1:
-                    h_ts[i] = self.dropout(h_ts[i])
+                h_ts[i] = self.dropout(h_ts[i])
 
             # linear layers
-            output = self.lins[0](h_ts[-1])
-            for i in range(1, self.num_lin_layers):
-                output = self.lins[i](output)
+            output = torch.relu(self.lins[0](h_ts[-1]))
+            for i in range(1, self.num_lin_layers - 1):
+                output = torch.relu(self.lins[i](output))
+            output = self.lins[-1](output)
 
             outputs.append(output)
 
@@ -122,21 +122,35 @@ class Model(pl.LightningModule):
         self.validation_step_outputs.append(loss)
         return loss
 
+    def predict_step(self, batch, batch_idx):
+        predicted = batch[:, :, : self.regression_seed]
+        targets = batch[:, :, self.regression_seed :]
+
+        for i in range(batch.shape[2] - self.regression_seed):
+            predicted_value = self(predicted[:, :, i:])[:, :, -1:]
+            predicted = torch.cat([predicted, predicted_value], axis=2)
+
+        predicted = predicted[:, :, self.regression_seed :]
+        loss = torch.nn.functional.mse_loss(predicted, targets)
+
+        return {"predicted": predicted, "targets": targets, "loss": loss}
+
 
 class Data(pl.LightningDataModule):
     def __init__(
         self,
         map_object,
         train_size: float,
-        if_plot_data: bool,
-        if_plot_data_split: bool,
+        plot_data: bool,
+        plot_data_split: bool,
+        print_split: bool,
         params: dict,
     ):
         super(Data, self).__init__()
         map_object.generate_data()
         thetas, ps = map_object.retrieve_data()
 
-        if if_plot_data:
+        if plot_data:
             map_object.plot_data()
 
         self.seq_len = params.get("seq_length")
@@ -149,33 +163,34 @@ class Data(pl.LightningDataModule):
         self.rng = np.random.default_rng(seed=42)
 
         # data.shape = [init_points, 2, steps]
-        data = np.stack([thetas.T, ps.T], axis=1)
+        self.data = np.stack([thetas.T, ps.T], axis=1)
 
         # first shuffle trajectories and then make sequences
         if self.shuffle_paths:
-            self.rng.shuffle(data)
+            self.rng.shuffle(self.data)
 
         # many-to-many or many-to-one types of sequences
-        sequences = self._make_sequences(data, type=sequence_type)
+        sequences = self._make_sequences(self.data, type=sequence_type)
 
-        if if_plot_data_split:
+        if plot_data_split:
             self.plot_data_split(sequences, train_size)
 
-        print(f"Sequences shape: {sequences.shape}")
-        xy_pairs = self._make_xy_pairs(sequences, type=sequence_type)
+        xy_pairs = self._make_input_output_pairs(sequences, type=sequence_type)
 
         t = int(len(xy_pairs) * train_size)
         self.train_data = xy_pairs[:t]
         self.val_data = xy_pairs[t:]
 
-        print(
-            f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {len(self.train_data[0][1][0])})"
-        )
-        if train_size < 1.0:
+        if print_split:
+            print(f"Sequences shape: {sequences.shape}")
             print(
-                f"Validation data shape: {len(self.val_data)} pairs of shape ({len(self.val_data[0][0][0])}, {len(self.val_data[0][1][0])})"
+                f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {len(self.train_data[0][1][0])})"
             )
-        print()
+            if train_size < 1.0:
+                print(
+                    f"Validation data shape: {len(self.val_data)} pairs of shape ({len(self.val_data[0][0][0])}, {len(self.val_data[0][1][0])})"
+                )
+            print()
 
     def _make_sequences(self, data, type: str):
         init_points, features, steps = data.shape
@@ -191,19 +206,22 @@ class Data(pl.LightningDataModule):
                 sequences = np.concatenate((sequences), axis=0)
                 self.rng.shuffle(sequences)
         elif type == "many-to-one":
-            # sequences.shape = [init_points * (steps - seq_len), features, seq_len + 1]
-            sequences = np.lib.stride_tricks.sliding_window_view(
-                data, (1, features, self.seq_len + 1)
-            )
-            sequences = sequences.reshape(
-                init_points * (steps - self.seq_len), features, self.seq_len + 1
-            )
+            if self.seq_len < steps:
+                # sequences.shape = [init_points * (steps - seq_len), features, seq_len + 1]
+                sequences = np.lib.stride_tricks.sliding_window_view(
+                    data, (1, features, self.seq_len + 1)
+                )
+                sequences = sequences.reshape(
+                    init_points * (steps - self.seq_len), features, self.seq_len + 1
+                )
+            elif self.seq_len == steps:
+                sequences = data
         else:
             raise ValueError("Invalid type.")
 
         return sequences
 
-    def _make_xy_pairs(self, sequences, type: str):
+    def _make_input_output_pairs(self, sequences, type: str):
         if type == "many-to-many":
             return [(seq[:, :-1], seq[:, 1:]) for seq in sequences]
         elif type == "many-to-one":
@@ -212,7 +230,6 @@ class Data(pl.LightningDataModule):
             raise ValueError("Invalid type.")
 
     def train_dataloader(self):
-        print("--->", self.batch_size)
         return DataLoader(
             Dataset(self.train_data),
             batch_size=self.batch_size,
@@ -225,6 +242,9 @@ class Data(pl.LightningDataModule):
             batch_size=2 * self.batch_size,
             shuffle=False,
         )
+
+    def predict_dataloader(self):
+        return torch.tensor(self.data).to(torch.double).unsqueeze(0)
 
     def plot_data_split(self, dataset, train_ratio):
         train_size = int(len(dataset) * train_ratio)
@@ -306,9 +326,6 @@ class CustomCallback(pl.Callback):
         train_time = time.time() - self.t_start
         print(f"Training time: {timedelta(seconds=train_time)}")
         print()
-        # trainer.logger.experiment.add_scalar(
-        #     "train_time", train_time, trainer.current_epoch
-        # )
 
 
 class Dataset(torch.utils.data.Dataset):
