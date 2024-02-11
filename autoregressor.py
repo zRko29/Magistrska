@@ -2,7 +2,7 @@ import os, yaml
 
 import pytorch_lightning as pl
 from utils.mapping_helper import StandardMap
-from utils.autoregression_helper import Model, Data, plot_2d
+from utils.helper import Model, Data, plot_2d
 
 import warnings
 
@@ -16,7 +16,7 @@ logging.getLogger("pytorch_lightning").setLevel(0)
 
 if __name__ == "__main__":
     version = None
-    name = "overfitting_9"
+    name = "overfitting_1"
 
     directory_path = f"logs/{name}"
 
