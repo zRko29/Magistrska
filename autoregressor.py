@@ -61,6 +61,7 @@ if __name__ == "__main__":
             )
 
             trainer = pl.Trainer(
+                precision=params["precision"],
                 enable_progress_bar=False,
                 logger=False,
             )

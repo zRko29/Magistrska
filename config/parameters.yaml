@@ -15,6 +15,7 @@ seq_length: 5
 loss: mse
 optimizer: adam
 lr: 0.0003
+precision: 32-true
 
 shuffle_paths: True # makes sense for linear sampling
 shuffle_batches: False # shuffle batches between epochs
@@ -23,20 +24,21 @@ shuffle_sequences: False # shuffle sequences
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
 gridsearch:
-  batch_size: { lower: 150, upper: 230, dtype: int }
-  seq_length: { lower: 25, upper: 35, dtype: int }
-  lr: { lower: 0.0006, upper: 0.002, dtype: float }
+  batch_size: { lower: 150, upper: 230, type: int }
+  seq_length: { lower: 25, upper: 35, type: int }
+  lr: { lower: 0.0006, upper: 0.002, type: float }
+  precision: { list: [32-true, 64-true], type: choice }
   num_rnn_layers:
     {
       lower: 2,
       upper: 4,
-      dtype: int,
+      type: int,
       layer_sizes: { lower: 120, upper: 210, layer_type: rnn, varied: True },
     }
   num_lin_layers:
     {
       lower: 2,
       upper: 4,
-      dtype: int,
+      type: int,
       layer_sizes: { lower: 20, upper: 80, layer_type: lin, varied: True },
     }
