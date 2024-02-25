@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
     name = "overfitting_1"
-    num_vertices = 1
+    num_vertices = 3
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
         datamodule = Data(
             map_object=map,
-            train_size=1.0,
+            train_size=0.8,
             plot_data=False,
             plot_data_split=False,
             print_split=False,
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         print()
 
         checkpoint_callback = callbacks.ModelCheckpoint(
-            monitor="loss/train",  # careful
+            monitor="loss/val",  # careful
             mode="min",
             dirpath=save_path,
             filename="model",
@@ -79,7 +79,7 @@ if __name__ == "__main__":
             monitor="loss/val",
             mode="min",
             min_delta=1e-7,
-            patience=15,
+            patience=30,
             verbose=False,
         )
 
