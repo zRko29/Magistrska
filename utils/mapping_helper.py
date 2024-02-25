@@ -30,7 +30,6 @@ class StandardMap:
         return self.theta_values, self.p_values
 
     def generate_data(self):
-        n = self.n if self.n is not None else n
         theta, p = self._get_initial_points()
 
         self.theta_values = np.empty((self.steps, theta.shape[0]))
