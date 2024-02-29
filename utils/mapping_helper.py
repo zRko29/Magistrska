@@ -32,17 +32,22 @@ class StandardMap:
     def generate_data(self):
         theta, p = self._get_initial_points()
 
-        self.theta_values = np.empty((self.steps, theta.shape[0]))
-        self.p_values = np.empty((self.steps, p.shape[0]))
+        if not isinstance(self.K, list):
+            K_list = [self.K]
+        else:
+            K_list = np.linspace(self.K[0], self.K[1], self.K[2])
 
-        for step in range(self.steps):
-            theta = np.mod(theta + p, 1)
-            p = np.mod(p + self.K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
-            self.theta_values[step] = theta
-            self.p_values[step] = p
+        self.theta_values = np.empty((self.steps, theta.shape[0] * len(K_list)))
+        self.p_values = np.empty((self.steps, p.shape[0] * len(K_list)))
 
-        self.theta_values = self.theta_values[: self.steps]
-        self.p_values = self.p_values[: self.steps]
+        for i, K in enumerate(K_list):
+            for step in range(self.steps):
+                theta = np.mod(theta + p, 1)
+                p = np.mod(p + K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
+                self.theta_values[
+                    step, i * theta.shape[0] : (i + 1) * theta.shape[0]
+                ] = theta
+                self.p_values[step, i * p.shape[0] : (i + 1) * p.shape[0]] = p
 
     def _get_initial_points(self):
         params = [0.01, 0.99, self.init_points]
@@ -77,6 +82,8 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    map = StandardMap(init_points=50, steps=1000, sampling="grid", K=1.0, seed=42)
+    map = StandardMap(
+        init_points=20, steps=100, sampling="random", K=[0.5, 1.0, 4], seed=42
+    )
     map.generate_data()
     map.plot_data()
