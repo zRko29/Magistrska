@@ -32,9 +32,11 @@ class StandardMap:
     def generate_data(self):
         theta, p = self._get_initial_points()
 
-        if not isinstance(self.K, list) or len(self.K) == 1:
+        if not isinstance(self.K, list):
             K_list = [self.K]
-        else:
+        elif isinstance(self.K, list) and len(self.K) == 1:
+            K_list = self.K
+        elif isinstance(self.K, list) and len(self.K) == 3:
             K_list = np.linspace(self.K[0], self.K[1], self.K[2])
 
         self.theta_values = np.empty((self.steps, theta.shape[0] * len(K_list)))
