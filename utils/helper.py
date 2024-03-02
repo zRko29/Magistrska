@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import time
 from datetime import timedelta
 import os, yaml
+from typing import Tuple
+
+from utils.mapping_helper import StandardMap
 
 
 class Model(pl.LightningModule):
@@ -17,14 +20,14 @@ class Model(pl.LightningModule):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
-        self.hidden_sizes = params.get("rnn_sizes")
-        self.linear_sizes = params.get("lin_sizes")
-        self.num_rnn_layers = params.get("num_rnn_layers")
-        self.num_lin_layers = params.get("num_lin_layers")
-        self.sequence_type = params.get("sequence_type")
-        dropout = params.get("dropout")
-        self.lr = params.get("lr")
-        self.optimizer = params.get("optimizer")
+        self.hidden_sizes: list[int] = params.get("rnn_sizes")
+        self.linear_sizes: list[int] = params.get("lin_sizes")
+        self.num_rnn_layers: int = params.get("num_rnn_layers")
+        self.num_lin_layers: int = params.get("num_lin_layers")
+        self.sequence_type: str = params.get("sequence_type")
+        dropout: float = params.get("dropout")
+        self.lr: float = params.get("lr")
+        self.optimizer: str = params.get("optimizer")
 
         self.training_step_outputs = []
         self.validation_step_outputs = []
@@ -57,13 +60,13 @@ class Model(pl.LightningModule):
         # takes care of dtype
         self.to(torch.double)
 
-    def _init_hidden(self, shape0: int, hidden_shapes: int):
+    def _init_hidden(self, shape0: int, hidden_shapes: int) -> list[torch.Tensor]:
         return [
             torch.zeros(shape0, hidden_shape, dtype=torch.double).to(self.device)
             for hidden_shape in hidden_shapes
         ]
 
-    def forward(self, input_t):
+    def forward(self, input_t: torch.Tensor) -> torch.Tensor:
         outputs = []
         # h_ts[i].shape = [features, hidden_sizes]
         h_ts = self._init_hidden(input_t.shape[0], self.hidden_sizes)
@@ -88,7 +91,7 @@ class Model(pl.LightningModule):
 
         return torch.stack(outputs, dim=2)
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> optim.Optimizer:
         if self.optimizer == "adam":
             return optim.Adam(self.parameters(), lr=self.lr, amsgrad=True)
         elif self.optimizer == "rmsprop":
@@ -96,8 +99,11 @@ class Model(pl.LightningModule):
         elif self.optimizer == "sgd":
             return optim.SGD(self.parameters(), lr=self.lr, momentum=0.9, nesterov=True)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
+        inputs: torch.Tensor
+        targets: torch.Tensor
         inputs, targets = batch
+
         predicted = self(inputs)
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
@@ -112,8 +118,11 @@ class Model(pl.LightningModule):
         self.training_step_outputs.append(loss)
         return loss
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch, batch_idx) -> torch.Tensor:
+        inputs: torch.Tensor
+        targets: torch.Tensor
         inputs, targets = batch
+
         predicted = self(inputs)
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
@@ -122,9 +131,9 @@ class Model(pl.LightningModule):
         self.validation_step_outputs.append(loss)
         return loss
 
-    def predict_step(self, batch, batch_idx):
-        predicted = batch[:, :, : self.regression_seed]
-        targets = batch[:, :, self.regression_seed :]
+    def predict_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
+        predicted: torch.Tensor = batch[:, :, : self.regression_seed]
+        targets: torch.Tensor = batch[:, :, self.regression_seed :]
 
         for i in range(batch.shape[2] - self.regression_seed):
             predicted_value = self(predicted[:, :, i:])[:, :, -1:]
@@ -139,28 +148,31 @@ class Model(pl.LightningModule):
 class Data(pl.LightningDataModule):
     def __init__(
         self,
-        map_object,
+        map_object: StandardMap,
         train_size: float,
         plot_data: bool,
         plot_data_split: bool,
         print_split: bool,
         params: dict,
-    ):
+    ) -> None:
         super(Data, self).__init__()
         map_object.generate_data()
+
+        thetas: np.ndarray
+        ps: np.ndarray
         thetas, ps = map_object.retrieve_data()
 
         if plot_data:
             map_object.plot_data()
 
-        self.seq_len = params.get("seq_length")
-        self.batch_size = params.get("batch_size")
-        self.shuffle_paths = params.get("shuffle_paths")
-        self.shuffle_batches = params.get("shuffle_batches")
-        self.shuffle_sequences = params.get("shuffle_sequences")
-        sequence_type = params.get("sequence_type")
+        self.seq_len: int = params.get("seq_length")
+        self.batch_size: int = params.get("batch_size")
+        self.shuffle_paths: bool = params.get("shuffle_paths")
+        self.shuffle_batches: bool = params.get("shuffle_batches")
+        self.shuffle_sequences: bool = params.get("shuffle_sequences")
+        sequence_type: str = params.get("sequence_type")
 
-        self.rng = np.random.default_rng(seed=42)
+        self.rng: np.random.Generator = np.random.default_rng(seed=42)
 
         # data.shape = [init_points, 2, steps]
         self.data = np.stack([thetas.T, ps.T], axis=1)
@@ -192,8 +204,12 @@ class Data(pl.LightningDataModule):
                 )
             print()
 
-    def _make_sequences(self, data, type: str):
+    def _make_sequences(self, data: np.ndarray, type: str) -> np.ndarray:
+        init_points: int
+        features: int
+        steps: int
         init_points, features, steps = data.shape
+
         if type == "many-to-many":
             # sequences.shape = [init_points*(steps//seq_len), 2, seq_len]
             sequences = np.split(data, steps // self.seq_len, axis=2)
@@ -221,7 +237,7 @@ class Data(pl.LightningDataModule):
 
         return sequences
 
-    def _make_input_output_pairs(self, sequences, type: str):
+    def _make_input_output_pairs(self, sequences, type: str) -> list[tuple[np.ndarray]]:
         if type == "many-to-many":
             return [(seq[:, :-1], seq[:, 1:]) for seq in sequences]
         elif type == "many-to-one":
@@ -229,24 +245,24 @@ class Data(pl.LightningDataModule):
         else:
             raise ValueError("Invalid type.")
 
-    def train_dataloader(self):
+    def train_dataloader(self) -> DataLoader:
         return DataLoader(
             Dataset(self.train_data),
             batch_size=self.batch_size,
             shuffle=self.shuffle_batches,
         )
 
-    def val_dataloader(self):
+    def val_dataloader(self) -> DataLoader:
         return DataLoader(
             Dataset(self.val_data),
             batch_size=2 * self.batch_size,
             shuffle=False,
         )
 
-    def predict_dataloader(self):
+    def predict_dataloader(self) -> torch.Tensor:
         return torch.tensor(self.data).to(torch.double).unsqueeze(0)
 
-    def plot_data_split(self, dataset, train_ratio):
+    def plot_data_split(self, dataset: torch.Tensor, train_ratio: float) -> None:
         train_size = int(len(dataset) * train_ratio)
         train_data = dataset[:train_size]
         val_data = dataset[train_size:]
@@ -329,13 +345,13 @@ class CustomCallback(pl.Callback):
 
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, data: np.ndarray):
+        self.data: np.ndarray = data
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         x, y = self.data[idx]
         x = torch.tensor(x).to(torch.double)
         y = torch.tensor(y).to(torch.double)
@@ -343,14 +359,14 @@ class Dataset(torch.utils.data.Dataset):
 
 
 class Gridsearch:
-    def __init__(self, path, num_vertices):
-        self.path = path
-        self.grid_step = 1
-        self.num_vertices = num_vertices
+    def __init__(self, path: str, num_vertices: int) -> None:
+        self.path: str = path
+        self.grid_step: int = 1
+        self.num_vertices: int = num_vertices
 
-    def get_params(self):
+    def get_params(self) -> dict:
         with open(os.path.join(self.path, "parameters.yaml"), "r") as file:
-            params = yaml.safe_load(file)
+            params: dict = yaml.safe_load(file)
             if self.num_vertices > 0:
                 params = self._update_params(params)
                 self.grid_step += 1
@@ -359,8 +375,10 @@ class Gridsearch:
 
         return params
 
-    def _update_params(self, params):
-        rng = np.random.default_rng()
+    def _update_params(self, params) -> dict:
+        # don't use any seed
+        rng: np.random.Generator = np.random.default_rng()
+
         for key, space in params.get("gridsearch").items():
             type = space.get("type")
             if type == "int":
@@ -398,7 +416,13 @@ class Gridsearch:
         return params
 
 
-def plot_2d(predicted, targets, show_plot=True, save_path=None, title=None):
+def plot_2d(
+    predicted: torch.Tensor,
+    targets: torch.Tensor,
+    show_plot: bool = True,
+    save_path: str = None,
+    title: str = None,
+) -> None:
     predicted = predicted.detach().numpy()
     targets = targets.detach().numpy()
     plt.figure(figsize=(6, 4))

@@ -33,41 +33,45 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
-    version = None
-    name = "overfitting_1"
-    num_vertices = 3
+    version: str = None
+    name: str = "overfitting_K=0.1"
+    num_vertices: int = 10
 
-    gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
+    gridsearch: Gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
     for _ in range(num_vertices):
-        params = gridsearch.get_params()
+        params: dict = gridsearch.get_params()
 
-        map = StandardMap(seed=42, params=params)
+        map: StandardMap = StandardMap(seed=42, params=params)
 
-        datamodule = Data(
+        datamodule: Data = Data(
             map_object=map,
-            train_size=0.8,
+            train_size=1.0,
             plot_data=False,
             plot_data_split=False,
             print_split=False,
             params=params,
         )
 
-        model = Model(**params)
+        model: Model = Model(**params)
 
-        logs_path = "logs"
+        logs_path: str = "logs"
 
         # **************** callbacks ****************
 
-        tb_logger = TensorBoardLogger(logs_path, name=name, default_hp_metric=False)
+        tb_logger: TensorBoardLogger = TensorBoardLogger(
+            logs_path, name=name, default_hp_metric=False
+        )
 
-        save_path = os.path.join(logs_path, name, "version_" + str(tb_logger.version))
+        save_path: str = os.path.join(
+            logs_path, name, "version_" + str(tb_logger.version)
+        )
 
         print(f"Running version_{tb_logger.version}")
         print()
 
         checkpoint_callback = callbacks.ModelCheckpoint(
-            monitor="loss/val",  # careful
+            monitor="loss/train",  # careful
             mode="min",
             dirpath=save_path,
             filename="model",
@@ -76,10 +80,10 @@ if __name__ == "__main__":
         )
 
         early_stopping_callback = callbacks.EarlyStopping(
-            monitor="loss/val",
+            monitor="loss/train",
             mode="min",
-            min_delta=1e-7,
-            patience=30,
+            min_delta=1e-8,
+            patience=500,
             verbose=False,
         )
 
@@ -101,7 +105,7 @@ if __name__ == "__main__":
             logger=tb_logger,
             callbacks=[
                 checkpoint_callback,
-                # early_stopping_callback,
+                early_stopping_callback,
                 progress_bar_callback,
                 # gradient_avg_callback,
                 CustomCallback(),

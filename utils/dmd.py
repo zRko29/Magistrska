@@ -4,7 +4,7 @@ from numpy import linalg as LA
 
 
 class DMD:
-    def __init__(self, data: np.ndarray | list):
+    def __init__(self, data: np.ndarray | list) -> None:
         if not isinstance(data, list):
             data = [data]
         self.len_of_data: int = len(data)
@@ -21,11 +21,11 @@ class DMD:
             self.X[i] = np.array(self.D[i][:-1]).T
             self.Y[i] = np.array(self.D[i][1:]).T
 
-    def _generate_dmd_results(self):
+    def _generate_dmd_results(self) -> None:
         self.res = self._dmd()
 
     # DMD classical version
-    def _dmd(self):
+    def _dmd(self) -> dict:
         results: dict = {}
 
         for i in range(self.len_of_data):
@@ -53,7 +53,7 @@ class DMD:
 
         return results
 
-    def plot_source_matrix(self, titles: list = None):
+    def plot_source_matrix(self, titles: list = None) -> None:
         fig, axs = plt.subplots(
             1, self.len_of_data, figsize=(self.len_of_data * 6, 6), sharey=True
         )
@@ -73,7 +73,7 @@ class DMD:
         plt.tight_layout()
         plt.show()
 
-    def plot_eigenvalues(self, titles: list = None):
+    def plot_eigenvalues(self, titles: list = None) -> None:
         fig, axs = plt.subplots(
             1, self.len_of_data, figsize=(self.len_of_data * 6, 6), sharey=True
         )
@@ -106,7 +106,7 @@ class DMD:
         plt.show()
 
     # plot abs. values, phase and spacing of phases distribution
-    def plot_abs_values(self, titles: list = None):
+    def plot_abs_values(self, titles: list = None) -> None:
         fig, axs = plt.subplots(
             1, self.len_of_data, figsize=(self.len_of_data * 10, 6), sharey=True
         )
