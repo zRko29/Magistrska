@@ -3,6 +3,7 @@ import os, yaml
 import pytorch_lightning as pl
 from utils.mapping_helper import StandardMap
 from utils.helper import Model, Data, plot_2d
+from utils.dmd import DMD
 
 import warnings
 
@@ -74,9 +75,15 @@ if __name__ == "__main__":
             plot_2d(
                 predicted,
                 targets,
-                show_plot=False,
+                show_plot=True,
                 save_path=os.path.join(log_path, input_suffix),
                 title=loss.item(),
             )
+
+            dmd = DMD([predicted, targets])
+            dmd.plot_source_matrix(titles=["Predicted", "Targets"])
+            dmd._generate_dmd_results()
+            dmd.plot_eigenvalues(titles=["Predicted", "Targets"])
+            dmd.plot_abs_values(titles=["Predicted", "Targets"])
 
         print("-" * 30)
