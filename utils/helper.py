@@ -288,8 +288,9 @@ class Data(pl.LightningDataModule):
 
 
 class CustomCallback(pl.Callback):
-    def __init__(self):
+    def __init__(self, print: bool):
         super(CustomCallback, self).__init__()
+        self.print = print
         self.min_train_loss = np.inf
         self.min_val_loss = np.inf
 
@@ -331,17 +332,19 @@ class CustomCallback(pl.Callback):
         pl_module.validation_step_outputs.clear()
 
     def on_fit_start(self, trainer, pl_module):
-        print()
-        print("Training started!")
-        print()
-        self.t_start = time.time()
+        if self.print:
+            print()
+            print("Training started!")
+            print()
+            self.t_start = time.time()
 
     def on_fit_end(self, trainer, pl_module):
-        print()
-        print("Training ended!")
-        train_time = time.time() - self.t_start
-        print(f"Training time: {timedelta(seconds=train_time)}")
-        print()
+        if self.print:
+            print()
+            print("Training ended!")
+            train_time = time.time() - self.t_start
+            print(f"Training time: {timedelta(seconds=train_time)}")
+            print()
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -364,14 +367,13 @@ class Gridsearch:
         self.grid_step: int = 1
         self.num_vertices: int = num_vertices
 
-    def get_params(self) -> dict:
-        with open(os.path.join(self.path, "parameters.yaml"), "r") as file:
+    def update_params(self) -> dict:
+        with open(self.path, "r") as file:
             params: dict = yaml.safe_load(file)
             if self.num_vertices > 0:
                 params = self._update_params(params)
                 self.grid_step += 1
-            if params.get("gridsearch") is not None:
-                del params["gridsearch"]
+                self.name = params.get("name")
 
         return params
 
@@ -379,7 +381,7 @@ class Gridsearch:
         # don't use any seed
         rng: np.random.Generator = np.random.default_rng()
 
-        for key, space in params.get("gridsearch").items():
+        for key, space in params.pop("gridsearch").items():
             type = space.get("type")
             if type == "int":
                 params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
@@ -393,7 +395,7 @@ class Gridsearch:
                 params[key] = choice
             elif type == "float":
                 params[key] = rng.uniform(space["lower"], space["upper"])
-            print(f"{key} = {params[key]}")
+            # print(f"{key} = {params[key]}")
 
             if "layers" in key:
                 num_layers = params[key]
@@ -407,11 +409,11 @@ class Gridsearch:
                         params[layer_type][-1] = params[layer_type][0]
                 if layer_type == "lin_sizes":
                     params[layer_type] = params[layer_type][:-1]
-                print(f"{layer_type}: {params[layer_type]}")
+                # print(f"{layer_type}: {params[layer_type]}")
 
-        print("-" * 80)
-        print(f"Gridsearch step: {self.grid_step} / {self.num_vertices}")
-        print()
+        # print("-" * 80)
+        # print(f"Gridsearch step: {self.grid_step} / {self.num_vertices}")
+        # print()
 
         return params
 

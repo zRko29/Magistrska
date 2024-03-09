@@ -1,6 +1,6 @@
 init_points: 40
-steps: 50 # ≤ 100
-K: 0.2 # ≤ 1.5
+steps: 45 # ≤ 100
+K: 0.1 # ≤ 1.5
 sampling: random
 
 hidden_size: 32
@@ -9,8 +9,8 @@ num_rnn_layers: 1
 num_lin_layers: 1
 dropout: 0.0 # doesn't seem necessary
 
-epochs: 6000
-batch_size: 64
+epochs: 20
+batch_size: 256
 seq_length: 5
 loss: mse
 optimizer: adam
@@ -23,22 +23,24 @@ shuffle_sequences: False # shuffle sequences
 
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
+name: logs/overfitting_K=0.6
+
 gridsearch:
   batch_size: { lower: 150, upper: 230, type: int }
-  seq_length: { lower: 25, upper: 35, type: int }
-  lr: { lower: 0.0006, upper: 0.002, type: float }
+  seq_length: { lower: 20, upper: 30, type: int }
+  lr: { lower: 0.0004, upper: 0.002, type: float }
   precision: { list: [32-true, 64-true], type: choice }
   num_rnn_layers:
     {
       lower: 2,
-      upper: 4,
+      upper: 5,
       type: int,
-      layer_sizes: { lower: 120, upper: 210, layer_type: rnn, varied: True },
+      layer_sizes: { lower: 120, upper: 210, layer_type: rnn, varied: False },
     }
   num_lin_layers:
     {
       lower: 2,
       upper: 4,
       type: int,
-      layer_sizes: { lower: 20, upper: 80, layer_type: lin, varied: True },
+      layer_sizes: { lower: 20, upper: 80, layer_type: lin, varied: False },
     }

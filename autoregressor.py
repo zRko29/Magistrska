@@ -11,13 +11,18 @@ import warnings
 warnings.filterwarnings(
     "ignore", ".*Consider increasing the value of the `num_workers` argument*"
 )
+warnings.filterwarnings(
+    "ignore",
+    ".*across ranks is zero. Please make sure this was your intention*",
+)
+
 
 import logging
 
 logging.getLogger("pytorch_lightning").setLevel(0)
 
 if __name__ == "__main__":
-    version: int = 7
+    version: int | None = 1
     name: str = "overfitting_K=0.1"
 
     directory_path: str = f"logs/{name}"
@@ -85,6 +90,6 @@ if __name__ == "__main__":
             dmd.plot_source_matrix(titles=["Predicted", "Targets"])
             dmd._generate_dmd_results()
             dmd.plot_eigenvalues(titles=["Predicted", "Targets"])
-            dmd.plot_abs_values(titles=["Predicted", "Targets"])
+            # dmd.plot_abs_values(titles=["Predicted", "Targets"])
 
         print("-" * 30)
