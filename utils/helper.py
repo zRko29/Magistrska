@@ -33,7 +33,7 @@ class Model(pl.LightningModule):
         lin_layer_size: int = params.get("lin_layer_size")
 
         self.hidden_sizes: list[int] = [rnn_layer_size] * self.num_rnn_layers
-        self.linear_sizes: list[int] = [lin_layer_size] * self.num_lin_layers
+        self.linear_sizes: list[int] = [lin_layer_size] * (self.num_lin_layers - 1)
         # ----------------------
 
         self.training_step_outputs = []
@@ -90,9 +90,8 @@ class Model(pl.LightningModule):
 
             # linear layers
             output = torch.relu(self.lins[0](h_ts[-1]))
-            for i in range(1, self.num_lin_layers - 1):
+            for i in range(1, self.num_lin_layers):
                 output = torch.relu(self.lins[i](output))
-            output = self.lins[-1](output)
 
             outputs.append(output)
 
