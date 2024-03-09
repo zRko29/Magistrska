@@ -29,7 +29,7 @@ import logging
 logging.getLogger("pytorch_lightning").setLevel(0)
 
 ROOT_DIR = os.getcwd()
-CONFIG_DIR = os.path.join(ROOT_DIR, "config", "test_parameters.yaml")
+CONFIG_DIR = os.path.join(ROOT_DIR, "config", "auto_parameters.yaml")
 
 
 if __name__ == "__main__":

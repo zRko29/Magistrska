@@ -20,14 +20,21 @@ class Model(pl.LightningModule):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
-        self.hidden_sizes: list[int] = params.get("rnn_sizes")
-        self.linear_sizes: list[int] = params.get("lin_sizes")
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
         self.sequence_type: str = params.get("sequence_type")
         dropout: float = params.get("dropout")
         self.lr: float = params.get("lr")
         self.optimizer: str = params.get("optimizer")
+
+        # ----------------------
+        # NOTE: This logic is kept so that variable layer sizes can be reimplemented in the future
+        rnn_layer_size: int = params.get("rnn_layer_size")
+        lin_layer_size: int = params.get("lin_layer_size")
+
+        self.hidden_sizes: list[int] = [rnn_layer_size] * self.num_rnn_layers
+        self.linear_sizes: list[int] = [lin_layer_size] * self.num_lin_layers
+        # ----------------------
 
         self.training_step_outputs = []
         self.validation_step_outputs = []
@@ -397,19 +404,20 @@ class Gridsearch:
                 params[key] = rng.uniform(space["lower"], space["upper"])
             # print(f"{key} = {params[key]}")
 
-            if "layers" in key:
-                num_layers = params[key]
-                space = space["layer_sizes"]
-                layer_type = space["layer_type"] + "_sizes"
-                params[layer_type] = []
-                for _ in range(num_layers):
-                    layer_size = rng.integers(space["lower"], space["upper"] + 1)
-                    params[layer_type].append(int(layer_size))
-                    if not space["varied"]:
-                        params[layer_type][-1] = params[layer_type][0]
-                if layer_type == "lin_sizes":
-                    params[layer_type] = params[layer_type][:-1]
-                # print(f"{layer_type}: {params[layer_type]}")
+        # to add variable layer size
+        # if "layers" in key:
+        #         num_layers = params[key]
+        #         space = space["layer_sizes"]
+        #         layer_type = space["layer_type"] + "_sizes"
+        #         params[layer_type] = []
+        #         for _ in range(num_layers):
+        #             layer_size = rng.integers(space["lower"], space["upper"] + 1)
+        #             params[layer_type].append(int(layer_size))
+        #             if not space["varied"]:
+        #                 params[layer_type][-1] = params[layer_type][0]
+        #         if layer_type == "lin_sizes":
+        #             params[layer_type] = params[layer_type][:-1]
+        # print(f"{layer_type}: {params[layer_type]}")
 
         # print("-" * 80)
         # print(f"Gridsearch step: {self.grid_step} / {self.num_vertices}")

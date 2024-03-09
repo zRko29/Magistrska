@@ -1,0 +1,33 @@
+K: 0.1
+batch_size: 256
+dropout: 0.0
+epochs: 2
+gridsearch:
+  batch_size: { lower: 170, type: int, upper: 200 }
+  lin_layer_size: { lower: 48, type: int, upper: 57 }
+  lr:
+    { lower: 0.0006229630757316919, type: float, upper: 0.0010595417406191732 }
+  num_lin_layers: { lower: 2, type: int, upper: 4 }
+  num_rnn_layers: { lower: 3, type: int, upper: 4 }
+  precision:
+    list: [32-true]
+    type: choice
+  rnn_layer_size: { lower: 172, type: int, upper: 195 }
+  seq_length: { lower: 20, type: int, upper: 30 }
+hidden_size: 32
+init_points: 40
+linear_size: 32
+loss: mse
+lr: 0.0003
+name: logs/overfitting_K=0.6
+num_lin_layers: 1
+num_rnn_layers: 1
+optimizer: adam
+precision: 32-true
+sampling: random
+seq_length: 5
+sequence_type: many-to-one
+shuffle_batches: false
+shuffle_paths: true
+shuffle_sequences: false
+steps: 45

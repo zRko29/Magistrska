@@ -72,10 +72,6 @@ def get_loss_and_params(dir: str) -> pd.DataFrame:
                     file_path = os.path.join(dir, directory, file)
                     parameter_dict = get_hparams_yaml(file_path)
 
-                    # temporary fix
-                    del parameter_dict["lin_sizes"]
-                    del parameter_dict["rnn_sizes"]
-
             if loss_value and parameter_dict:
                 all_loss_hyperparams.append({**loss_value, **parameter_dict})
 
@@ -99,7 +95,7 @@ def input_value(param: str, value: str, include: bool = False):
 
 
 def compute_parameter_intervals(
-    results: pd.DataFrame, params_dir: str, threshold: float, min_n_good_values: int
+    results: pd.DataFrame, params_dir: str, max_loss: float, min_n_good_values: int
 ) -> Dict[str, Tuple[float, float]]:
     gridsearch_params = get_parameters_yaml(params_dir)["gridsearch"]
 
@@ -118,7 +114,7 @@ def compute_parameter_intervals(
 
     # don't filter before because a parmeter could have the same value for all "good" rows
     # don't filter after because you wouldn't get optimal intervals
-    results = results[results["best_loss"] < threshold]
+    results = results[results["best_loss"] < max_loss]
 
     if len(results) < min_n_good_values:
         return None
@@ -205,7 +201,7 @@ def update_yaml_file(
 
             yaml_params["gridsearch"] = gridsearch_dict
 
-            save_yaml(yaml_params, "config/test_parameters.yaml")
+            save_yaml(yaml_params, "config/auto_parameters.yaml")
 
 
 def find_new_path(file_dir: str) -> str:
@@ -224,12 +220,12 @@ def find_new_path(file_dir: str) -> str:
 
 
 if __name__ == "__main__":
-    params_dir = "config/test_parameters.yaml"
+    params_dir = "config/auto_parameters.yaml"
     events_dir = get_parameters_yaml(params_dir)["name"]
 
     loss_and_params = get_loss_and_params(events_dir)
     parameters = compute_parameter_intervals(
-        loss_and_params, params_dir, threshold=1, min_n_good_values=1
+        loss_and_params, params_dir, max_loss=1, min_n_good_values=6
     )
     # print_parameter_intervals(parameters)
 
