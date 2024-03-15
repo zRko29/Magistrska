@@ -28,14 +28,13 @@ import logging
 
 logging.getLogger("pytorch_lightning").setLevel(0)
 
-ROOT_DIR = os.getcwd()
-CONFIG_DIR = os.path.join(ROOT_DIR, "config", "auto_parameters.yaml")
+CONFIG_DIR = os.path.join("config", "auto_parameters.yaml")
 
 
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version: str = None
-    num_vertices: int = 1
+    num_vertices: int = 2
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
@@ -84,13 +83,13 @@ if __name__ == "__main__":
             monitor="loss/train",
             mode="min",
             min_delta=1e-8,
-            patience=500,
+            patience=350,
             verbose=False,
         )
 
         gradient_avg_callback = pl.callbacks.StochasticWeightAveraging(swa_lrs=1e-3)
 
-        progress_bar_callback = pl.callbacks.TQDMProgressBar(refresh_rate=10)
+        # progress_bar_callback = pl.callbacks.TQDMProgressBar(refresh_rate=20)
 
         # **************** trainer ****************
 
