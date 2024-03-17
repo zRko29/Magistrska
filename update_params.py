@@ -1,25 +1,23 @@
 import yaml
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 import os
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-from typing import List
-import re
-
+from math import ceil
 import pandas as pd
+from argparse import Namespace, ArgumentParser
 
 INPUT_MAPPING = {"y": True, "n": False, "": False}
 TYPES_LIST = ["float", "int", "choice"]
 
 
 class Parameter:
-    def __init__(self, name: str, type: str):
+    def __init__(self, name: str, type: str) -> None:
         self.name = name
         self.type = type
 
         if self.type in ["float", "int"]:
             self.min = float("inf")
             self.max = -float("inf")
-            self.mean = 0
 
         elif self.type == "choice":
             self.value_counts = {}
@@ -36,21 +34,13 @@ def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
         yaml.safe_dump(file, f, default_flow_style=None, default_style=None)
 
 
-def get_parameters_yaml(param_file_path: str) -> dict[str | float | int]:
-    return read_yaml(param_file_path)
-
-
-def get_hparams_yaml(param_file_path: str) -> dict[str | float | int]:
-    return read_yaml(param_file_path)
-
-
 def read_events_file(events_file_path: str) -> EventAccumulator:
     event_acc = EventAccumulator(events_file_path)
     event_acc.Reload()
     return event_acc
 
 
-def get_value_from_event_file(events_file_path: str) -> str | float | int:
+def extract_best_loss_from_event_file(events_file_path: str) -> str | float | int:
     event_values = read_events_file(events_file_path)
     for tag in event_values.Tags()["scalars"]:
         if tag == "metrics/min_train_loss":
@@ -66,11 +56,11 @@ def get_loss_and_params(dir: str) -> pd.DataFrame:
             for file in os.listdir(os.path.join(dir, directory)):
                 if "events" in file.split("."):
                     file_path = os.path.join(dir, directory, file)
-                    loss_value = get_value_from_event_file(file_path)
+                    loss_value = extract_best_loss_from_event_file(file_path)
 
                 elif file == "hparams.yaml":
                     file_path = os.path.join(dir, directory, file)
-                    parameter_dict = get_hparams_yaml(file_path)
+                    parameter_dict = read_yaml(file_path)
 
             if loss_value and parameter_dict:
                 all_loss_hyperparams.append({**loss_value, **parameter_dict})
@@ -78,7 +68,7 @@ def get_loss_and_params(dir: str) -> pd.DataFrame:
     return pd.DataFrame(all_loss_hyperparams)
 
 
-def input_value(param: str, value: str, include: bool = False):
+def input_value(param: str, value: str, include: bool = False) -> str | None:
     if not include:
         include = INPUT_MAPPING[
             input(
@@ -95,15 +85,14 @@ def input_value(param: str, value: str, include: bool = False):
 
 
 def compute_parameter_intervals(
-    results: pd.DataFrame, params_dir: str, max_loss: float, min_n_good_values: int
+    results: pd.DataFrame, params_dir: str, max_loss: float, min_good_samples: int
 ) -> Dict[str, Tuple[float, float]]:
-    gridsearch_params = get_parameters_yaml(params_dir)["gridsearch"]
+    gridsearch_params = read_yaml(params_dir)["gridsearch"]
 
     parameters = []
     for column in results.columns:
         if (
-            len(results.get(column, {}).unique()) > 1
-            or column in gridsearch_params.keys()
+            len(results[column].unique()) > 1 or column in gridsearch_params.keys()
         ) and column != "best_loss":
             try:
                 type = gridsearch_params[column]["type"]
@@ -114,21 +103,26 @@ def compute_parameter_intervals(
 
     # don't filter before because a parmeter could have the same value for all "good" rows
     # don't filter after because you wouldn't get optimal intervals
-    results = results[results["best_loss"] < max_loss]
+    try:
+        results = results[results["best_loss"] < max_loss]
+    except KeyError:
+        print()
+        print("There are probably no results in folder.")
+        print()
+        return None
 
-    if len(results) < min_n_good_values:
+    if len(results) < min_good_samples:
         return None
 
     for param in parameters:
-        if param.type in ["float", "int"]:
-            param.min = results[param.name].min()
-            param.max = results[param.name].max()
-            param.mean = results[param.name].mean()
+        if param.type == "float":
+            param.min = results[param.name].min() * 0.99
+            param.max = results[param.name].max() * 1.01
 
-            if param.min == param.max:
-                if param.min > 0:
-                    param.min -= 1
-                param.max += 1
+        elif param.type == "int":
+            # use math.ceil to prevent zeros
+            param.min = ceil(results[param.name].min() * 0.99)
+            param.max = ceil(results[param.name].max() * 1.01)
 
         elif param.type == "choice":
             param.value_counts = results[param.name].value_counts().to_dict()
@@ -137,96 +131,99 @@ def compute_parameter_intervals(
             # only keep "good" values
             dict_copy = param.value_counts.copy()
             for key, value_count in param.value_counts.items():
-                if value_count < param.count * 1 / 5 and len(dict_copy) > 2:
+                if value_count < param.count * 1 / 5 and len(dict_copy) > 1:
                     del dict_copy[key]
             param.value_counts = list(dict_copy.keys())
 
     return parameters
 
 
-def print_parameter_intervals(parameters: List[Parameter]):
-    print()
-    print("Parameter intervals:")
-    print()
-    for param in parameters:
-        print(f"Parameter: {param.name}")
-        if param.type in ["float", "int"]:
-            if param.name == "lr":
-                print(
-                    f"min: {param.min:.3e} || "
-                    f"max: {param.max:.3e} || "
-                    f"mean: {param.mean:.3e}"
-                )
-            else:
-                print(
-                    f"min: {param.min} || "
-                    f"max: {param.max} || "
-                    f"mean: {round(param.mean,1)}"
-                )
-        elif param.type == "choice":
-            print(f"values: {param.value_counts}")
-        print()
-
-
 def update_yaml_file(
-    params_dir: str, events_dir: str, parameters: List[Parameter], force: bool = False
-):
+    params_dir: str, events_dir: str, parameters: List[Parameter]
+) -> None:
     if parameters is not None:
-        update = "y"
-        if not force:
-            update = INPUT_MAPPING[
-                input("Do you want to update the parameters.yaml file? (y/n): ")
-            ]
+        yaml_params = read_yaml(params_dir)
+        new_path = find_new_path(events_dir)
 
-        if update:
-            yaml_params = get_parameters_yaml(params_dir)
-            new_path = find_new_path(events_dir)
+        yaml_params["name"] = new_path
 
-            yaml_params["name"] = new_path
+        gridsearch_dict = {}
 
-            gridsearch_dict = {}
+        for param in parameters:
+            if param.type in ["float", "int"]:
+                gridsearch_dict[param.name] = {
+                    "lower": param.min,
+                    "upper": param.max,
+                    "type": param.type,
+                }
+            elif param.type == "choice":
+                gridsearch_dict[param.name] = {
+                    "list": param.value_counts,
+                    "type": param.type,
+                }
 
-            for param in parameters:
-                if param.type in ["float", "int"]:
-                    gridsearch_dict[param.name] = {
-                        "lower": param.min,
-                        "upper": param.max,
-                        "type": param.type,
-                    }
-                elif param.type == "choice":
-                    gridsearch_dict[param.name] = {
-                        "list": param.value_counts,
-                        "type": param.type,
-                    }
+        yaml_params["gridsearch"] = gridsearch_dict
 
-            yaml_params["gridsearch"] = gridsearch_dict
+        save_yaml(yaml_params, "config/auto_parameters.yaml")
 
-            save_yaml(yaml_params, "config/auto_parameters.yaml")
+        save_last_params(yaml_params, events_dir)
+
+
+def save_last_params(yaml_params: dict, events_dir: str) -> None:
+    folder = "/".join(events_dir.split("/")[:-1])
+    save_yaml(yaml_params, os.path.join(folder, "last_parameters.yaml"))
 
 
 def find_new_path(file_dir: str) -> str:
     path_split = file_dir.split("/")
-    try:
-        int_dir = int(path_split[-1])
-    except ValueError:
-        int_dir = 0
-    path_split[-1] = str(int_dir + 1)
+    path_split[-1] = str(int(path_split[-1]) + 1)
     new_path = "/".join(path_split)
     try:
-        os.makedirs(new_path)
+        os.mkdir(new_path)
     except FileExistsError:
         pass
     return new_path
 
 
-if __name__ == "__main__":
-    params_dir = "config/auto_parameters.yaml"
-    events_dir = get_parameters_yaml(params_dir)["name"]
+def main(args: Namespace) -> None:
+    params_dir = args.params_dir
+    events_dir = read_yaml(params_dir)["name"]
 
     loss_and_params = get_loss_and_params(events_dir)
     parameters = compute_parameter_intervals(
-        loss_and_params, params_dir, max_loss=1, min_n_good_values=6
+        loss_and_params,
+        params_dir,
+        max_loss=args.max_loss,
+        min_good_samples=args.min_good_samples,
     )
-    # print_parameter_intervals(parameters)
 
-    update_yaml_file(params_dir, events_dir, parameters, force=True)
+    update_yaml_file(params_dir, events_dir, parameters)
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(
+        prog="Parameter updater",
+        description="Updates the parameter file with the best parameters from past runs.",
+    )
+
+    parser.add_argument(
+        "--params_dir",
+        type=str,
+        default="config/auto_parameters.yaml",
+        help="Directory containing parameter files. (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--max_loss",
+        type=float,
+        default=1e-6,
+        help="Maximum loss value considered acceptable for selecting parameters. (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--min_good_samples",
+        type=int,
+        default=3,
+        help="Minimum number of good samples required for parameter selection, otherwise parameters aren't updated, but training continues. (default: %(default)s)",
+    )
+
+    args = parser.parse_args()
+    main(args)

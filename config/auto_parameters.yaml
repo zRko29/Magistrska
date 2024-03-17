@@ -19,7 +19,7 @@ init_points: 40
 linear_size: 32
 loss: mse
 lr: 0.0003
-name: logs/overfitting_K=0.6
+name: logs/overfitting_K=0.6/0
 num_lin_layers: 1
 num_rnn_layers: 1
 optimizer: adam
