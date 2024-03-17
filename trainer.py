@@ -1,110 +1,131 @@
-# import os
-# from google.colab import drive
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-# drive.mount('/content/drive')
-# os.chdir("/content/drive/My Drive/Work")
+if TYPE_CHECKING:
+    from pytorch_lightning.callbacks import callbacks
 
-import pytorch_lightning as pl
+from pytorch_lightning import Trainer
+from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.callbacks import (
+    EarlyStopping,
+    ModelCheckpoint,
+    DeviceStatsMonitor,
+)
+
+from src.mapping_helper import StandardMap
+from src.helper import Model, Data, CustomCallback, Gridsearch
+from src.utils import measure_time
+
+from argparse import Namespace, ArgumentParser
 import os
-
-from utils.mapping_helper import StandardMap
-from utils.helper import Model, Data, Gridsearch, CustomCallback
-
 import warnings
-
-warnings.filterwarnings(
-    "ignore", ".*Consider increasing the value of the `num_workers` argument*"
-)
-warnings.filterwarnings(
-    "ignore",
-    ".*The number of training batches*",
-)
-warnings.filterwarnings(
-    "ignore",
-    ".*across ranks is zero. Please make sure this was your intention*",
-)
-
 import logging
 
+os.environ["GLOO_SOCKET_IFNAME"] = "en0"
+warnings.filterwarnings(
+    "ignore",
+    module="pytorch_lightning",
+)
 logging.getLogger("pytorch_lightning").setLevel(0)
 
-CONFIG_DIR = os.path.join("config", "auto_parameters.yaml")
 
+def get_callbacks(tb_logger: TensorBoardLogger) -> list[callbacks]:
 
-if __name__ == "__main__":
-    # necessary to continue training from checkpoint, else set to None
-    version: str = None
-    num_vertices: int = 2
+    save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
 
-    gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
-
-    for _ in range(num_vertices):
-        params: dict = gridsearch.update_params()
-        name: str = gridsearch.name
-
-        map = StandardMap(seed=42, params=params)
-
-        datamodule = Data(
-            map_object=map,
-            train_size=1.0,
-            plot_data=False,
-            plot_data_split=False,
-            print_split=False,
-            params=params,
-        )
-
-        model = Model(**params)
-
-        logs_path: str = ""
-
-        # **************** pl.callbacks ****************
-
-        tb_logger = pl.loggers.TensorBoardLogger(
-            logs_path, name=name, default_hp_metric=False
-        )
-
-        save_path: str = os.path.join(
-            logs_path, name, "version_" + str(tb_logger.version)
-        )
-
-        print(f"Running version_{tb_logger.version}")
-        print()
-
-        checkpoint_callback = pl.callbacks.ModelCheckpoint(
-            monitor="loss/train",  # careful
+    return [
+        ModelCheckpoint(
+            monitor="loss/train",
             mode="min",
             dirpath=save_path,
             filename="model",
             save_on_train_epoch_end=True,
-            save_top_k=1,
-        )
-
-        early_stopping_callback = pl.callbacks.EarlyStopping(
+        ),
+        EarlyStopping(
             monitor="loss/train",
             mode="min",
             min_delta=1e-8,
             patience=350,
-            verbose=False,
-        )
+        ),
+        DeviceStatsMonitor(),
+        CustomCallback(print=False),
+    ]
 
-        gradient_avg_callback = pl.callbacks.StochasticWeightAveraging(swa_lrs=1e-3)
 
-        # progress_bar_callback = pl.callbacks.TQDMProgressBar(refresh_rate=20)
+# @measure_time
+def main(args: Namespace, params: dict) -> None:
 
-        # **************** trainer ****************
+    datamodule = Data(
+        map_object=StandardMap(seed=42, params=params),
+        train_size=1.0,
+        plot_data=False,
+        plot_data_split=False,
+        print_split=False,
+        params=params,
+    )
 
-        trainer = pl.Trainer(
-            max_epochs=params.get("epochs"),
-            precision=params.get("precision"),
-            enable_progress_bar=False,
-            logger=tb_logger,
-            callbacks=[
-                checkpoint_callback,
-                early_stopping_callback,
-                # progress_bar_callback,
-                # gradient_avg_callback,
-                CustomCallback(print=False),
-            ],
-        )
+    model = Model(**params)
 
-        trainer.fit(model=model, datamodule=datamodule, ckpt_path=None)
+    tb_logger = TensorBoardLogger(
+        save_dir="", name=params.get("name"), default_hp_metric=False
+    )
+
+    trainer = Trainer(
+        max_epochs=params.get("epochs"),
+        precision=params.get("precision"),
+        enable_progress_bar=args.progress_bar,
+        logger=tb_logger,
+        callbacks=get_callbacks(tb_logger),
+        accelerator=args.accelerator,
+        devices=args.num_devices,
+        strategy=args.strategy,
+    )
+
+    trainer.fit(model=model, datamodule=datamodule)
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(
+        prog="Autoregressor trainer",
+        description="Trains an autoregression model using PyTorch Lightning",
+    )
+
+    parser.add_argument(
+        "--params_dir",
+        type=str,
+        default="config/auto_parameters.yaml",
+        help="Directory containing parameter files. (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--progress_bar",
+        "-prog",
+        action="store_true",
+        help="Show progress bar during training. (default: False)",
+    )
+    parser.add_argument(
+        "--accelerator",
+        "-acc",
+        type=str,
+        default="auto",
+        choices=["auto", "cpu", "gpu"],
+        help="Specify the accelerator to use. Choices are 'auto', 'cpu', or 'gpu'. (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--num_devices",
+        default="auto",
+        help="Number of devices to use. (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--strategy",
+        type=str,
+        default="auto",
+        choices=["auto", "ddp", "ddp_spawn"],
+        help="Specify the training strategy. Choices are 'auto', 'ddp', or 'ddp_spawn'. (default: %(default)s)",
+    )
+
+    args = parser.parse_args()
+
+    gridsearch = Gridsearch(args.params_dir, use_defaults=True)
+    params: dict = gridsearch.update_params()
+
+    main(args, params)

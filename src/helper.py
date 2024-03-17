@@ -9,7 +9,7 @@ from datetime import timedelta
 import os, yaml
 from typing import Tuple
 
-from utils.mapping_helper import StandardMap
+from src.mapping_helper import StandardMap
 
 
 class Model(pl.LightningModule):
@@ -29,8 +29,8 @@ class Model(pl.LightningModule):
 
         # ----------------------
         # NOTE: This logic is kept so that variable layer sizes can be reimplemented in the future
-        rnn_layer_size: int = params.get("rnn_layer_size")
-        lin_layer_size: int = params.get("lin_layer_size")
+        rnn_layer_size: int = params.get("hidden_size")
+        lin_layer_size: int = params.get("linear_size")
 
         self.hidden_sizes: list[int] = [rnn_layer_size] * self.num_rnn_layers
         self.linear_sizes: list[int] = [lin_layer_size] * (self.num_lin_layers - 1)
@@ -89,9 +89,12 @@ class Model(pl.LightningModule):
                 h_ts[i] = self.dropout(h_ts[i])
 
             # linear layers
-            output = torch.relu(self.lins[0](h_ts[-1]))
+            output = self.lins[0](h_ts[-1])
             for i in range(1, self.num_lin_layers):
-                output = torch.relu(self.lins[i](output))
+                output = self.lins[i](output)
+            # output = torch.relu(self.lins[0](h_ts[-1]))
+            # for i in range(1, self.num_lin_layers):
+            #     output = torch.relu(self.lins[i](output))
 
             outputs.append(output)
 
@@ -120,6 +123,7 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
+            sync_dist=False,
         )
         self.training_step_outputs.append(loss)
         return loss
@@ -133,7 +137,14 @@ class Model(pl.LightningModule):
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
         loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log("loss/val", loss, on_epoch=True, prog_bar=True, on_step=False)
+        self.log(
+            "loss/val",
+            loss,
+            on_epoch=True,
+            prog_bar=True,
+            on_step=False,
+            sync_dist=False,
+        )
         self.validation_step_outputs.append(loss)
         return loss
 
@@ -306,35 +317,26 @@ class CustomCallback(pl.Callback):
             {"metrics/min_val_loss": np.inf, "metrics/min_train_loss": np.inf},
         )
 
-    # def on_before_zero_grad(self, trainer, pl_module, optimizer):
-    #     self.log_weights(trainer, pl_module)
-    #     self.log_gradients(trainer, pl_module)
-
-    # def log_weights(self, trainer, pl_module):
-    #     for name, params in pl_module.named_parameters():
-    #         trainer.logger.experiment.add_histogram(
-    #             f"weight/{name}", params, trainer.current_epoch
-    #         )
-
-    # def log_gradients(self, trainer, pl_module):
-    #     for name, params in pl_module.named_parameters():
-    #         if params.grad is not None:
-    #             trainer.logger.experiment.add_histogram(
-    #                 f"grad/{name}", params.grad.cpu(), trainer.current_epoch
-    #             )
-
     def on_train_epoch_end(self, trainer, pl_module):
         mean_loss = torch.stack(pl_module.training_step_outputs).mean()
         if mean_loss < self.min_train_loss:
             self.min_train_loss = mean_loss
-            pl_module.log("metrics/min_train_loss", mean_loss)
+            pl_module.log(
+                "metrics/min_train_loss",
+                mean_loss,
+                sync_dist=False,
+            )
         pl_module.training_step_outputs.clear()
 
     def on_validation_epoch_end(self, trainer, pl_module):
         mean_loss = torch.stack(pl_module.validation_step_outputs).mean()
         if mean_loss < self.min_val_loss:
             self.min_val_loss = mean_loss
-            pl_module.log("metrics/min_val_loss", mean_loss)
+            pl_module.log(
+                "metrics/min_val_loss",
+                mean_loss,
+                sync_dist=False,
+            )
         pl_module.validation_step_outputs.clear()
 
     def on_fit_start(self, trainer, pl_module):
@@ -368,26 +370,27 @@ class Dataset(torch.utils.data.Dataset):
 
 
 class Gridsearch:
-    def __init__(self, path: str, num_vertices: int) -> None:
-        self.path: str = path
-        self.grid_step: int = 1
-        self.num_vertices: int = num_vertices
+    def __init__(self, path: str, use_defaults: bool = False) -> None:
+        self.path = path
+        self.use_defaults = use_defaults
 
     def update_params(self) -> dict:
         with open(self.path, "r") as file:
             params: dict = yaml.safe_load(file)
-            if self.num_vertices > 0:
+            if not self.use_defaults:
                 params = self._update_params(params)
-                self.grid_step += 1
-                self.name = params.get("name")
+
+            try:
+                del params["gridsearch"]
+            except KeyError:
+                pass
 
         return params
 
     def _update_params(self, params) -> dict:
         # don't use any seed
         rng: np.random.Generator = np.random.default_rng()
-
-        for key, space in params.pop("gridsearch").items():
+        for key, space in params.get("gridsearch").items():
             type = space.get("type")
             if type == "int":
                 params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
@@ -417,10 +420,6 @@ class Gridsearch:
         #         if layer_type == "lin_sizes":
         #             params[layer_type] = params[layer_type][:-1]
         # print(f"{layer_type}: {params[layer_type]}")
-
-        # print("-" * 80)
-        # print(f"Gridsearch step: {self.grid_step} / {self.num_vertices}")
-        # print()
 
         return params
 
