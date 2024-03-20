@@ -10,6 +10,10 @@ TYPES_LIST = ["float", "int", "choice"]
 
 from src.utils import read_yaml, import_parsed_args
 
+import logging
+
+logger = logging.getLogger("rnn_autoregressor")
+
 
 class Parameter:
     def __init__(self, name: str, type: str) -> None:
@@ -45,39 +49,27 @@ def extract_best_loss_from_event_file(events_file_path: str) -> str | float | in
 
 def get_loss_and_params(dir: str) -> pd.DataFrame:
     all_loss_hyperparams = []
-    for directory in sorted(os.listdir(dir)):
-        loss_value = None
-        parameter_dict = None
-        if os.path.isdir(os.path.join(dir, directory)):
-            for file in os.listdir(os.path.join(dir, directory)):
-                if "events" in file.split("."):
-                    file_path = os.path.join(dir, directory, file)
-                    loss_value = extract_best_loss_from_event_file(file_path)
+    try:
+        for directory in sorted(os.listdir(dir)):
+            loss_value = None
+            parameter_dict = None
+            if os.path.isdir(os.path.join(dir, directory)):
+                for file in os.listdir(os.path.join(dir, directory)):
+                    if "events" in file.split("."):
+                        file_path = os.path.join(dir, directory, file)
+                        loss_value = extract_best_loss_from_event_file(file_path)
 
-                elif file == "hparams.yaml":
-                    file_path = os.path.join(dir, directory, file)
-                    parameter_dict = read_yaml(file_path)
+                    elif file == "hparams.yaml":
+                        file_path = os.path.join(dir, directory, file)
+                        parameter_dict = read_yaml(file_path)
 
-            if loss_value and parameter_dict:
-                all_loss_hyperparams.append({**loss_value, **parameter_dict})
+                if loss_value and parameter_dict:
+                    all_loss_hyperparams.append({**loss_value, **parameter_dict})
+    except FileNotFoundError as e:
+        logger.error(e)
+        raise e
 
     return pd.DataFrame(all_loss_hyperparams)
-
-
-def input_value(param: str, value: str, include: bool = False) -> str | None:
-    if not include:
-        include = INPUT_MAPPING[
-            input(
-                f"Parameter '{param}' was is not included in the gridsearch parameters. Do you want to include it now? (y/n): "
-            )
-        ]
-    if include:
-        type = input(f"Please choose value for {value} (int/float/choice): ")
-        if type not in TYPES_LIST:
-            print("Invalid type. Try again and please choose valid type.")
-            type = input_value(param, value, include)
-        return type
-    return None
 
 
 def compute_parameter_intervals(
@@ -93,7 +85,9 @@ def compute_parameter_intervals(
             try:
                 type = gridsearch_params[column]["type"]
             except KeyError:
-                type = input_value(column, "type")
+                logger.warning(
+                    f"Parameter '{column}' was is not included in the gridsearch parameters."
+                )
             if type:
                 parameters.append(Parameter(name=column, type=type))
 
@@ -102,12 +96,13 @@ def compute_parameter_intervals(
     try:
         results = results[results["best_loss"] < max_loss]
     except KeyError:
-        print()
-        print("There are probably no results in folder.")
-        print()
+        logger.warning("There are probably no results in folder.")
         return None
 
     if len(results) < min_good_samples:
+        logger.info(
+            f"Less than {min_good_samples} good samples. Parameters will not be updated."
+        )
         return None
 
     for param in parameters:
@@ -123,7 +118,7 @@ def compute_parameter_intervals(
             param.value_counts = results[param.name].value_counts().to_dict()
             param.count = results[param.name].count()
 
-            # only keep "good" values
+            # only keep "good" values in list
             dict_copy = param.value_counts.copy()
             for key, value_count in param.value_counts.items():
                 if value_count < param.count * 1 / 5 and len(dict_copy) > 1:
@@ -137,13 +132,7 @@ def update_yaml_file(
     params_dir: str, events_dir: str, parameters: List[Parameter]
 ) -> None:
     if parameters is not None:
-        yaml_params = read_yaml(params_dir)
-        new_path = find_new_path(events_dir)
-
-        yaml_params["name"] = new_path
-
         gridsearch_dict = {}
-
         for param in parameters:
             if param.type in ["float", "int"]:
                 gridsearch_dict[param.name] = {
@@ -157,10 +146,11 @@ def update_yaml_file(
                     "type": param.type,
                 }
 
+        yaml_params = read_yaml(params_dir)
+        yaml_params["name"] = find_new_path(events_dir)
         yaml_params["gridsearch"] = gridsearch_dict
 
-        save_yaml(yaml_params, "config/auto_parameters.yaml")
-
+        save_yaml(yaml_params, params_dir)
         save_last_params(yaml_params, events_dir)
 
 
@@ -181,18 +171,17 @@ def find_new_path(file_dir: str) -> str:
 
 
 def main(args: Namespace) -> None:
-    params_dir = args.params_dir
-    events_dir = read_yaml(params_dir)["name"]
+    events_dir = read_yaml(args.params_dir)["name"]
 
     loss_and_params = get_loss_and_params(events_dir)
     parameters = compute_parameter_intervals(
-        loss_and_params,
-        params_dir,
+        results=loss_and_params,
+        params_dir=args.params_dir,
         max_loss=args.max_loss,
         min_good_samples=args.min_good_samples,
     )
 
-    update_yaml_file(params_dir, events_dir, parameters)
+    update_yaml_file(args.params_dir, events_dir, parameters)
 
 
 if __name__ == "__main__":

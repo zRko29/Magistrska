@@ -29,11 +29,10 @@ warnings.filterwarnings(
 )
 logging.getLogger("pytorch_lightning").setLevel(0)
 
+logger = logging.getLogger("rnn_autoregressor")
 
-def get_callbacks(tb_logger: TensorBoardLogger) -> list[callbacks]:
 
-    save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
-
+def get_callbacks(save_path: str) -> list[callbacks]:
     return [
         ModelCheckpoint(
             monitor="loss/train",
@@ -67,24 +66,28 @@ def main(
         save_dir="", name=params.get("name"), default_hp_metric=False
     )
 
+    save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
+
     trainer = Trainer(
         max_epochs=params.get("epochs"),
         precision=params.get("precision"),
-        enable_progress_bar=args.progress_bar,
         logger=tb_logger,
-        callbacks=get_callbacks(tb_logger),
+        callbacks=get_callbacks(save_path),
+        enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
         devices=args.num_devices,
         strategy=args.strategy,
     )
 
     trainer.fit(model, datamodule)
+    logger.info("Model trained.")
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
 
     params = read_yaml(args.params_dir)
+    del params["gridsearch"]
 
     map_object = StandardMap(seed=42, params=params)
 

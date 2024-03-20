@@ -8,6 +8,10 @@ from src.helper import Gridsearch
 from src.mapping_helper import StandardMap
 from src.utils import measure_time, read_yaml, import_parsed_args
 
+import logging
+
+logger = logging.getLogger("rnn_autoregressor")
+
 
 @measure_time
 def main(args: Namespace, map_object: StandardMap) -> None:
@@ -18,18 +22,28 @@ def main(args: Namespace, map_object: StandardMap) -> None:
 
         print()
         print(f"Starting optimization step: {i + 1} / {args.optimization_steps}")
+        logger.info(f"Starting optimization step: {i + 1} / {args.optimization_steps}")
         print()
 
-        Parallel(backend="loky", n_jobs=args.models_per_step, verbose=5)(
-            delayed(train)(args, params, sleep, map_object)
-            for sleep, params in zip(sleep_list, gridsearch)
-        )
+        try:
+            Parallel(
+                backend="loky",
+                n_jobs=args.models_per_step,
+                verbose=11,
+            )(
+                delayed(train)(args, params, sleep, map_object)
+                for sleep, params in zip(sleep_list, gridsearch)
+            )
+        except Exception as e:
+            logger.error(e)
+            raise e
 
         update(args)
         print()
-        print("Finished optimization step.")
+        print(f"Finished optimization step: {i + 1} / {args.optimization_steps}")
+        logger.info(f"Finished optimization step: {i + 1} / {args.optimization_steps}")
         print()
-        print("------------------------")
+        print("-----------------------------")
 
 
 if __name__ == "__main__":

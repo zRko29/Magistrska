@@ -4,6 +4,16 @@ from typing import Callable
 import yaml
 from argparse import Namespace, ArgumentParser
 
+import logging
+
+
+logger = logging.getLogger("rnn_autoregressor")
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+file_handler = logging.FileHandler("logs/log")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
 
 def read_yaml(parameters_path: str) -> dict:
     with open(parameters_path, "r") as file:
@@ -30,23 +40,16 @@ def measure_time(func: Callable) -> Callable:
 
 
 def import_parsed_args(script_name: str) -> Namespace:
-    script_names = [
-        "Autoregressor trainer",
-        "Parameter updater",
-        "Hyperparameter optimizer",
-    ]
-    parser = ArgumentParser(
-        prog=script_name,
-        description="Trains an autoregression model using PyTorch Lightning",
+    parser = ArgumentParser(prog=script_name)
+
+    parser.add_argument(
+        "--params_dir",
+        type=str,
+        default="config/parameters.yaml",
+        help="Directory containing parameter files. (default: %(default)s)",
     )
 
-    if script_name == script_names[0]:
-        parser.add_argument(
-            "--params_dir",
-            type=str,
-            default="config/auto_parameters.yaml",
-            help="Directory containing parameter files. (default: %(default)s)",
-        )
+    if script_name in ["Autoregressor trainer", "Hyperparameter optimizer"]:
         parser.add_argument(
             "--progress_bar",
             "-prog",
@@ -74,7 +77,7 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Specify the training strategy. Choices are 'auto', 'ddp', or 'ddp_spawn'. (default: %(default)s)",
         )
 
-    elif script_name == script_names[1]:
+    if script_name in ["Parameter updater", "Hyperparameter optimizer"]:
         parser.add_argument(
             "--max_loss",
             type=float,
@@ -88,7 +91,7 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Minimum number of good samples required for parameter selection, otherwise parameters aren't updated, but training continues. (default: %(default)s)",
         )
 
-    elif script_name == script_names[2]:
+    if script_name == "Hyperparameter optimizer":
         parser.add_argument(
             "--optimization_steps",
             type=int,
