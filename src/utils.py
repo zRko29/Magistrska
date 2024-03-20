@@ -1,8 +1,9 @@
 import time
 from datetime import timedelta
-from typing import Callable
+from typing import Callable, List
 import yaml
 from argparse import Namespace, ArgumentParser
+import os
 
 import logging
 
@@ -37,6 +38,19 @@ def measure_time(func: Callable) -> Callable:
         return val
 
     return wrapper
+
+
+def get_inference_folders(directory_path: str, version: str) -> List[str]:
+    if version is not None:
+        folders: List[str] = [os.path.join(directory_path, f"version_{version}")]
+    else:
+        folders: List[str] = [
+            os.path.join(directory_path, folder)
+            for folder in os.listdir(directory_path)
+            if os.path.isdir(os.path.join(directory_path, folder))
+        ]
+        folders.sort()
+    return folders
 
 
 def import_parsed_args(script_name: str) -> Namespace:
