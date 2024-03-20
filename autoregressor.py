@@ -1,9 +1,9 @@
 import os, yaml
 
 import pytorch_lightning as pl
-from utils.mapping_helper import StandardMap
-from utils.helper import Model, Data, plot_2d
-from utils.dmd import DMD
+from src.mapping_helper import StandardMap
+from src.helper import Model, Data, plot_2d
+from src.dmd import DMD
 from torch import Tensor
 
 import warnings
