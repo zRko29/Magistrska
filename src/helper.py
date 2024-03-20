@@ -6,10 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from datetime import timedelta
-import os, yaml
+import os
 from typing import Tuple
 
 from src.mapping_helper import StandardMap
+from src.utils import read_yaml
 
 
 class Model(pl.LightningModule):
@@ -167,10 +168,10 @@ class Data(pl.LightningDataModule):
         self,
         map_object: StandardMap,
         train_size: float,
-        plot_data: bool,
-        plot_data_split: bool,
-        print_split: bool,
         params: dict,
+        plot_data: bool = False,
+        plot_data_split: bool = False,
+        print_split: bool = False,
     ) -> None:
         super(Data, self).__init__()
         map_object.generate_data()
@@ -374,16 +375,22 @@ class Gridsearch:
         self.path = path
         self.use_defaults = use_defaults
 
-    def update_params(self) -> dict:
-        with open(self.path, "r") as file:
-            params: dict = yaml.safe_load(file)
-            if not self.use_defaults:
-                params = self._update_params(params)
+    def __next__(self):
+        return self.update_params()
 
-            try:
-                del params["gridsearch"]
-            except KeyError:
-                pass
+    def __iter__(self):
+        for _ in range(10**3):
+            yield self.update_params()
+
+    def update_params(self) -> dict:
+        params = read_yaml(self.path)
+        if not self.use_defaults:
+            params = self._update_params(params)
+
+        try:
+            del params["gridsearch"]
+        except KeyError:
+            pass
 
         return params
 

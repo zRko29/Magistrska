@@ -13,13 +13,14 @@ from pytorch_lightning.callbacks import (
 )
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, CustomCallback, Gridsearch
-from src.utils import measure_time
+from src.helper import Model, Data, CustomCallback
+from src.utils import measure_time, read_yaml, import_parsed_args
 
-from argparse import Namespace, ArgumentParser
+from argparse import Namespace
 import os
 import warnings
 import logging
+from time import sleep
 
 os.environ["GLOO_SOCKET_IFNAME"] = "en0"
 warnings.filterwarnings(
@@ -53,16 +54,12 @@ def get_callbacks(tb_logger: TensorBoardLogger) -> list[callbacks]:
 
 
 # @measure_time
-def main(args: Namespace, params: dict) -> None:
+def main(
+    args: Namespace, params: dict, sleep_sec: int, map_object: StandardMap
+) -> None:
+    sleep(sleep_sec)
 
-    datamodule = Data(
-        map_object=StandardMap(seed=42, params=params),
-        train_size=1.0,
-        plot_data=False,
-        plot_data_split=False,
-        print_split=False,
-        params=params,
-    )
+    datamodule = Data(map_object=map_object, train_size=0.8, params=params)
 
     model = Model(**params)
 
@@ -81,51 +78,14 @@ def main(args: Namespace, params: dict) -> None:
         strategy=args.strategy,
     )
 
-    trainer.fit(model=model, datamodule=datamodule)
+    trainer.fit(model, datamodule)
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(
-        prog="Autoregressor trainer",
-        description="Trains an autoregression model using PyTorch Lightning",
-    )
+    args: Namespace = import_parsed_args("Autoregressor trainer")
 
-    parser.add_argument(
-        "--params_dir",
-        type=str,
-        default="config/auto_parameters.yaml",
-        help="Directory containing parameter files. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--progress_bar",
-        "-prog",
-        action="store_true",
-        help="Show progress bar during training. (default: False)",
-    )
-    parser.add_argument(
-        "--accelerator",
-        "-acc",
-        type=str,
-        default="auto",
-        choices=["auto", "cpu", "gpu"],
-        help="Specify the accelerator to use. Choices are 'auto', 'cpu', or 'gpu'. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--num_devices",
-        default="auto",
-        help="Number of devices to use. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--strategy",
-        type=str,
-        default="auto",
-        choices=["auto", "ddp", "ddp_spawn"],
-        help="Specify the training strategy. Choices are 'auto', 'ddp', or 'ddp_spawn'. (default: %(default)s)",
-    )
+    params = read_yaml(args.params_dir)
 
-    args = parser.parse_args()
+    map_object = StandardMap(seed=42, params=params)
 
-    gridsearch = Gridsearch(args.params_dir, use_defaults=True)
-    params: dict = gridsearch.update_params()
-
-    main(args, params)
+    main(args, params, 0, map_object)

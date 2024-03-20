@@ -2,12 +2,13 @@ import yaml
 from typing import Dict, Tuple, List
 import os
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-from math import ceil
 import pandas as pd
-from argparse import Namespace, ArgumentParser
+from argparse import Namespace
 
 INPUT_MAPPING = {"y": True, "n": False, "": False}
 TYPES_LIST = ["float", "int", "choice"]
+
+from src.utils import read_yaml, import_parsed_args
 
 
 class Parameter:
@@ -22,11 +23,6 @@ class Parameter:
         elif self.type == "choice":
             self.value_counts = {}
             self.count = 0
-
-
-def read_yaml(param_file_path: str) -> dict[str | float | int]:
-    with open(param_file_path, "r") as param_file:
-        return yaml.safe_load(param_file)
 
 
 def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
@@ -116,13 +112,12 @@ def compute_parameter_intervals(
 
     for param in parameters:
         if param.type == "float":
-            param.min = results[param.name].min() * 0.99
-            param.max = results[param.name].max() * 1.01
+            param.min = results[param.name].min()
+            param.max = results[param.name].max()
 
         elif param.type == "int":
-            # use math.ceil to prevent zeros
-            param.min = ceil(results[param.name].min() * 0.99)
-            param.max = ceil(results[param.name].max() * 1.01)
+            param.min = results[param.name].min()
+            param.max = results[param.name].max()
 
         elif param.type == "choice":
             param.value_counts = results[param.name].value_counts().to_dict()
@@ -201,29 +196,6 @@ def main(args: Namespace) -> None:
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(
-        prog="Parameter updater",
-        description="Updates the parameter file with the best parameters from past runs.",
-    )
+    args: Namespace = import_parsed_args("Parameter updater")
 
-    parser.add_argument(
-        "--params_dir",
-        type=str,
-        default="config/auto_parameters.yaml",
-        help="Directory containing parameter files. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--max_loss",
-        type=float,
-        default=1e-6,
-        help="Maximum loss value considered acceptable for selecting parameters. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--min_good_samples",
-        type=int,
-        default=3,
-        help="Minimum number of good samples required for parameter selection, otherwise parameters aren't updated, but training continues. (default: %(default)s)",
-    )
-
-    args = parser.parse_args()
     main(args)
