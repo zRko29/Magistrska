@@ -6,11 +6,7 @@ from update_params import main as update
 
 from src.helper import Gridsearch
 from src.mapping_helper import StandardMap
-from src.utils import measure_time, read_yaml, import_parsed_args
-
-import logging
-
-logger = logging.getLogger("rnn_autoregressor")
+from src.utils import measure_time, read_yaml, import_parsed_args, setup_logger
 
 
 @measure_time
@@ -49,6 +45,15 @@ def main(args: Namespace, map_object: StandardMap) -> None:
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Hyperparameter optimizer")
 
-    map_object = StandardMap(seed=42, params=read_yaml(args.params_dir))
+    params = read_yaml(args.params_dir)
+    del params["gridsearch"]
+
+    logs_dir = args.logs_dir or params["name"]
+
+    logger = setup_logger(logs_dir)
+    logger.info("Started optimize_hyperparams.py")
+    logger.info(f"{args.__dict__=}")
+
+    map_object = StandardMap(seed=42, params=params)
 
     main(args, map_object)

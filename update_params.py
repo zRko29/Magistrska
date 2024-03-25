@@ -8,11 +8,7 @@ from argparse import Namespace
 INPUT_MAPPING = {"y": True, "n": False, "": False}
 TYPES_LIST = ["float", "int", "choice"]
 
-from src.utils import read_yaml, import_parsed_args
-
-import logging
-
-logger = logging.getLogger("rnn_autoregressor")
+from src.utils import read_yaml, import_parsed_args, setup_logger
 
 
 class Parameter:
@@ -73,9 +69,9 @@ def get_loss_and_params(dir: str) -> pd.DataFrame:
 
 
 def compute_parameter_intervals(
-    results: pd.DataFrame, params_dir: str, max_loss: float, min_good_samples: int
+    results: pd.DataFrame, args: Namespace
 ) -> Dict[str, Tuple[float, float]]:
-    gridsearch_params = read_yaml(params_dir)["gridsearch"]
+    gridsearch_params = read_yaml(args.params_dir)["gridsearch"]
 
     parameters = []
     for column in results.columns:
@@ -86,24 +82,29 @@ def compute_parameter_intervals(
                 type = gridsearch_params[column]["type"]
             except KeyError:
                 logger.warning(
-                    f"Parameter '{column}' was is not included in the gridsearch parameters."
+                    f"Variable parameter '{column}' is not included in the gridsearch parameters."
                 )
+                continue
             if type:
                 parameters.append(Parameter(name=column, type=type))
 
     # don't filter before because a parmeter could have the same value for all "good" rows
     # don't filter after because you wouldn't get optimal intervals
     try:
-        results = results[results["best_loss"] < max_loss]
+        results = results[results["best_loss"] < args.max_loss]
     except KeyError:
         logger.warning("There are probably no results in folder.")
         return None
 
-    if len(results) < min_good_samples:
-        logger.info(
-            f"Less than {min_good_samples} good samples. Parameters will not be updated."
+    if len(results) < args.min_good_samples:
+        logger.warning(
+            f"Found {len(results)} (< {args.min_good_samples}) good samples. Parameters will not be updated."
         )
         return None
+    else:
+        logger.info(
+            f"Found {len(results)} (> {args.min_good_samples}) good samples. Parameters will be updated."
+        )
 
     for param in parameters:
         if param.type == "float":
@@ -129,7 +130,7 @@ def compute_parameter_intervals(
 
 
 def update_yaml_file(
-    params_dir: str, events_dir: str, parameters: List[Parameter]
+    args: Namespace, events_dir: str, parameters: List[Parameter]
 ) -> None:
     if parameters is not None:
         gridsearch_dict = {}
@@ -146,11 +147,15 @@ def update_yaml_file(
                     "type": param.type,
                 }
 
-        yaml_params = read_yaml(params_dir)
+        yaml_params = read_yaml(args.params_dir)
+
+        # specify new folder
         yaml_params["name"] = find_new_path(events_dir)
+
+        # update gridsearch parameters
         yaml_params["gridsearch"] = gridsearch_dict
 
-        save_yaml(yaml_params, params_dir)
+        save_yaml(yaml_params, args.params_dir)
         save_last_params(yaml_params, events_dir)
 
 
@@ -174,17 +179,20 @@ def main(args: Namespace) -> None:
     events_dir = read_yaml(args.params_dir)["name"]
 
     loss_and_params = get_loss_and_params(events_dir)
-    parameters = compute_parameter_intervals(
-        results=loss_and_params,
-        params_dir=args.params_dir,
-        max_loss=args.max_loss,
-        min_good_samples=args.min_good_samples,
-    )
+    parameters = compute_parameter_intervals(results=loss_and_params, args=args)
 
-    update_yaml_file(args.params_dir, events_dir, parameters)
+    update_yaml_file(args, events_dir, parameters)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Parameter updater")
+
+    params = read_yaml(args.params_dir)
+
+    logs_dir = args.logs_dir or params["name"]
+
+    logger = setup_logger(logs_dir)
+    logger.info("Started update_params.py")
+    logger.info(f"{args.__dict__=}")
 
     main(args)

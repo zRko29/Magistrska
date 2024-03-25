@@ -8,14 +8,6 @@ import os
 import logging
 
 
-logger = logging.getLogger("rnn_autoregressor")
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-file_handler = logging.FileHandler("logs/log")
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
-
-
 def read_yaml(parameters_path: str) -> dict:
     with open(parameters_path, "r") as file:
         return yaml.safe_load(file)
@@ -53,6 +45,27 @@ def get_inference_folders(directory_path: str, version: str) -> List[str]:
     return folders
 
 
+def setup_logger(log_file_path: str) -> logging.Logger:
+    logger = logging.getLogger("rnn_autoregressor")
+    logger.setLevel(logging.INFO)
+
+    if not os.path.exists(log_file_path):
+        os.makedirs(log_file_path)
+
+    log_file_name = os.path.join(log_file_path, "logs.log")
+    file_handler = logging.FileHandler(log_file_name)
+    file_handler.setLevel(logging.INFO)
+
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+    return logger
+
+
 def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
@@ -61,6 +74,13 @@ def import_parsed_args(script_name: str) -> Namespace:
         type=str,
         default="config/parameters.yaml",
         help="Directory containing parameter files. (default: %(default)s)",
+    )
+
+    parser.add_argument(
+        "--logs_dir",
+        type=str,
+        default=None,
+        help="File containing logs. (default: folder where trainer outputs are saved)",
     )
 
     if script_name in ["Autoregressor trainer", "Hyperparameter optimizer"]:
@@ -95,7 +115,7 @@ def import_parsed_args(script_name: str) -> Namespace:
         parser.add_argument(
             "--max_loss",
             type=float,
-            default=1e-6,
+            default=5e-6,
             help="Maximum loss value considered acceptable for selecting parameters. (default: %(default)s)",
         )
         parser.add_argument(
