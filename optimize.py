@@ -2,7 +2,7 @@ from argparse import Namespace
 from joblib import Parallel, delayed
 
 from trainer import main as train
-from update_params import main as update
+from update import main as update
 
 from src.helper import Gridsearch
 from src.mapping_helper import StandardMap
