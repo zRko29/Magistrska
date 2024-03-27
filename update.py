@@ -5,9 +5,6 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 import pandas as pd
 from argparse import Namespace
 
-INPUT_MAPPING = {"y": True, "n": False, "": False}
-TYPES_LIST = ["float", "int", "choice"]
-
 from src.utils import read_yaml, import_parsed_args, setup_logger, measure_time
 
 
