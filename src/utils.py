@@ -23,10 +23,12 @@ def measure_time(func: Callable) -> Callable:
         print('Started function "{}"!\n'.format(func.__name__))
         t1 = time.time()
         val = func(*args, **kwargs)
-        t2 = time.time() - t1
+        t2 = timedelta(seconds=time.time() - t1)
         print('\nFunction "{}" finished!'.format(func.__name__))
-        print(f"Function ran for: {timedelta(seconds=t2)}")
+        print(f"Function ran for: {t2}")
         print("------------------------------------\n")
+        if val == None:
+            return t2
         return val
 
     return wrapper

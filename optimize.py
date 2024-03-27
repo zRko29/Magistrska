@@ -51,9 +51,11 @@ if __name__ == "__main__":
     logs_dir = args.logs_dir or params["name"]
 
     logger = setup_logger(logs_dir)
-    logger.info("Started optimize_hyperparams.py")
+    logger.info("Started optimize.py")
     logger.info(f"{args.__dict__=}")
 
     map_object = StandardMap(seed=42, params=params)
 
-    main(args, map_object)
+    run_time = main(args, map_object)
+
+    logger.info(f"Finished trainer.py in {run_time}.\n")

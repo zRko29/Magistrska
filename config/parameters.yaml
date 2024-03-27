@@ -1,18 +1,19 @@
 K: 0.1
 batch_size: 256
 dropout: 0.0
-epochs: 20
+epochs: 10
 gridsearch:
-  batch_size: { lower: 256, type: int, upper: 256 }
-  hidden_size: { lower: 32, type: int, upper: 32 }
-  linear_size: { lower: 32, type: int, upper: 32 }
-  lr: { lower: 0.0003, type: float, upper: 0.0003 }
-  num_lin_layers: { lower: 1, type: int, upper: 1 }
-  num_rnn_layers: { lower: 1, type: int, upper: 1 }
+  batch_size: { lower: 185, type: int, upper: 218 }
+  hidden_size: { lower: 136, type: int, upper: 202 }
+  linear_size: { lower: 23, type: int, upper: 76 }
+  lr:
+    { lower: 0.0005528898448352811, type: float, upper: 0.0013252850964716812 }
+  num_lin_layers: { lower: 2, type: int, upper: 4 }
+  num_rnn_layers: { lower: 2, type: int, upper: 5 }
   precision:
-    list: [32-true]
+    list: [32-true, 64-true]
     type: choice
-  seq_length: { lower: 5, type: int, upper: 5 }
+  seq_length: { lower: 28, type: int, upper: 29 }
 hidden_size: 32
 init_points: 40
 linear_size: 32

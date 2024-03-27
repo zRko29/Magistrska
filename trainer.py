@@ -14,7 +14,13 @@ from pytorch_lightning.callbacks import (
 
 from src.mapping_helper import StandardMap
 from src.helper import Model, Data, CustomCallback
-from src.utils import measure_time, read_yaml, import_parsed_args, setup_logger
+from src.utils import (
+    measure_time,
+    read_yaml,
+    import_parsed_args,
+    setup_logger,
+    send_email,
+)
 
 from argparse import Namespace
 import os
@@ -50,7 +56,7 @@ def get_callbacks(save_path: str) -> list[callbacks]:
     ]
 
 
-# @measure_time
+@measure_time
 def main(
     args: Namespace, params: dict, sleep_sec: int, map_object: StandardMap
 ) -> None:
@@ -95,4 +101,6 @@ if __name__ == "__main__":
 
     map_object = StandardMap(seed=42, params=params)
 
-    main(args, params, 0, map_object)
+    run_time = main(args, params, 0, map_object)
+
+    logger.info(f"Finished trainer.py in {run_time}.\n")

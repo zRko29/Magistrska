@@ -9,4 +9,6 @@
 #SBATCH -o slurm.%N.%j.out        # STDOUT
 #SBATCH -e slurm.%N.%j.err        # STDERR
 
-python optimize_hyperparams.py -prog --strategy ddp --num_devices 2 --acc cpu
+source rnn_generator_env/bin/activate
+
+python optimize_hyperparams.py --optimization_steps 5 --models_per_step 10
