@@ -1,33 +1,35 @@
-K: 0.1
-batch_size: 256
-dropout: 0.0
-epochs: 10
-gridsearch:
-  batch_size: { lower: 185, type: int, upper: 218 }
-  hidden_size: { lower: 136, type: int, upper: 202 }
-  linear_size: { lower: 23, type: int, upper: 76 }
-  lr:
-    { lower: 0.0005528898448352811, type: float, upper: 0.0013252850964716812 }
-  num_lin_layers: { lower: 2, type: int, upper: 4 }
-  num_rnn_layers: { lower: 2, type: int, upper: 5 }
-  precision:
-    list: [32-true, 64-true]
-    type: choice
-  seq_length: { lower: 28, type: int, upper: 29 }
-hidden_size: 32
 init_points: 40
-linear_size: 32
-loss: mse
-lr: 0.0003
-name: logs/overfitting_K=0.1/0
-num_lin_layers: 1
-num_rnn_layers: 1
-optimizer: adam
-precision: 32-true
+steps: 45 # ≤ 100
+K: 0.1 # ≤ 1.5
 sampling: random
+
+hidden_size: 32
+linear_size: 32 # used when num_lin_layers > 1
+num_rnn_layers: 1
+num_lin_layers: 1
+dropout: 0.0 # doesn't seem necessary
+
+epochs: 4000
+batch_size: 256
 seq_length: 5
-sequence_type: many-to-one
-shuffle_batches: false
-shuffle_paths: true
-shuffle_sequences: false
-steps: 45
+loss: mse
+optimizer: adam
+lr: 0.0003
+precision: 32-true
+
+shuffle_paths: True # makes sense for linear sampling
+shuffle_batches: False # shuffle batches between epochs
+shuffle_sequences: False # shuffle sequences
+
+sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
+
+name: logs/overfitting_K=0.6/0
+
+gridsearch:
+  batch_size: { lower: 100, upper: 350, type: int }
+  seq_length: { lower: 10, upper: 30, type: int }
+  lr: { lower: 0.0001, upper: 0.003, type: float }
+  num_rnn_layers: { lower: 1, upper: 5, type: int }
+  num_lin_layers: { lower: 1, upper: 5, type: int }
+  hidden_size: { lower: 80, upper: 300, type: int }
+  linear_size: { lower: 30, upper: 250, type: int }
