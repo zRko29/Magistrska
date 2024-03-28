@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Tuple
+from typing import Tuple, List
 
 
 class StandardMap:
@@ -20,14 +20,14 @@ class StandardMap:
     ) -> None:
         self.init_points: int = init_points or params.get("init_points")
         self.steps: int = steps or params.get("steps")
-        self.K: float = K or params.get("K")
+        self.K: float | List[float] = K or params.get("K")
         self.sampling: str = sampling or params.get("sampling")
 
         self.rng: np.random.Generator = np.random.default_rng(seed=seed)
         self.n: int = n
         self.spectrum: np.ndarray = np.array([])
 
-    def retrieve_data(self) -> Tuple[np.ndarray, np.ndarray]:
+    def retrieve_data(self) -> Tuple[np.ndarray]:
         return self.theta_values, self.p_values
 
     def generate_data(self) -> None:
@@ -36,11 +36,11 @@ class StandardMap:
         theta, p = self._get_initial_points()
 
         if not isinstance(self.K, list):
-            K_list: list[float] = [self.K]
+            K_list: List[float] = [self.K]
         elif isinstance(self.K, list) and len(self.K) == 1:
-            K_list: list[float] = self.K
+            K_list: List[float] = self.K
         elif isinstance(self.K, list) and len(self.K) == 3:
-            K_list: list[float] = np.linspace(self.K[0], self.K[1], self.K[2])
+            K_list: List[float] = np.linspace(self.K[0], self.K[1], self.K[2])
 
         self.theta_values: np.ndarray = np.empty(
             (self.steps, theta.shape[0] * len(K_list))
@@ -57,7 +57,7 @@ class StandardMap:
                 self.p_values[step, i * p.shape[0] : (i + 1) * p.shape[0]] = p
 
     def _get_initial_points(self) -> Tuple[np.ndarray, np.ndarray]:
-        params = [0.01, 0.99, self.init_points]
+        params: List = [0.01, 0.99, self.init_points]
 
         if self.sampling == "random":
             theta_init = self.rng.uniform(*params)

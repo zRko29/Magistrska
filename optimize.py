@@ -17,8 +17,8 @@ def main(args: Namespace, map_object: StandardMap) -> None:
     for i in range(args.optimization_steps):
 
         print()
-        print(f"Starting optimization step: {i + 1} / {args.optimization_steps}")
-        logger.info(f"Starting optimization step: {i + 1} / {args.optimization_steps}")
+        print(f"Started optimization step: {i + 1} / {args.optimization_steps}")
+        logger.info(f"Started optimization step: {i + 1} / {args.optimization_steps}")
         print()
 
         try:
@@ -58,4 +58,4 @@ if __name__ == "__main__":
 
     run_time = main(args, map_object)
 
-    logger.info(f"Finished trainer.py in {run_time}.\n")
+    logger.info(f"Finished optimize.py in {run_time}.\n")

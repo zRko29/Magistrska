@@ -93,9 +93,6 @@ class Model(pl.LightningModule):
             output = self.lins[0](h_ts[-1])
             for i in range(1, self.num_lin_layers):
                 output = self.lins[i](output)
-            # output = torch.relu(self.lins[0](h_ts[-1]))
-            # for i in range(1, self.num_lin_layers):
-            #     output = torch.relu(self.lins[i](output))
 
             outputs.append(output)
 
@@ -306,7 +303,7 @@ class Data(pl.LightningDataModule):
 
 
 class CustomCallback(pl.Callback):
-    def __init__(self, print: bool):
+    def __init__(self, print: bool) -> None:
         super(CustomCallback, self).__init__()
         self.print = print
         self.min_train_loss = np.inf

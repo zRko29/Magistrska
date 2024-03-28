@@ -4,6 +4,7 @@ from typing import Callable, List
 import yaml
 from argparse import Namespace, ArgumentParser
 import os
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 import logging
 
@@ -19,14 +20,9 @@ def measure_time(func: Callable) -> Callable:
     """
 
     def wrapper(*args, **kwargs):
-        print("\n------------------------------------")
-        print('Started function "{}"!\n'.format(func.__name__))
         t1 = time.time()
         val = func(*args, **kwargs)
         t2 = timedelta(seconds=time.time() - t1)
-        print('\nFunction "{}" finished!'.format(func.__name__))
-        print(f"Function ran for: {t2}")
-        print("------------------------------------\n")
         if val == None:
             return t2
         return val
@@ -66,6 +62,40 @@ def setup_logger(log_file_path: str) -> logging.Logger:
     logger.addHandler(file_handler)
 
     return logger
+
+
+def save_last_params(yaml_params: dict, events_dir: str) -> None:
+    folder = "/".join(events_dir.split("/")[:-1])
+    save_yaml(yaml_params, os.path.join(folder, "last_parameters.yaml"))
+
+
+def find_new_path(file_dir: str) -> str:
+    path_split = file_dir.split("/")
+    path_split[-1] = str(int(path_split[-1]) + 1)
+    new_path = "/".join(path_split)
+    try:
+        os.mkdir(new_path)
+    except FileExistsError:
+        pass
+    return new_path
+
+
+def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
+    with open(param_file_path, "w") as f:
+        yaml.safe_dump(file, f, default_flow_style=None, default_style=None)
+
+
+def read_events_file(events_file_path: str) -> EventAccumulator:
+    event_acc = EventAccumulator(events_file_path)
+    event_acc.Reload()
+    return event_acc
+
+
+def extract_best_loss_from_event_file(events_file_path: str) -> str | float | int:
+    event_values = read_events_file(events_file_path)
+    for tag in event_values.Tags()["scalars"]:
+        if tag == "metrics/min_train_loss":
+            return {"best_loss": event_values.Scalars(tag)[-1].value}
 
 
 def import_parsed_args(script_name: str) -> Namespace:

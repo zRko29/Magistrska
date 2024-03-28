@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from pytorch_lightning.callbacks import callbacks
@@ -19,7 +19,6 @@ from src.utils import (
     read_yaml,
     import_parsed_args,
     setup_logger,
-    send_email,
 )
 
 from argparse import Namespace
@@ -36,7 +35,7 @@ warnings.filterwarnings(
 logging.getLogger("pytorch_lightning").setLevel(0)
 
 
-def get_callbacks(save_path: str) -> list[callbacks]:
+def get_callbacks(save_path: str) -> List[callbacks]:
     return [
         ModelCheckpoint(
             monitor="loss/train",

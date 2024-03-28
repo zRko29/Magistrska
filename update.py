@@ -5,7 +5,16 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 import pandas as pd
 from argparse import Namespace
 
-from src.utils import read_yaml, import_parsed_args, setup_logger, measure_time
+from src.utils import (
+    read_yaml,
+    import_parsed_args,
+    setup_logger,
+    measure_time,
+    save_yaml,
+    save_last_params,
+    find_new_path,
+    extract_best_loss_from_event_file,
+)
 
 
 class Parameter:
@@ -20,24 +29,6 @@ class Parameter:
         elif self.type == "choice":
             self.value_counts = {}
             self.count = 0
-
-
-def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
-    with open(param_file_path, "w") as f:
-        yaml.safe_dump(file, f, default_flow_style=None, default_style=None)
-
-
-def read_events_file(events_file_path: str) -> EventAccumulator:
-    event_acc = EventAccumulator(events_file_path)
-    event_acc.Reload()
-    return event_acc
-
-
-def extract_best_loss_from_event_file(events_file_path: str) -> str | float | int:
-    event_values = read_events_file(events_file_path)
-    for tag in event_values.Tags()["scalars"]:
-        if tag == "metrics/min_train_loss":
-            return {"best_loss": event_values.Scalars(tag)[-1].value}
 
 
 def get_loss_and_params(dir: str) -> pd.DataFrame:
@@ -154,22 +145,6 @@ def update_yaml_file(
 
         save_yaml(yaml_params, args.params_dir)
         save_last_params(yaml_params, events_dir)
-
-
-def save_last_params(yaml_params: dict, events_dir: str) -> None:
-    folder = "/".join(events_dir.split("/")[:-1])
-    save_yaml(yaml_params, os.path.join(folder, "last_parameters.yaml"))
-
-
-def find_new_path(file_dir: str) -> str:
-    path_split = file_dir.split("/")
-    path_split[-1] = str(int(path_split[-1]) + 1)
-    new_path = "/".join(path_split)
-    try:
-        os.mkdir(new_path)
-    except FileExistsError:
-        pass
-    return new_path
 
 
 @measure_time
