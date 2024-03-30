@@ -60,20 +60,17 @@ def main():
                 logger=False,
             )
             predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
-            predicted: Tensor = predictions["predicted"]
-            targets: Tensor = predictions["targets"]
-            loss: Tensor = predictions["loss"]
 
-            print(f"{input_suffix} loss: {loss.item():.3e}")
+            print(f"{input_suffix} loss: {predictions["loss"].item():.3e}")
             plot_2d(
-                predicted,
-                targets,
+                predictions["predicted"],
+                predictions["targets"],
                 show_plot=True,
                 save_path=os.path.join(log_path, input_suffix),
-                title=loss.item(),
+                title=predictions["loss"].item(),
             )
 
-            dmd: DMD = DMD([predicted, targets])
+            dmd: DMD = DMD([predictions["predicted"], predictions["targets"]])
             dmd.plot_source_matrix(titles=["Predicted", "Targets"])
             dmd._generate_dmd_results()
             dmd.plot_eigenvalues(titles=["Predicted", "Targets"])

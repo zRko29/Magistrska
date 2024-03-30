@@ -9,7 +9,7 @@ num_rnn_layers: 1
 num_lin_layers: 1
 dropout: 0.0 # doesn't seem necessary
 
-epochs: 20
+epochs: 4000
 batch_size: 256
 seq_length: 5
 loss: mse
@@ -17,13 +17,13 @@ optimizer: adam
 lr: 0.0003
 precision: 32-true
 
-shuffle_paths: True # makes sense for linear sampling
+shuffle_trajectories: True # makes sense for linear sampling
 shuffle_batches: False # shuffle batches between epochs
 shuffle_sequences: False # shuffle sequences
 
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
-name: logs/overfitting_K=0.6/0
+name: logs/overfitting_K=0.1/0
 
 gridsearch:
   batch_size: { lower: 150, upper: 230, type: int }

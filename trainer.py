@@ -51,7 +51,7 @@ def get_callbacks(save_path: str) -> List[callbacks]:
             patience=350,
         ),
         # DeviceStatsMonitor(),
-        CustomCallback(print=False),
+        CustomCallback(),
     ]
 
 
@@ -83,7 +83,7 @@ def main(
     )
 
     trainer.fit(model, datamodule)
-    logger.info("Model trained.")
+    logger.info(f"Model trained and saved in '{save_path}'.")
 
 
 if __name__ == "__main__":
