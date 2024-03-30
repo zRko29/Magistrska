@@ -6,10 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from datetime import timedelta
-import os, yaml
+import os
 from typing import Tuple
 
 from src.mapping_helper import StandardMap
+from src.utils import read_yaml
 
 
 class Model(pl.LightningModule):
@@ -92,9 +93,6 @@ class Model(pl.LightningModule):
             output = self.lins[0](h_ts[-1])
             for i in range(1, self.num_lin_layers):
                 output = self.lins[i](output)
-            # output = torch.relu(self.lins[0](h_ts[-1]))
-            # for i in range(1, self.num_lin_layers):
-            #     output = torch.relu(self.lins[i](output))
 
             outputs.append(output)
 
@@ -112,6 +110,7 @@ class Model(pl.LightningModule):
         inputs: torch.Tensor
         targets: torch.Tensor
         inputs, targets = batch
+        print(inputs.shape, targets.shape)
 
         predicted = self(inputs)
         if self.sequence_type == "many-to-one":
@@ -123,7 +122,6 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
-            sync_dist=False,
         )
         self.training_step_outputs.append(loss)
         return loss
@@ -143,7 +141,6 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
-            sync_dist=False,
         )
         self.validation_step_outputs.append(loss)
         return loss
@@ -167,12 +164,19 @@ class Data(pl.LightningDataModule):
         self,
         map_object: StandardMap,
         train_size: float,
-        plot_data: bool,
-        plot_data_split: bool,
-        print_split: bool,
         params: dict,
+        plot_data: bool = False,
+        plot_data_split: bool = False,
     ) -> None:
         super(Data, self).__init__()
+        self.seq_len: int = params.get("seq_length")
+        self.batch_size: int = params.get("batch_size")
+        self.shuffle_trajectories: bool = params.get("shuffle_trajectories")
+        self.shuffle_batches: bool = params.get("shuffle_batches")
+        self.shuffle_sequences: bool = params.get("shuffle_sequences")
+        sequence_type: str = params.get("sequence_type")
+        self.rng: np.random.Generator = np.random.default_rng(seed=42)
+
         map_object.generate_data()
 
         thetas: np.ndarray
@@ -182,44 +186,23 @@ class Data(pl.LightningDataModule):
         if plot_data:
             map_object.plot_data()
 
-        self.seq_len: int = params.get("seq_length")
-        self.batch_size: int = params.get("batch_size")
-        self.shuffle_paths: bool = params.get("shuffle_paths")
-        self.shuffle_batches: bool = params.get("shuffle_batches")
-        self.shuffle_sequences: bool = params.get("shuffle_sequences")
-        sequence_type: str = params.get("sequence_type")
-
-        self.rng: np.random.Generator = np.random.default_rng(seed=42)
-
         # data.shape = [init_points, 2, steps]
         self.data = np.stack([thetas.T, ps.T], axis=1)
 
-        # first shuffle trajectories and then make sequences
-        if self.shuffle_paths:
+        # shuffle trajectories
+        if self.shuffle_trajectories:
             self.rng.shuffle(self.data)
 
-        # many-to-many or many-to-one types of sequences
+        # many-to-many or many-to-one
         sequences = self._make_sequences(self.data, type=sequence_type)
 
         if plot_data_split:
             self.plot_data_split(sequences, train_size)
 
-        xy_pairs = self._make_input_output_pairs(sequences, type=sequence_type)
-
-        t = int(len(xy_pairs) * train_size)
-        self.train_data = xy_pairs[:t]
-        self.val_data = xy_pairs[t:]
-
-        if print_split:
-            print(f"Sequences shape: {sequences.shape}")
-            print(
-                f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {len(self.train_data[0][1][0])})"
-            )
-            if train_size < 1.0:
-                print(
-                    f"Validation data shape: {len(self.val_data)} pairs of shape ({len(self.val_data[0][0][0])}, {len(self.val_data[0][1][0])})"
-                )
-            print()
+        self.input_output_pairs = self._make_input_output_pairs(
+            sequences, type=sequence_type
+        )
+        self.t = int(len(self.input_output_pairs) * train_size)
 
     def _make_sequences(self, data: np.ndarray, type: str) -> np.ndarray:
         init_points: int
@@ -238,6 +221,7 @@ class Data(pl.LightningDataModule):
             else:
                 sequences = np.concatenate((sequences), axis=0)
                 self.rng.shuffle(sequences)
+
         elif type == "many-to-one":
             if self.seq_len < steps:
                 # sequences.shape = [init_points * (steps - seq_len), features, seq_len + 1]
@@ -255,23 +239,25 @@ class Data(pl.LightningDataModule):
         return sequences
 
     def _make_input_output_pairs(self, sequences, type: str) -> list[tuple[np.ndarray]]:
+        # (trajectory, trajectory shifted by one step)
         if type == "many-to-many":
             return [(seq[:, :-1], seq[:, 1:]) for seq in sequences]
         elif type == "many-to-one":
+            # (trajectory, next point in trajectory)
             return [(seq[:, :-1], seq[:, -1:]) for seq in sequences]
         else:
             raise ValueError("Invalid type.")
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
-            Dataset(self.train_data),
+            Dataset(self.input_output_pairs[: self.t]),
             batch_size=self.batch_size,
             shuffle=self.shuffle_batches,
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            Dataset(self.val_data),
+            Dataset(self.input_output_pairs[self.t :]),
             batch_size=2 * self.batch_size,
             shuffle=False,
         )
@@ -305,9 +291,8 @@ class Data(pl.LightningDataModule):
 
 
 class CustomCallback(pl.Callback):
-    def __init__(self, print: bool):
+    def __init__(self, print: bool) -> None:
         super(CustomCallback, self).__init__()
-        self.print = print
         self.min_train_loss = np.inf
         self.min_val_loss = np.inf
 
@@ -339,21 +324,6 @@ class CustomCallback(pl.Callback):
             )
         pl_module.validation_step_outputs.clear()
 
-    def on_fit_start(self, trainer, pl_module):
-        if self.print:
-            print()
-            print("Training started!")
-            print()
-            self.t_start = time.time()
-
-    def on_fit_end(self, trainer, pl_module):
-        if self.print:
-            print()
-            print("Training ended!")
-            train_time = time.time() - self.t_start
-            print(f"Training time: {timedelta(seconds=train_time)}")
-            print()
-
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data: np.ndarray):
@@ -374,22 +344,29 @@ class Gridsearch:
         self.path = path
         self.use_defaults = use_defaults
 
-    def update_params(self) -> dict:
-        with open(self.path, "r") as file:
-            params: dict = yaml.safe_load(file)
-            if not self.use_defaults:
-                params = self._update_params(params)
+    def __next__(self):
+        return self.update_params()
 
-            try:
-                del params["gridsearch"]
-            except KeyError:
-                pass
+    def __iter__(self):
+        for _ in range(10**3):
+            yield self.update_params()
+
+    def update_params(self) -> dict:
+        params = read_yaml(self.path)
+        if not self.use_defaults:
+            params = self._update_params(params)
+
+        try:
+            del params["gridsearch"]
+        except KeyError:
+            pass
 
         return params
 
     def _update_params(self, params) -> dict:
         # don't use any seed
-        rng: np.random.Generator = np.random.default_rng()
+        rng: np.random.Generator = np.random.default_rng(None)
+
         for key, space in params.get("gridsearch").items():
             type = space.get("type")
             if type == "int":
@@ -404,22 +381,6 @@ class Gridsearch:
                 params[key] = choice
             elif type == "float":
                 params[key] = rng.uniform(space["lower"], space["upper"])
-            # print(f"{key} = {params[key]}")
-
-        # to add variable layer size
-        # if "layers" in key:
-        #         num_layers = params[key]
-        #         space = space["layer_sizes"]
-        #         layer_type = space["layer_type"] + "_sizes"
-        #         params[layer_type] = []
-        #         for _ in range(num_layers):
-        #             layer_size = rng.integers(space["lower"], space["upper"] + 1)
-        #             params[layer_type].append(int(layer_size))
-        #             if not space["varied"]:
-        #                 params[layer_type][-1] = params[layer_type][0]
-        #         if layer_type == "lin_sizes":
-        #             params[layer_type] = params[layer_type][:-1]
-        # print(f"{layer_type}: {params[layer_type]}")
 
         return params
 

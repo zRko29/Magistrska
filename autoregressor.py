@@ -1,49 +1,39 @@
 import os, yaml
 
 import pytorch_lightning as pl
-from utils.mapping_helper import StandardMap
-from utils.helper import Model, Data, plot_2d
-from utils.dmd import DMD
+from src.mapping_helper import StandardMap
+from src.helper import Model, Data, plot_2d
+from src.dmd import DMD
+from src.utils import read_yaml, get_inference_folders
 from torch import Tensor
+
+from typing import Optional, List
 
 import warnings
 
 warnings.filterwarnings(
-    "ignore", ".*Consider increasing the value of the `num_workers` argument*"
-)
-warnings.filterwarnings(
     "ignore",
-    ".*across ranks is zero. Please make sure this was your intention*",
+    module="pytorch_lightning",
 )
-
-
 import logging
 
 logging.getLogger("pytorch_lightning").setLevel(0)
 
-if __name__ == "__main__":
-    version: int | None = 1
-    name: str = "overfitting_K=0.1"
+
+def main():
+    version: Optional[int] = None
+    name: str = "overfitting_K=0.1/0"
 
     directory_path: str = f"logs/{name}"
 
-    if version is not None:
-        folders: list[str] = [os.path.join(directory_path, f"version_{version}")]
-    else:
-        folders: list[str] = [
-            os.path.join(directory_path, folder)
-            for folder in os.listdir(directory_path)
-            if os.path.isdir(os.path.join(directory_path, folder))
-        ]
-        folders.sort()
+    folders = get_inference_folders(directory_path, version)
 
     for log_path in folders:
         print(f"log_path: {log_path}")
         params_path: str = os.path.join(log_path, "hparams.yaml")
-        with open(params_path) as f:
-            params: dict = yaml.safe_load(f)
+        params: dict = read_yaml(params_path)
 
-        maps: list[StandardMap] = [
+        maps: List[StandardMap] = [
             StandardMap(seed=42, params=params),
             StandardMap(seed=41, params=params),
         ]
@@ -51,7 +41,7 @@ if __name__ == "__main__":
 
         for map, input_suffix in zip(maps, input_suffixes):
             model_path: str = os.path.join(log_path, f"model.ckpt")
-            model: Model = Model(**params).load_from_checkpoint(model_path)
+            model = Model(**params).load_from_checkpoint(model_path)
 
             model.regression_seed = params["seq_length"]
 
@@ -61,9 +51,6 @@ if __name__ == "__main__":
             datamodule: Data = Data(
                 map_object=map,
                 train_size=1.0,
-                plot_data=False,
-                print_split=False,
-                plot_data_split=False,
                 params=temp_params,
             )
 
@@ -73,23 +60,24 @@ if __name__ == "__main__":
                 logger=False,
             )
             predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
-            predicted: Tensor = predictions["predicted"]
-            targets: Tensor = predictions["targets"]
-            loss: Tensor = predictions["loss"]
 
-            print(f"{input_suffix} loss: {loss.item():.3e}")
+            print(f"{input_suffix} loss: {predictions["loss"].item():.3e}")
             plot_2d(
-                predicted,
-                targets,
+                predictions["predicted"],
+                predictions["targets"],
                 show_plot=True,
                 save_path=os.path.join(log_path, input_suffix),
-                title=loss.item(),
+                title=predictions["loss"].item(),
             )
 
-            dmd: DMD = DMD([predicted, targets])
+            dmd: DMD = DMD([predictions["predicted"], predictions["targets"]])
             dmd.plot_source_matrix(titles=["Predicted", "Targets"])
             dmd._generate_dmd_results()
             dmd.plot_eigenvalues(titles=["Predicted", "Targets"])
             # dmd.plot_abs_values(titles=["Predicted", "Targets"])
 
-        print("-" * 30)
+        print("-----------------------------")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from pytorch_lightning.callbacks import callbacks
@@ -13,13 +13,19 @@ from pytorch_lightning.callbacks import (
 )
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, CustomCallback, Gridsearch
-from src.utils import measure_time
+from src.helper import Model, Data, CustomCallback
+from src.utils import (
+    measure_time,
+    read_yaml,
+    import_parsed_args,
+    setup_logger,
+)
 
-from argparse import Namespace, ArgumentParser
+from argparse import Namespace
 import os
 import warnings
 import logging
+from time import sleep
 
 os.environ["GLOO_SOCKET_IFNAME"] = "en0"
 warnings.filterwarnings(
@@ -29,10 +35,7 @@ warnings.filterwarnings(
 logging.getLogger("pytorch_lightning").setLevel(0)
 
 
-def get_callbacks(tb_logger: TensorBoardLogger) -> list[callbacks]:
-
-    save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
-
+def get_callbacks(save_path: str) -> List[callbacks]:
     return [
         ModelCheckpoint(
             monitor="loss/train",
@@ -47,22 +50,18 @@ def get_callbacks(tb_logger: TensorBoardLogger) -> list[callbacks]:
             min_delta=1e-8,
             patience=350,
         ),
-        DeviceStatsMonitor(),
-        CustomCallback(print=False),
+        # DeviceStatsMonitor(),
+        CustomCallback(),
     ]
 
 
-# @measure_time
-def main(args: Namespace, params: dict) -> None:
+@measure_time
+def main(
+    args: Namespace, params: dict, sleep_sec: int, map_object: StandardMap
+) -> None:
+    sleep(sleep_sec)
 
-    datamodule = Data(
-        map_object=StandardMap(seed=42, params=params),
-        train_size=1.0,
-        plot_data=False,
-        plot_data_split=False,
-        print_split=False,
-        params=params,
-    )
+    datamodule = Data(map_object=map_object, train_size=0.8, params=params)
 
     model = Model(**params)
 
@@ -70,62 +69,37 @@ def main(args: Namespace, params: dict) -> None:
         save_dir="", name=params.get("name"), default_hp_metric=False
     )
 
+    save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
+
     trainer = Trainer(
         max_epochs=params.get("epochs"),
         precision=params.get("precision"),
-        enable_progress_bar=args.progress_bar,
         logger=tb_logger,
-        callbacks=get_callbacks(tb_logger),
+        callbacks=get_callbacks(save_path),
+        enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
         devices=args.num_devices,
         strategy=args.strategy,
     )
 
-    trainer.fit(model=model, datamodule=datamodule)
+    trainer.fit(model, datamodule)
+    logger.info(f"Model trained and saved in '{save_path}'.")
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(
-        prog="Autoregressor trainer",
-        description="Trains an autoregression model using PyTorch Lightning",
-    )
+    args: Namespace = import_parsed_args("Autoregressor trainer")
 
-    parser.add_argument(
-        "--params_dir",
-        type=str,
-        default="config/auto_parameters.yaml",
-        help="Directory containing parameter files. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--progress_bar",
-        "-prog",
-        action="store_true",
-        help="Show progress bar during training. (default: False)",
-    )
-    parser.add_argument(
-        "--accelerator",
-        "-acc",
-        type=str,
-        default="auto",
-        choices=["auto", "cpu", "gpu"],
-        help="Specify the accelerator to use. Choices are 'auto', 'cpu', or 'gpu'. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--num_devices",
-        default="auto",
-        help="Number of devices to use. (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--strategy",
-        type=str,
-        default="auto",
-        choices=["auto", "ddp", "ddp_spawn"],
-        help="Specify the training strategy. Choices are 'auto', 'ddp', or 'ddp_spawn'. (default: %(default)s)",
-    )
+    params = read_yaml(args.params_dir)
+    del params["gridsearch"]
 
-    args = parser.parse_args()
+    logs_dir = args.logs_dir or params["name"]
 
-    gridsearch = Gridsearch(args.params_dir, use_defaults=True)
-    params: dict = gridsearch.update_params()
+    logger = setup_logger(logs_dir)
+    logger.info("Started trainer.py")
+    logger.info(f"{args.__dict__=}")
 
-    main(args, params)
+    map_object = StandardMap(seed=42, params=params)
+
+    run_time = main(args, params, 0, map_object)
+
+    logger.info(f"Finished trainer.py in {run_time}.\n")
