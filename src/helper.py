@@ -110,7 +110,6 @@ class Model(pl.LightningModule):
         inputs: torch.Tensor
         targets: torch.Tensor
         inputs, targets = batch
-        print(inputs.shape, targets.shape)
 
         predicted = self(inputs)
         if self.sequence_type == "many-to-one":
