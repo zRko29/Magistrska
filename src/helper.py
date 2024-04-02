@@ -112,6 +112,7 @@ class Model(pl.LightningModule):
         inputs, targets = batch
 
         predicted = self(inputs)
+
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
         loss = torch.nn.functional.mse_loss(predicted, targets)
@@ -290,7 +291,7 @@ class Data(pl.LightningDataModule):
 
 
 class CustomCallback(pl.Callback):
-    def __init__(self, print: bool) -> None:
+    def __init__(self) -> None:
         super(CustomCallback, self).__init__()
         self.min_train_loss = np.inf
         self.min_val_loss = np.inf
@@ -300,6 +301,10 @@ class CustomCallback(pl.Callback):
             pl_module.hparams,
             {"metrics/min_val_loss": np.inf, "metrics/min_train_loss": np.inf},
         )
+
+    def on_before_zero_grad(self, trainer, pl_module, optimizer):
+        if trainer.global_step == 1:
+            trainer.logger.experiment.add_graph("plot")
 
     def on_train_epoch_end(self, trainer, pl_module):
         mean_loss = torch.stack(pl_module.training_step_outputs).mean()
