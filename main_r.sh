@@ -11,4 +11,6 @@
 
 source rnn_generator_env/bin/activate
 
-python rnn_autoregression_model/optimize.py --optimization_steps 5 --models_per_step 10
+cd rnn_autoregression_model
+
+python optimize.py --optimization_steps 5 --models_per_step 10
