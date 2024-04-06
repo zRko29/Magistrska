@@ -32,7 +32,8 @@ warnings.filterwarnings(
     "ignore",
     module="pytorch_lightning",
 )
-logging.getLogger("pytorch_lightning").setLevel(0)
+
+logging.getLogger("pytorch_lightning").setLevel("INFO")
 
 
 def get_callbacks(save_path: str) -> List[callbacks]:
