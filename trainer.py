@@ -57,7 +57,11 @@ def get_callbacks(save_path: str) -> List[callbacks]:
 
 @measure_time
 def main(
-    args: Namespace, params: dict, sleep_sec: int, map_object: StandardMap
+    args: Namespace,
+    params: dict,
+    sleep_sec: int,
+    map_object: StandardMap,
+    logger: logging.Logger,
 ) -> None:
     sleep(sleep_sec)
 
@@ -100,6 +104,6 @@ if __name__ == "__main__":
 
     map_object = StandardMap(seed=42, params=params)
 
-    run_time = main(args, params, 0, map_object)
+    run_time = main(args, params, 0, map_object, logger)
 
     logger.info(f"Finished trainer.py in {run_time}.\n")
