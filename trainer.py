@@ -83,8 +83,9 @@ def main(
         callbacks=get_callbacks(save_path),
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
-        devices=1,
+        devices=args.devices,
         strategy=args.strategy,
+        num_nodes=args.num_nodes,
     )
 
     trainer.fit(model, datamodule)
