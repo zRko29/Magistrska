@@ -13,4 +13,4 @@ source rnn_generator_env/bin/activate
 
 cd rnn_autoregression_model
 
-srun python optimize.py --optimization_steps 2 --models_per_step 1 --num_nodes 2 --strategy ddp --num_devices 2 --accelerator gpu
+srun python optimize.py --optimization_steps 2 --models_per_step 1 --num_nodes 2 --strategy auto --num_devices -1 --accelerator gpu
