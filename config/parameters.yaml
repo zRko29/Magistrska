@@ -9,7 +9,7 @@ num_rnn_layers: 1
 num_lin_layers: 1
 dropout: 0.0 # doesn't seem necessary
 
-epochs: 4000
+epochs: 2
 batch_size: 256
 seq_length: 5
 loss: mse
