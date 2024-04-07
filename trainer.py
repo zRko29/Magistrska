@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from pytorch_lightning.callbacks import callbacks
 
 from pytorch_lightning import Trainer
+from pytorch_lightning.strategies import DDPStrategy
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import (
     EarlyStopping,
@@ -84,7 +85,7 @@ def main(
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
         devices=args.num_devices,
-        strategy=args.strategy,
+        strategy=DDPStrategy(process_group_backend="gloo"),
         num_nodes=args.num_nodes,
     )
 
