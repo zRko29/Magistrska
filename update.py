@@ -177,4 +177,4 @@ if __name__ == "__main__":
 
     run_time = main(args, logger)
 
-    logger.info(f"Finished trainer.py in {run_time}.\n")
+    logger.info(f"Finished update.py in {run_time}.\n")
