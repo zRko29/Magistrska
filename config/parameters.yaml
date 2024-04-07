@@ -23,7 +23,7 @@ shuffle_sequences: False # shuffle sequences
 
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
-name: logs/overfitting_K=0.1/0
+name: shared/mari/grandovecu/rnn_autoregression_model/logs/overfitting_K=0.1/0
 
 gridsearch:
   batch_size: { lower: 100, upper: 350, type: int }
