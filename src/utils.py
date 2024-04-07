@@ -82,7 +82,7 @@ def find_new_path(file_dir: str) -> str:
 
 def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
     with open(param_file_path, "w") as f:
-        yaml.dump(file, f)
+        yaml.dump(file, f, default_style=False)
 
 
 def read_events_file(events_file_path: str) -> EventAccumulator:
