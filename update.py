@@ -6,6 +6,8 @@ import pandas as pd
 from argparse import Namespace
 import logging
 
+from src.helper import Gridsearch
+
 from src.utils import (
     read_yaml,
     import_parsed_args,
@@ -167,7 +169,8 @@ if __name__ == "__main__":
 
     args.params_dir = os.path.abspath(args.params_dir)
 
-    params = read_yaml(args.params_dir)
+    gridsearch = Gridsearch(args.params_dir, use_defaults=False)
+    params = next(gridsearch)
 
     params["name"] = os.path.abspath(params["name"])
 

@@ -13,10 +13,9 @@ from pytorch_lightning.callbacks import (
 )
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, CustomCallback
+from src.helper import Model, Data, CustomCallback, Gridsearch
 from src.utils import (
     measure_time,
-    read_yaml,
     import_parsed_args,
     setup_logger,
 )
@@ -99,8 +98,8 @@ if __name__ == "__main__":
 
     args.params_dir = os.path.abspath(args.params_dir)
 
-    params = read_yaml(args.params_dir)
-    del params["gridsearch"]
+    gridsearch = Gridsearch(args.params_dir, use_defaults=False)
+    params = next(gridsearch)
 
     params["name"] = os.path.abspath(params["name"])
 
