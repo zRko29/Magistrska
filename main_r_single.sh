@@ -3,7 +3,7 @@
 #SBATCH -p gpu                    # partition (queue)
 #SBATCH --qos=valhala
 #SBATCH --nodes=1                 # number of nodes
-#SBATCH --ntasks-per-node=1       # number of cores
+#SBATCH --ntasks-per-node=2       # number of cores
 #SBATCH --mem=10G                 # memory pool for all cores
 #SBATCH -t 1-00:00                # time (D-HH:MM)
 #SBATCH -o slurm.%N.%j.out        # STDOUT
