@@ -11,4 +11,4 @@
 
 source ../rnn_generator_env/bin/activate
 
-srun python optimize_single.py --optimization_steps 3 --num_nodes 1 --num_devices 2 --accelerator gpu
+srun python optimize_single.py --optimization_steps 3 --num_nodes 1 --devices [0,1] --accelerator gpu
