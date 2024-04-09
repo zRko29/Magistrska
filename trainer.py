@@ -9,7 +9,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import (
     EarlyStopping,
     ModelCheckpoint,
-    DeviceStatsMonitor,
+    # DeviceStatsMonitor,
 )
 
 from src.mapping_helper import StandardMap

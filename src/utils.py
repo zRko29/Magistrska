@@ -4,7 +4,7 @@ from typing import Callable, List
 import yaml
 from argparse import Namespace, ArgumentParser
 import os
-from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+# from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 import logging
 
@@ -12,6 +12,11 @@ import logging
 def read_yaml(parameters_path: str) -> dict:
     with open(parameters_path, "r") as file:
         return yaml.safe_load(file)
+
+def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
+    with open(param_file_path, "w") as f:
+        yaml.dump(file, f, default_flow_style=None, default_style=None)
+
 
 
 def measure_time(func: Callable) -> Callable:
@@ -80,15 +85,10 @@ def find_new_path(file_dir: str) -> str:
     return new_path
 
 
-def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
-    with open(param_file_path, "w") as f:
-        yaml.dump(file, f, default_flow_style=None, default_style=None)
-
-
-def read_events_file(events_file_path: str) -> EventAccumulator:
-    event_acc = EventAccumulator(events_file_path)
-    event_acc.Reload()
-    return event_acc
+# def read_events_file(events_file_path: str) -> EventAccumulator:
+#     event_acc = EventAccumulator(events_file_path)
+#     event_acc.Reload()
+#     return event_acc
 
 
 def extract_best_loss_from_event_file(events_file_path: str) -> str | float | int:
