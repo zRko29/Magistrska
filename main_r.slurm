@@ -11,7 +11,7 @@
 #SBATCH --mail-type=END                        # Send email at job completion
 #SBATCH --mail-user=grandovecuros@gmail.com    # Email address for notifications
 
-conda init
+source ~/.bashrc
 
 conda activate rnn_generator_env
 
