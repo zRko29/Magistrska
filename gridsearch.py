@@ -1,5 +1,4 @@
 from argparse import Namespace
-import logging
 from src.utils import (
     import_parsed_args,
     setup_logger,
@@ -11,16 +10,9 @@ import numpy as np
 
 
 class Gridsearch:
-    def __init__(self, path: str, use_defaults: bool = False) -> None:
-        self.path = path
+    def __init__(self, params_path: str, use_defaults: bool = False) -> None:
+        self.path = params_path
         self.use_defaults = use_defaults
-
-    def __next__(self):
-        return self.update_params()
-
-    def __iter__(self):
-        for _ in range(10**3):
-            yield self.update_params()
 
     def update_params(self) -> dict:
         params = read_yaml(self.path)
@@ -56,28 +48,23 @@ class Gridsearch:
         return params
 
 
+def main(params_dir: str) -> None:
+    params_path = os.path.join(params_dir, "parameters.yaml")
+    gridsearch = Gridsearch(params_path, use_defaults=False)
+    updated_params = gridsearch.update_params()
 
-
-def main(args: Namespace, logger: logging.Logger) -> None:
-    gridsearch = Gridsearch(args.params_dir, use_defaults=False)
-    params = next(gridsearch)
-
-    logger.info(f"{params=}")
-
-    save_yaml(params, os.path.join(params["name"], "current_params.yaml"))
+    save_yaml(updated_params, os.path.join(params_dir, "current_params.yaml"))
 
 
 if __name__ == "__main__":
-    args: Namespace = import_parsed_args("Autoregressor trainer")
+    params_dir = os.path.abspath("config")
 
-    args.params_dir = os.path.abspath(args.params_dir)
-
-    params = read_yaml(args.params_dir)
+    params_path = os.path.join(params_dir, "parameters.yaml")
+    params = read_yaml(params_path)
 
     params["name"] = os.path.abspath(params["name"])
 
     logger = setup_logger(params["name"])
-    logger.info("Started trainer.py")
-    logger.info(f"{args.__dict__=}")
+    logger.info("Running gridsearch.py")
 
-    main(args, logger)
+    main(params_dir)

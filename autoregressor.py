@@ -21,8 +21,8 @@ logging.getLogger("pytorch_lightning").setLevel(0)
 
 
 def main():
-    version: Optional[int] = None
-    name: str = "overfitting_K=0.1/0"
+    version: Optional[int] = 5
+    name: str = "overfitting_K=0.1/9"
 
     directory_path: str = f"logs/{name}"
 
@@ -61,7 +61,7 @@ def main():
             )
             predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
 
-            print(f"{input_suffix} loss: {predictions["loss"].item():.3e}")
+            print(f"{input_suffix} loss: {predictions['loss'].item():.3e}")
             plot_2d(
                 predictions["predicted"],
                 predictions["targets"],

@@ -1,12 +1,8 @@
-import yaml
 from typing import Dict, Tuple, List
 import os
-from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 import pandas as pd
 from argparse import Namespace
 import logging
-
-from src.helper import Gridsearch
 
 from src.utils import (
     read_yaml,
@@ -15,7 +11,6 @@ from src.utils import (
     measure_time,
     save_yaml,
     save_last_params,
-    find_new_path,
     extract_best_loss_from_event_file,
 )
 
@@ -59,12 +54,13 @@ def get_loss_and_params(dir: str, logger: logging.Logger) -> pd.DataFrame:
     return pd.DataFrame(all_loss_hyperparams)
 
 
-def compute_parameter_intervals(
+def compute_new_parameter_intervals(
     results: pd.DataFrame,
     args: Namespace,
     logger: logging.Logger,
+    params_path: str,
 ) -> Dict[str, Tuple[float, float]]:
-    gridsearch_params = read_yaml(args.params_dir)["gridsearch"]
+    gridsearch_params = read_yaml(params_path)["gridsearch"]
 
     parameters = []
     for column in results.columns:
@@ -75,7 +71,7 @@ def compute_parameter_intervals(
                 type = gridsearch_params[column]["type"]
             except KeyError:
                 logger.warning(
-                    f"Variable parameter '{column}' is not included in the gridsearch parameters."
+                    f"Parameter '{column}' changed during training but it is not included in the gridsearch parameters."
                 )
                 continue
             if type:
@@ -84,7 +80,7 @@ def compute_parameter_intervals(
     # don't filter before because a parmeter could have the same value for all "good" rows
     # don't filter after because you wouldn't get optimal intervals
     try:
-        results = results[results["best_loss"] < args.max_loss]
+        results = results[results["best_loss"] < args.max_good_loss]
     except KeyError:
         logger.warning("There are probably no results in folder.")
         return None
@@ -95,7 +91,7 @@ def compute_parameter_intervals(
         )
         return None
     else:
-        logger.info(
+        logger.warning(
             f"Found {len(results)} (> {args.min_good_samples}) good samples. Parameters will be updated."
         )
 
@@ -123,7 +119,7 @@ def compute_parameter_intervals(
 
 
 def update_yaml_file(
-    args: Namespace, events_dir: str, parameters: List[Parameter]
+    params_path: str, events_dir: str, parameters: List[Parameter]
 ) -> None:
     if parameters is not None:
         gridsearch_dict = {}
@@ -140,44 +136,47 @@ def update_yaml_file(
                     "type": param.type,
                 }
 
-        yaml_params = read_yaml(args.params_dir)
-
-        # specify new folder
-        yaml_params["name"] = find_new_path(events_dir)
+        yaml_params = read_yaml(params_path)
 
         # update gridsearch parameters
         yaml_params["gridsearch"] = gridsearch_dict
 
-        save_yaml(yaml_params, args.params_dir)
+        save_yaml(yaml_params, params_path)
         save_last_params(yaml_params, events_dir)
 
 
 @measure_time
-def main(args: Namespace, logger: logging.Logger) -> None:
-    events_dir = read_yaml(args.params_dir)["name"]
+def main(args: Namespace, logger: logging.Logger, params_dir=str) -> None:
+    events_dir = params["name"]
 
     loss_and_params = get_loss_and_params(events_dir, logger)
-    parameters = compute_parameter_intervals(
-        results=loss_and_params, args=args, logger=logger
+
+    params_path = os.path.join(params_dir, "parameters.yaml")
+    parameters = compute_new_parameter_intervals(
+        results=loss_and_params,
+        args=args,
+        logger=logger,
+        params_path=params_path,
     )
 
-    update_yaml_file(args, events_dir, parameters)
+    update_yaml_file(params_path, events_dir, parameters)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Parameter updater")
 
-    args.params_dir = os.path.abspath(args.params_dir)
+    if args.current_step % args.check_every_n_steps != 0:
+        exit()
 
-    gridsearch = Gridsearch(args.params_dir, use_defaults=False)
-    params = next(gridsearch)
+    params_dir = os.path.abspath("config")
+
+    params_path = os.path.join(params_dir, "parameters.yaml")
+    params = read_yaml(params_path)
 
     params["name"] = os.path.abspath(params["name"])
 
     logger = setup_logger(params["name"])
-    logger.info("Started update.py")
+    logger.info("Running update.py")
     logger.info(f"{args.__dict__=}")
 
-    run_time = main(args, logger)
-
-    logger.info(f"Finished update.py in {run_time}.\n")
+    run_time = main(args, logger, params_dir)

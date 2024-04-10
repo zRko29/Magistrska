@@ -9,13 +9,14 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import (
     EarlyStopping,
     ModelCheckpoint,
-    # DeviceStatsMonitor,
+    DeviceStatsMonitor,
 )
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, CustomCallback, Gridsearch
+from src.helper import Model, Data, CustomCallback
 from src.utils import (
     measure_time,
+    read_yaml,
     import_parsed_args,
     setup_logger,
 )
@@ -24,7 +25,6 @@ from argparse import Namespace
 import os
 import warnings
 import logging
-from time import sleep
 
 os.environ["GLOO_SOCKET_IFNAME"] = "en0"
 warnings.filterwarnings(
@@ -59,13 +59,16 @@ def get_callbacks(save_path: str) -> List[callbacks]:
 def main(
     args: Namespace,
     params: dict,
-    sleep_sec: int,
-    map_object: StandardMap,
     logger: logging.Logger,
 ) -> None:
-    sleep(sleep_sec)
 
-    datamodule = Data(map_object=map_object, train_size=0.8, params=params)
+    map_object = StandardMap(seed=42, params=params)
+
+    datamodule = Data(
+        map_object=map_object,
+        train_size=args.train_size,
+        params=params,
+    )
 
     model = Model(**params)
 
@@ -75,12 +78,13 @@ def main(
 
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
 
-    logger.info(f"Started version_{tb_logger.version}")
+    logger.info(f"Training version_{tb_logger.version}.")
 
     trainer = Trainer(
-        max_epochs=params.get("epochs"),
+        max_epochs=args.num_epochs,
         precision=params.get("precision"),
         logger=tb_logger,
+        check_val_every_n_epoch=10,
         callbacks=get_callbacks(save_path),
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
@@ -90,25 +94,20 @@ def main(
     )
 
     trainer.fit(model, datamodule)
-    logger.info(f"Model trained and saved in '{save_path}'.")
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
 
-    args.params_dir = os.path.abspath(args.params_dir)
+    params_dir = os.path.abspath("config")
 
-    gridsearch = Gridsearch(args.params_dir, use_defaults=False)
-    params = next(gridsearch)
+    params_path = os.path.join(params_dir, "current_params.yaml")
+    params = read_yaml(params_path)
 
     params["name"] = os.path.abspath(params["name"])
 
     logger = setup_logger(params["name"])
-    logger.info("Started trainer.py")
+    logger.info("Running trainer.py")
     logger.info(f"{args.__dict__=}")
 
-    map_object = StandardMap(seed=42, params=params)
-
-    run_time = main(args, params, 0, map_object, logger)
-
-    logger.info(f"Finished trainer.py in {run_time}.\n")
+    run_time = main(args, params, logger)

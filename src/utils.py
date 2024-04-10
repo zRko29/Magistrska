@@ -4,7 +4,7 @@ from typing import Callable, List
 import yaml
 from argparse import Namespace, ArgumentParser
 import os
-# from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 import logging
 
@@ -13,10 +13,10 @@ def read_yaml(parameters_path: str) -> dict:
     with open(parameters_path, "r") as file:
         return yaml.safe_load(file)
 
+
 def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
     with open(param_file_path, "w") as f:
         yaml.dump(file, f, default_flow_style=None, default_style=None)
-
 
 
 def measure_time(func: Callable) -> Callable:
@@ -74,21 +74,10 @@ def save_last_params(yaml_params: dict, events_dir: str) -> None:
     save_yaml(yaml_params, os.path.join(folder, "last_parameters.yaml"))
 
 
-def find_new_path(file_dir: str) -> str:
-    path_split = file_dir.split("/")
-    path_split[-1] = str(int(path_split[-1]) + 1)
-    new_path = "/".join(path_split)
-    try:
-        os.mkdir(new_path)
-    except FileExistsError:
-        pass
-    return new_path
-
-
-# def read_events_file(events_file_path: str) -> EventAccumulator:
-#     event_acc = EventAccumulator(events_file_path)
-#     event_acc.Reload()
-#     return event_acc
+def read_events_file(events_file_path: str) -> EventAccumulator:
+    event_acc = EventAccumulator(events_file_path)
+    event_acc.Reload()
+    return event_acc
 
 
 def extract_best_loss_from_event_file(events_file_path: str) -> str | float | int:
@@ -101,14 +90,19 @@ def extract_best_loss_from_event_file(events_file_path: str) -> str | float | in
 def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
-    parser.add_argument(
-        "--params_dir",
-        type=str,
-        default="config/parameters.yaml",
-        help="Directory containing parameter files. (default: %(default)s)",
-    )
-
-    if script_name in ["Autoregressor trainer", "Hyperparameter optimizer"]:
+    if script_name == "Autoregressor trainer":
+        parser.add_argument(
+            "--num_epochs",
+            type=int,
+            default=1000,
+            help="Number of epochs to train the model for. (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--train_size",
+            type=float,
+            default=0.8,
+            help="Fraction of data to use for training. (default: %(default)s)",
+        )
         parser.add_argument(
             "--progress_bar",
             "-prog",
@@ -142,9 +136,9 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Specify number of nodes to use. (default: 1)",
         )
 
-    if script_name in ["Parameter updater", "Hyperparameter optimizer"]:
+    if script_name == "Parameter updater":
         parser.add_argument(
-            "--max_loss",
+            "--max_good_loss",
             type=float,
             default=5e-6,
             help="Maximum loss value considered acceptable for selecting parameters. (default: %(default)s)",
@@ -155,19 +149,16 @@ def import_parsed_args(script_name: str) -> Namespace:
             default=3,
             help="Minimum number of good samples required for parameter selection, otherwise parameters aren't updated, but training continues. (default: %(default)s)",
         )
-
-    if script_name == "Hyperparameter optimizer":
         parser.add_argument(
-            "--optimization_steps",
+            "--check_every_n_steps",
             type=int,
-            default=5,
-            help="Number of optimization steps to perform. (default: %(default)s)",
+            default=1,
+            help="Check for new good samples every n steps. (default: %(default)s)",
         )
         parser.add_argument(
-            "--models_per_step",
+            "--current_step",
             type=int,
-            default=5,
-            help="Number of models to train in each optimization step. (default: %(default)s)",
+            help="Current step of the training. (default: None)",
         )
 
     return parser.parse_args()
