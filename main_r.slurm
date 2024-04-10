@@ -11,7 +11,7 @@
 #SBATCH --mail-type=END                        # Send email at job completion
 #SBATCH --mail-user=grandovecuros@gmail.com    # Email address for notifications
 
-source ../rnn_generator_env/bin/activate
+conda activate rnn_generator_env
 
 export NCCL_DEBUG=INFO # WARN
 
