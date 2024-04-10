@@ -9,7 +9,7 @@
 #SBATCH -o slurm.%N.%j.out        # STDOUT
 #SBATCH -e slurm.%N.%j.err        # STDERR
 
-source ../rnn_generator_env/bin/activate
+source rnn_generator_env/bin/activate
 
 cd rnn_autoregression_model/
 
