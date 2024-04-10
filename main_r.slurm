@@ -13,7 +13,7 @@
 
 source ~/.bashrc
 
-conda activate rnn_generator_env
+conda activate rnn_env
 
 export NCCL_DEBUG=INFO # WARN
 

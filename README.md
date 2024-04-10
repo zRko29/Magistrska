@@ -2,13 +2,13 @@
 
 This project is meant to explore the possibility of training and RNN to replace the Standard map dynamical system.
 
-
 - requirements:
-    - python >= 3.9
+    - python==3.10
     - pytorch lightning
     - pyyaml
     - tensorboard
     - pandas
+    - matplotlib
 
 - activate venv environment with
 source /shared/mari/grandovecu/rnn_generator_env/bin/activate
