@@ -11,6 +11,8 @@
 
 source ../rnn_generator_env/bin/activate
 
+cd rnn_autoregression_model/
+
 export NCCL_DEBUG=WARN # WARN
 
 optimization_steps=20
