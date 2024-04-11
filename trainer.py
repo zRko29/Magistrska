@@ -75,9 +75,6 @@ def main(
         save_dir="", name=params.get("name"), default_hp_metric=False
     )
 
-    logger.info(f"Running trainer.py version_{tb_logger.version}.")
-    logger.info(f"args = {args.__dict__}")
-
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
 
     trainer = Trainer(
@@ -93,6 +90,12 @@ def main(
         strategy=args.strategy,
         num_nodes=args.num_nodes,
     )
+
+    logger.info(
+        f"Running trainer.py version_{tb_logger.version} (global_rank={trainer.global_rank}, local_rank={trainer.local_rank})."
+    )
+    if trainer.global_rank == 0 and trainer.local_rank == 0:
+        logger.info(f"args = {args.__dict__}")
 
     trainer.fit(model, datamodule)
 
