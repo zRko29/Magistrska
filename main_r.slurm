@@ -2,7 +2,7 @@
 #
 #SBATCH --partition=gpu                 # partition (queue)
 #SBATCH --qos=valhala
-#SBATCH --nodes==2                      # number of nodes
+#SBATCH --nodes=2                      # number of nodes
 #SBATCH --ntasks-per-node=2             # number of cores
 #SBATCH --mem=24G                       # memory pool
 #SBATCH --time=1-00:00                  # time (D-HH:MM)
