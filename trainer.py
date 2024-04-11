@@ -92,9 +92,9 @@ def main(
     )
 
     logger.info(
-        f"Running trainer.py version_{tb_logger.version}. ({trainer.global_rank=})"
+        f"Running trainer.py version_{tb_logger.version}. ({trainer.global_rank=}, {trainer.local_rank=})"
     )
-    if trainer.global_rank == 0:
+    if trainer.global_rank == 0 and trainer.local_rank == 0:
         logger.info(f"{args.__dict__=}")
 
     trainer.fit(model, datamodule)
