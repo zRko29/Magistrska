@@ -99,6 +99,7 @@ def main(
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
+    print(args.devices)
 
     params_dir = os.path.abspath("config")
 

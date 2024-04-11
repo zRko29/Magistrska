@@ -25,11 +25,11 @@ do
     
     # train new model on gpu 0
     python gridsearch.py
-    python trainer.py --devices [0,] --accelerator gpu --train_size 0.8 --num_epochs 10
+    python trainer.py --devices 0 --accelerator gpu --train_size 0.8 --num_epochs 10
     
     # train new model on gpu 1
     python gridsearch.py
-    python trainer.py --devices [1,] --accelerator gpu --train_size 0.8 --num_epochs 10
+    python trainer.py --devices 1 --accelerator gpu --train_size 0.8 --num_epochs 10
     
     # update gridsearch intervals
     python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
