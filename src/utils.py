@@ -148,7 +148,7 @@ def import_parsed_args(script_name: str) -> Namespace:
             type=str,
             default="auto",
             choices=["auto", "cpu", "gpu"],
-            help="Specify the accelerator to use. Choices are 'auto', 'cpu', or 'gpu'. (default: %(default)s)",
+            help="Specify the accelerator to use. (default: %(default)s)",
         )
         parser.add_argument(
             "--devices",
@@ -161,8 +161,7 @@ def import_parsed_args(script_name: str) -> Namespace:
             "--strategy",
             type=str,
             default="auto",
-            choices=["auto", "ddp", "ddp_spawn"],
-            help="Specify the training strategy. Choices are 'auto', 'ddp', or 'ddp_spawn'. (default: %(default)s)",
+            help="Specify the training strategy. (default: %(default)s)",
         )
         parser.add_argument(
             "--num_nodes",
