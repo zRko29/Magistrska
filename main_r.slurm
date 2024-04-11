@@ -26,13 +26,13 @@ do
     echo
     
     # update config/current_params.yaml
-    python gridsearch.py
+    srun python gridsearch.py
     
     # train new model
-    srun python trainer.py --num_nodes 2 --devices 2 --strategy ddp --accelerator gpu --train_size 0.8 --num_epochs 4000
+    srun python trainer.py --num_nodes 2 --devices 2 --strategy ddp --accelerator gpu --train_size 0.8 --num_epochs 10
     
     # update gridsearch intervals
-    python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
+    srun python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
     
 done
 
