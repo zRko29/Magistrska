@@ -101,6 +101,7 @@ def import_parsed_args(script_name: str) -> Namespace:
         parser.add_argument(
             "--devices",
             default="auto",
+            nargs="*",
             help="Number or list of devices to use. (default: %(default)s)",
         )
         parser.add_argument(
