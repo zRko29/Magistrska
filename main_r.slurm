@@ -35,5 +35,3 @@ do
     python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
     
 done
-
-rm config/current_params.yaml

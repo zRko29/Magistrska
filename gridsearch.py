@@ -1,8 +1,7 @@
-from argparse import Namespace
 from src.utils import (
-    setup_logger,
     read_yaml,
     save_yaml,
+    setup_logger,
 )
 import os
 import numpy as np

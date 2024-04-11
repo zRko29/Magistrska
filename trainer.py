@@ -13,11 +13,10 @@ from pytorch_lightning.callbacks import (
 )
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, CustomCallback
+from src.helper import Model, Data
 from src.utils import (
-    measure_time,
-    read_yaml,
     import_parsed_args,
+    read_yaml,
     setup_logger,
 )
 
@@ -51,11 +50,9 @@ def get_callbacks(save_path: str) -> List[callbacks]:
             patience=350,
         ),
         # DeviceStatsMonitor(),
-        CustomCallback(),
     ]
 
 
-@measure_time
 def main(
     args: Namespace,
     params: dict,

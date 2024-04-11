@@ -71,11 +71,6 @@ def setup_logger(log_file_path: str) -> logging.Logger:
     return logger
 
 
-def save_last_params(yaml_params: dict, events_dir: str) -> None:
-    folder = "/".join(events_dir.split("/")[:-1])
-    save_yaml(yaml_params, os.path.join(folder, "last_parameters.yaml"))
-
-
 def read_events_file(events_file_path: str) -> EventAccumulator:
     event_acc = EventAccumulator(events_file_path)
     event_acc.Reload()
@@ -160,6 +155,7 @@ def import_parsed_args(script_name: str) -> Namespace:
         parser.add_argument(
             "--current_step",
             type=int,
+            default=1,
             help="Current step of the training. (default: None)",
         )
 

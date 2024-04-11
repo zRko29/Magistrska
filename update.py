@@ -5,12 +5,10 @@ from argparse import Namespace
 import logging
 
 from src.utils import (
-    read_yaml,
     import_parsed_args,
-    setup_logger,
-    measure_time,
+    read_yaml,
     save_yaml,
-    save_last_params,
+    setup_logger,
     extract_best_loss_from_event_file,
 )
 
@@ -142,10 +140,8 @@ def update_yaml_file(
         yaml_params["gridsearch"] = gridsearch_dict
 
         save_yaml(yaml_params, params_path)
-        save_last_params(yaml_params, events_dir)
 
 
-@measure_time
 def main(args: Namespace, logger: logging.Logger, params_dir=str) -> None:
     events_dir = params["name"]
 

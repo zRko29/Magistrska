@@ -18,6 +18,9 @@ class Model(pl.LightningModule):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
+        self.min_train_loss = np.inf
+        self.min_val_loss = np.inf
+
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
         self.sequence_type: str = params.get("sequence_type")
@@ -103,6 +106,12 @@ class Model(pl.LightningModule):
         elif self.optimizer == "sgd":
             return optim.SGD(self.parameters(), lr=self.lr, momentum=0.9, nesterov=True)
 
+    def on_train_start(self):
+        self.training_step_outputs = []
+        self.validation_step_outputs = []
+        self.log("metrics/min_val_loss", np.inf)
+        self.log("metrics/min_train_loss", np.inf)
+
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
         targets: torch.Tensor
@@ -123,6 +132,16 @@ class Model(pl.LightningModule):
         self.training_step_outputs.append(loss)
         return loss
 
+    def on_train_epoch_end(self):
+        mean_loss = torch.stack(self.training_step_outputs).mean()
+        if mean_loss < self.min_train_loss:
+            self.min_train_loss = mean_loss
+            self.log(
+                "metrics/min_train_loss",
+                mean_loss,
+            )
+        self.training_step_outputs.clear()
+
     def validation_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
         targets: torch.Tensor
@@ -141,6 +160,16 @@ class Model(pl.LightningModule):
         )
         self.validation_step_outputs.append(loss)
         return loss
+
+    def on_validation_epoch_end(self):
+        mean_loss = torch.stack(self.validation_step_outputs).mean()
+        if mean_loss < self.min_val_loss:
+            self.min_val_loss = mean_loss
+            self.log(
+                "metrics/min_val_loss",
+                mean_loss,
+            )
+        self.validation_step_outputs.clear()
 
     def predict_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         predicted: torch.Tensor = batch[:, :, : self.regression_seed]
@@ -287,45 +316,6 @@ class Data(pl.LightningDataModule):
         plt.show()
 
 
-class CustomCallback(pl.Callback):
-    def __init__(self) -> None:
-        super(CustomCallback, self).__init__()
-        self.min_train_loss = np.inf
-        self.min_val_loss = np.inf
-
-    def on_train_start(self, trainer, pl_module):
-        trainer.logger.log_hyperparams(
-            pl_module.hparams,
-            {"metrics/min_val_loss": np.inf, "metrics/min_train_loss": np.inf},
-        )
-
-    # def on_before_zero_grad(self, trainer, pl_module, optimizer):
-    #     if trainer.global_step == 1:
-    #         trainer.logger.experiment.add_graph("plot")
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        mean_loss = torch.stack(pl_module.training_step_outputs).mean()
-        if mean_loss < self.min_train_loss:
-            self.min_train_loss = mean_loss
-            pl_module.log(
-                "metrics/min_train_loss",
-                mean_loss,
-                sync_dist=False,
-            )
-        pl_module.training_step_outputs.clear()
-
-    def on_validation_epoch_end(self, trainer, pl_module):
-        mean_loss = torch.stack(pl_module.validation_step_outputs).mean()
-        if mean_loss < self.min_val_loss:
-            self.min_val_loss = mean_loss
-            pl_module.log(
-                "metrics/min_val_loss",
-                mean_loss,
-                sync_dist=False,
-            )
-        pl_module.validation_step_outputs.clear()
-
-
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data: np.ndarray):
         self.data: np.ndarray = data
@@ -338,52 +328,6 @@ class Dataset(torch.utils.data.Dataset):
         x = torch.tensor(x).to(torch.double)
         y = torch.tensor(y).to(torch.double)
         return x, y
-
-
-class Gridsearch:
-    def __init__(self, path: str, use_defaults: bool = False) -> None:
-        self.path = path
-        self.use_defaults = use_defaults
-
-    def __next__(self):
-        return self.update_params()
-
-    def __iter__(self):
-        for _ in range(10**3):
-            yield self.update_params()
-
-    def update_params(self) -> dict:
-        params = read_yaml(self.path)
-        if not self.use_defaults:
-            params = self._update_params(params)
-
-        try:
-            del params["gridsearch"]
-        except KeyError:
-            pass
-
-        return params
-
-    def _update_params(self, params) -> dict:
-        # don't use any seed
-        rng: np.random.Generator = np.random.default_rng(None)
-
-        for key, space in params.get("gridsearch").items():
-            type = space.get("type")
-            if type == "int":
-                params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
-            elif type == "choice":
-                list = space.get("list")
-                choice = rng.choice(list)
-                try:
-                    choice = float(choice)
-                except:
-                    choice = str(choice)
-                params[key] = choice
-            elif type == "float":
-                params[key] = rng.uniform(space["lower"], space["upper"])
-
-        return params
 
 
 def plot_2d(
