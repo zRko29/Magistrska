@@ -13,20 +13,8 @@ source ~/.bashrc
 
 conda activate rnn_env
 
-optimization_steps=20
+python gridsearch.py
 
-for i in $(seq $optimization_steps)
-do
-    echo
-    echo "-----------------------------"
-    echo
-    echo "Optimization step: $i / $optimization_steps"
-    echo
-    
-    python gridsearch.py
-    
-    srun python trainer.py --devices 2 --strategy ddp --train_size 1.0 --num_epochs 4000
-    
-    python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
-    
-done
+srun python trainer.py --devices 2 --strategy ddp --train_size 1.0 --num_epochs 4000
+
+python update.py --min_good_samples 3 --max_good_loss 5e-6
