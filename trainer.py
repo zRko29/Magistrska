@@ -75,13 +75,16 @@ def main(
         save_dir="", name=params.get("name"), default_hp_metric=False
     )
 
+    logger.info(f"Running trainer.py version_{tb_logger.version}.")
+    logger.info(f"args = {args.__dict__}")
+
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
 
     trainer = Trainer(
         max_epochs=args.num_epochs,
         precision=params.get("precision"),
         logger=tb_logger,
-        check_val_every_n_epoch=1,
+        check_val_every_n_epoch=10,
         callbacks=get_callbacks(save_path),
         deterministic=True,
         enable_progress_bar=args.progress_bar,
@@ -91,15 +94,11 @@ def main(
         num_nodes=args.num_nodes,
     )
 
-    logger.info(f"Running trainer.py version_{tb_logger.version}.")
-    logger.info(f"{args.__dict__=}")
-
     trainer.fit(model, datamodule)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
-    print(args.devices)
 
     params_dir = os.path.abspath("config")
 
@@ -110,4 +109,4 @@ if __name__ == "__main__":
 
     logger = setup_logger(params["name"])
 
-    run_time = main(args, params, logger)
+    main(args, params, logger)

@@ -10,21 +10,8 @@ from src.utils import (
     save_yaml,
     setup_logger,
     extract_best_loss_from_event_file,
+    Parameter,
 )
-
-
-class Parameter:
-    def __init__(self, name: str, type: str) -> None:
-        self.name = name
-        self.type = type
-
-        if self.type in ["float", "int"]:
-            self.min = float("inf")
-            self.max = -float("inf")
-
-        elif self.type == "choice":
-            self.value_counts = {}
-            self.count = 0
 
 
 def get_loss_and_params(dir: str, logger: logging.Logger) -> pd.DataFrame:
@@ -116,9 +103,7 @@ def compute_new_parameter_intervals(
     return parameters
 
 
-def update_yaml_file(
-    params_path: str, events_dir: str, parameters: List[Parameter]
-) -> None:
+def update_yaml_file(params_path: str, parameters: List[Parameter]) -> None:
     if parameters is not None:
         gridsearch_dict = {}
         for param in parameters:
@@ -155,7 +140,7 @@ def main(args: Namespace, logger: logging.Logger, params_dir=str) -> None:
         params_path=params_path,
     )
 
-    update_yaml_file(params_path, events_dir, parameters)
+    update_yaml_file(params_path, parameters)
 
 
 if __name__ == "__main__":
@@ -173,6 +158,6 @@ if __name__ == "__main__":
 
     logger = setup_logger(params["name"])
     logger.info("Running update.py")
-    logger.info(f"{args.__dict__=}")
+    logger.info(f"args = {args.__dict__}")
 
-    run_time = main(args, logger, params_dir)
+    main(args, logger, params_dir)

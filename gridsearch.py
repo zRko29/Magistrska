@@ -1,49 +1,10 @@
+import os
 from src.utils import (
     read_yaml,
     save_yaml,
     setup_logger,
+    Gridsearch,
 )
-import os
-import numpy as np
-
-
-class Gridsearch:
-    def __init__(self, params_path: str, use_defaults: bool = False) -> None:
-        self.path = params_path
-        self.use_defaults = use_defaults
-
-    def update_params(self) -> dict:
-        params = read_yaml(self.path)
-        if not self.use_defaults:
-            params = self._update_params(params)
-
-        try:
-            del params["gridsearch"]
-        except KeyError:
-            pass
-
-        return params
-
-    def _update_params(self, params) -> dict:
-        # don't use any seed
-        rng: np.random.Generator = np.random.default_rng(None)
-
-        for key, space in params.get("gridsearch").items():
-            type = space.get("type")
-            if type == "int":
-                params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
-            elif type == "choice":
-                list = space.get("list")
-                choice = rng.choice(list)
-                try:
-                    choice = float(choice)
-                except:
-                    choice = str(choice)
-                params[key] = choice
-            elif type == "float":
-                params[key] = rng.uniform(space["lower"], space["upper"])
-
-        return params
 
 
 def main(params_dir: str) -> None:

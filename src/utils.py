@@ -1,6 +1,5 @@
-import time
-from datetime import timedelta
-from typing import Callable, List
+from typing import List
+import numpy as np
 import yaml
 from argparse import Namespace, ArgumentParser
 import os
@@ -55,6 +54,20 @@ def setup_logger(log_file_path: str) -> logging.Logger:
     return logger
 
 
+class Parameter:
+    def __init__(self, name: str, type: str) -> None:
+        self.name = name
+        self.type = type
+
+        if self.type in ["float", "int"]:
+            self.min = float("inf")
+            self.max = -float("inf")
+
+        elif self.type == "choice":
+            self.value_counts = {}
+            self.count = 0
+
+
 def read_events_file(events_file_path: str) -> EventAccumulator:
     event_acc = EventAccumulator(events_file_path)
     event_acc.Reload()
@@ -66,6 +79,45 @@ def extract_best_loss_from_event_file(events_file_path: str) -> str | float | in
     for tag in event_values.Tags()["scalars"]:
         if tag == "metrics/min_train_loss":
             return {"best_loss": event_values.Scalars(tag)[-1].value}
+
+
+class Gridsearch:
+    def __init__(self, params_path: str, use_defaults: bool = False) -> None:
+        self.path = params_path
+        self.use_defaults = use_defaults
+
+    def update_params(self) -> dict:
+        params = read_yaml(self.path)
+        if not self.use_defaults:
+            params = self._update_params(params)
+
+        try:
+            del params["gridsearch"]
+        except KeyError:
+            pass
+
+        return params
+
+    def _update_params(self, params) -> dict:
+        # don't use any seed
+        rng: np.random.Generator = np.random.default_rng(None)
+
+        for key, space in params.get("gridsearch").items():
+            type = space.get("type")
+            if type == "int":
+                params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
+            elif type == "choice":
+                list = space.get("list")
+                choice = rng.choice(list)
+                try:
+                    choice = float(choice)
+                except:
+                    choice = str(choice)
+                params[key] = choice
+            elif type == "float":
+                params[key] = rng.uniform(space["lower"], space["upper"])
+
+        return params
 
 
 def import_parsed_args(script_name: str) -> Namespace:
