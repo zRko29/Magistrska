@@ -26,6 +26,7 @@ import os
 import warnings
 import logging
 
+os.environ["GLOO_SOCKET_IFNAME"] = "en0"
 warnings.filterwarnings(
     "ignore",
     module="pytorch_lightning",
@@ -90,11 +91,8 @@ def main(
         num_nodes=args.num_nodes,
     )
 
-    logger.info(
-        f"Running trainer.py version_{tb_logger.version}. (global_rank = {trainer.global_rank}, local_rank = {trainer.local_rank})"
-    )
-    if trainer.global_rank == 0 and trainer.local_rank == 0:
-        logger.info(f"{args.__dict__=}")
+    logger.info(f"Running trainer.py version_{tb_logger.version}.")
+    logger.info(f"{args.__dict__=}")
 
     trainer.fit(model, datamodule)
 

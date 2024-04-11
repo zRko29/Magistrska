@@ -109,8 +109,8 @@ class Model(pl.LightningModule):
     def on_train_start(self):
         self.training_step_outputs = []
         self.validation_step_outputs = []
-        self.log("metrics/min_val_loss", np.inf)
-        self.log("metrics/min_train_loss", np.inf)
+        self.log("metrics/min_val_loss", np.inf, sync_dist=True)
+        self.log("metrics/min_train_loss", np.inf, sync_dist=True)
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
@@ -128,6 +128,7 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
+            sync_dist=True,
         )
         self.training_step_outputs.append(loss)
         return loss
@@ -139,6 +140,7 @@ class Model(pl.LightningModule):
             self.log(
                 "metrics/min_train_loss",
                 mean_loss,
+                sync_dist=True,
             )
         self.training_step_outputs.clear()
 
@@ -157,6 +159,7 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
+            sync_dist=True,
         )
         self.validation_step_outputs.append(loss)
         return loss
@@ -168,6 +171,7 @@ class Model(pl.LightningModule):
             self.log(
                 "metrics/min_val_loss",
                 mean_loss,
+                sync_dist=True,
             )
         self.validation_step_outputs.clear()
 

@@ -8,8 +8,6 @@
 #SBATCH --time=1-00:00                         # time (D-HH:MM)
 #SBATCH --output=slurm.%N.%j.out               # STDOUT
 #SBATCH --error=slurm.%N.%j.err                # STDERR
-#SBATCH --mail-type=END                        # Send email at job completion
-#SBATCH --mail-user=grandovecuros@gmail.com    # Email address for notifications
 
 source ~/.bashrc
 
@@ -25,11 +23,13 @@ do
     echo "Optimization step: $i / $optimization_steps"
     echo
     
-    # update config/current_params.yaml
+    # train new model on gpu 0
     python gridsearch.py
+    python trainer.py --num_nodes 1 --devices 2 --accelerator gpu --train_size 0.8 --num_epochs 10
     
-    # train new model
-    srun python trainer.py --num_nodes 1 --devices 2 --strategy ddp --accelerator gpu --train_size 0.8 --num_epochs 10
+    # train new model on gpu 1
+    # python gridsearch.py
+    # python trainer.py --num_nodes 1 --devices [1] --accelerator gpu --train_size 0.8 --num_epochs 10
     
     # update gridsearch intervals
     python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
