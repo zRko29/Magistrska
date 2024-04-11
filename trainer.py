@@ -78,8 +78,6 @@ def main(
 
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
 
-    logger.info(f"Training version_{tb_logger.version}.")
-
     trainer = Trainer(
         max_epochs=args.num_epochs,
         precision=params.get("precision"),
@@ -93,8 +91,10 @@ def main(
         num_nodes=args.num_nodes,
     )
 
+    logger.info(
+        f"Running trainer.py version_{tb_logger.version}. ({trainer.global_rank=})"
+    )
     if trainer.global_rank == 0:
-        logger.info("Running trainer.py")
         logger.info(f"{args.__dict__=}")
 
     trainer.fit(model, datamodule)
