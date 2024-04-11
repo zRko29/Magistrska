@@ -82,7 +82,7 @@ def main(
         max_epochs=args.num_epochs,
         precision=params.get("precision"),
         logger=tb_logger,
-        check_val_every_n_epoch=10,
+        check_val_every_n_epoch=1,
         callbacks=get_callbacks(save_path),
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
