@@ -15,8 +15,6 @@ source ~/.bashrc
 
 conda activate rnn_env
 
-export NCCL_DEBUG=INFO # WARN
-
 optimization_steps=20
 
 for i in $(seq $optimization_steps)
