@@ -9,6 +9,8 @@
 #SBATCH --output=slurm.%N.%j.out        # STDOUT
 #SBATCH --error=slurm.%N.%j.err         # STDERR
 
+export NCCL_P2P_DISABLE=1
+
 source ~/.bashrc
 
 conda activate rnn_env
