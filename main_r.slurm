@@ -23,15 +23,17 @@ do
     echo "Optimization step: $i / $optimization_steps"
     echo
     
-    echo "train model on gpu:0"
-    python gridsearch.py
-    python trainer.py --devices 0 --accelerator gpu --train_size 1.0 --num_epochs 4000
-    
-    sleep 2
-    
-    echo "train model on gpu:1"
-    python gridsearch.py
-    python trainer.py --devices 1 --accelerator gpu --train_size 1.0 --num_epochs 4000
+    (
+        echo "train model on gpu:0"
+        python gridsearch.py
+        python trainer.py --devices 0 --accelerator gpu --train_size 1.0 --num_epochs 4000
+    ) &
+    (
+        sleep 2
+        echo "train model on gpu:1"
+        python gridsearch.py
+        python trainer.py --devices 1 --accelerator gpu --train_size 1.0 --num_epochs 4000
+    )
     
     # update gridsearch intervals
     python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
