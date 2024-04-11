@@ -106,11 +106,11 @@ class Model(pl.LightningModule):
         elif self.optimizer == "sgd":
             return optim.SGD(self.parameters(), lr=self.lr, momentum=0.9, nesterov=True)
 
-    def on_train_start(self):
-        self.training_step_outputs = []
-        self.validation_step_outputs = []
-        self.log("metrics/min_val_loss", np.inf)
-        self.log("metrics/min_train_loss", np.inf)
+    # def on_train_start(self):
+    #     self.training_step_outputs = []
+    #     self.validation_step_outputs = []
+    #     self.log("metrics/min_val_loss", np.inf)
+    #     self.log("metrics/min_train_loss", np.inf)
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
@@ -129,18 +129,18 @@ class Model(pl.LightningModule):
             prog_bar=True,
             on_step=False,
         )
-        self.training_step_outputs.append(loss)
+        # self.training_step_outputs.append(loss)
         return loss
 
-    def on_train_epoch_end(self):
-        mean_loss = torch.stack(self.training_step_outputs).mean()
-        if mean_loss < self.min_train_loss:
-            self.min_train_loss = mean_loss
-            self.log(
-                "metrics/min_train_loss",
-                mean_loss,
-            )
-        self.training_step_outputs.clear()
+    # def on_train_epoch_end(self):
+    #     mean_loss = torch.stack(self.training_step_outputs).mean()
+    #     if mean_loss < self.min_train_loss:
+    #         self.min_train_loss = mean_loss
+    #         self.log(
+    #             "metrics/min_train_loss",
+    #             mean_loss,
+    #         )
+    #     self.training_step_outputs.clear()
 
     def validation_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
@@ -158,18 +158,18 @@ class Model(pl.LightningModule):
             prog_bar=True,
             on_step=False,
         )
-        self.validation_step_outputs.append(loss)
+        # self.validation_step_outputs.append(loss)
         return loss
 
-    def on_validation_epoch_end(self):
-        mean_loss = torch.stack(self.validation_step_outputs).mean()
-        if mean_loss < self.min_val_loss:
-            self.min_val_loss = mean_loss
-            self.log(
-                "metrics/min_val_loss",
-                mean_loss,
-            )
-        self.validation_step_outputs.clear()
+    # def on_validation_epoch_end(self):
+    #     mean_loss = torch.stack(self.validation_step_outputs).mean()
+    #     if mean_loss < self.min_val_loss:
+    #         self.min_val_loss = mean_loss
+    #         self.log(
+    #             "metrics/min_val_loss",
+    #             mean_loss,
+    #         )
+    #     self.validation_step_outputs.clear()
 
     def predict_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         predicted: torch.Tensor = batch[:, :, : self.regression_seed]
@@ -279,13 +279,15 @@ class Data(pl.LightningDataModule):
             Dataset(self.input_output_pairs[: self.t]),
             batch_size=self.batch_size,
             shuffle=self.shuffle_batches,
+            drop_last=True,
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
             Dataset(self.input_output_pairs[self.t :]),
-            batch_size=2 * self.batch_size,
+            batch_size=self.batch_size,
             shuffle=None,
+            drop_last=True,
         )
 
     def predict_dataloader(self) -> torch.Tensor:
