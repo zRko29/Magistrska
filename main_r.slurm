@@ -2,7 +2,7 @@
 #
 #SBATCH --partition=gpu                 # partition (queue)
 #SBATCH --qos=valhala
-#SBATCH --nodelist=valhala-gpu1         # node list
+#SBATCH --nodes==2                      # number of nodes
 #SBATCH --ntasks-per-node=2             # number of cores
 #SBATCH --mem=24G                       # memory pool
 #SBATCH --time=1-00:00                  # time (D-HH:MM)
@@ -15,8 +15,20 @@ source ~/.bashrc
 
 conda activate rnn_env
 
-python gridsearch.py
 
-srun python trainer.py --devices 2 --train_size 1.0 --num_epochs 4000
+optimization_steps=5
 
-python update.py --min_good_samples 3 --max_good_loss 5e-6
+for i in $(seq $optimization_steps)
+do
+    echo
+    echo "-----------------------------"
+    echo
+    echo "Optimization step: $i / $optimization_steps"
+    echo
+    
+    python gridsearch.py
+    
+    srun python trainer.py --num_nodes 2 --devices 2 --train_size 1.0 --num_epochs 10
+    
+    python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
+done
