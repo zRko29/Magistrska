@@ -52,8 +52,10 @@ def setup_logger(log_file_path: str) -> logging.Logger:
     logger = logging.getLogger("rnn_autoregressor")
     logger.setLevel(logging.INFO)
 
-    if not os.path.exists(log_file_path):
+    try:
         os.makedirs(log_file_path)
+    except FileExistsError:
+        pass
 
     log_file_name = os.path.join(log_file_path, "logs.log")
     file_handler = logging.FileHandler(log_file_name)

@@ -93,6 +93,10 @@ def main(
         num_nodes=args.num_nodes,
     )
 
+    if trainer.global_rank == 0:
+        logger.info("Running trainer.py")
+        logger.info(f"{args.__dict__=}")
+
     trainer.fit(model, datamodule)
 
 
@@ -107,7 +111,5 @@ if __name__ == "__main__":
     params["name"] = os.path.abspath(params["name"])
 
     logger = setup_logger(params["name"])
-    logger.info("Running trainer.py")
-    logger.info(f"{args.__dict__=}")
 
     run_time = main(args, params, logger)

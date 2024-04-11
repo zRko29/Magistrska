@@ -15,7 +15,7 @@ source ~/.bashrc
 
 conda activate rnn_env
 
-optimization_steps=20
+optimization_steps=2
 
 for i in $(seq $optimization_steps)
 do
@@ -26,13 +26,13 @@ do
     echo
     
     # update config/current_params.yaml
-    srun python gridsearch.py
+    python gridsearch.py
     
     # train new model
     srun python trainer.py --num_nodes 2 --devices 2 --strategy ddp --accelerator gpu --train_size 0.8 --num_epochs 10
     
     # update gridsearch intervals
-    srun python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
+    python update.py --min_good_samples 3 --max_good_loss 5e-6 --check_every_n_steps 3 --current_step $i
     
 done
 
