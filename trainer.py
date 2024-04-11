@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from pytorch_lightning.callbacks import callbacks
 
 from pytorch_lightning import Trainer
+from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import (
     EarlyStopping,
@@ -25,13 +26,13 @@ import os
 import warnings
 import logging
 
-os.environ["GLOO_SOCKET_IFNAME"] = "en0"
 warnings.filterwarnings(
     "ignore",
     module="pytorch_lightning",
 )
 
 logging.getLogger("pytorch_lightning").setLevel("INFO")
+seed_everything(42, workers=True)
 
 
 def get_callbacks(save_path: str) -> List[callbacks]:
@@ -81,6 +82,7 @@ def main(
         logger=tb_logger,
         check_val_every_n_epoch=1,
         callbacks=get_callbacks(save_path),
+        deterministic=True,
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
         devices=args.devices,
@@ -89,7 +91,7 @@ def main(
     )
 
     logger.info(
-        f"Running trainer.py version_{tb_logger.version}. ({trainer.global_rank=}, {trainer.local_rank=})"
+        f"Running trainer.py version_{tb_logger.version}. (global_rank = {trainer.global_rank}, local_rank = {trainer.local_rank})"
     )
     if trainer.global_rank == 0 and trainer.local_rank == 0:
         logger.info(f"{args.__dict__=}")

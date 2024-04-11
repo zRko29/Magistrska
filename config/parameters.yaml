@@ -17,7 +17,7 @@ lr: 0.0003
 precision: 32-true
 
 shuffle_trajectories: True # makes sense for linear sampling
-shuffle_batches: False # shuffle batches between epochs
+shuffle_batches: None # shuffle batches between epochs (None necesary for ddp)
 shuffle_sequences: False # shuffle sequences
 
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)

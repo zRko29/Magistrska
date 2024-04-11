@@ -19,22 +19,6 @@ def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
         yaml.dump(file, f, default_flow_style=None, default_style=None)
 
 
-def measure_time(func: Callable) -> Callable:
-    """
-    A decorator that measures the time a function takes to run.
-    """
-
-    def wrapper(*args, **kwargs):
-        t1 = time.time()
-        val = func(*args, **kwargs)
-        t2 = timedelta(seconds=time.time() - t1)
-        if val == None:
-            return t2
-        return val
-
-    return wrapper
-
-
 def get_inference_folders(directory_path: str, version: str) -> List[str]:
     if version is not None:
         folders: List[str] = [os.path.join(directory_path, f"version_{version}")]

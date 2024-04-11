@@ -1,14 +1,10 @@
-import os, yaml
-
+import os
 import pytorch_lightning as pl
 from src.mapping_helper import StandardMap
 from src.helper import Model, Data, plot_2d
 from src.dmd import DMD
 from src.utils import read_yaml, get_inference_folders
-from torch import Tensor
-
 from typing import Optional, List
-
 import warnings
 
 warnings.filterwarnings(
@@ -18,6 +14,7 @@ warnings.filterwarnings(
 import logging
 
 logging.getLogger("pytorch_lightning").setLevel(0)
+pl.seed_everything(42, workers=True)
 
 
 def main():
@@ -58,6 +55,7 @@ def main():
                 precision=params["precision"],
                 enable_progress_bar=False,
                 logger=False,
+                deterministic=True,
             )
             predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
 

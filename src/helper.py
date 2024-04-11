@@ -285,7 +285,7 @@ class Data(pl.LightningDataModule):
         return DataLoader(
             Dataset(self.input_output_pairs[self.t :]),
             batch_size=2 * self.batch_size,
-            shuffle=False,
+            shuffle=None,
         )
 
     def predict_dataloader(self) -> torch.Tensor:
