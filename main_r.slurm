@@ -15,6 +15,6 @@ conda activate rnn_env
 
 python gridsearch.py
 
-srun python trainer.py --devices 2 --strategy ddp --train_size 1.0 --num_epochs 4000
+srun python trainer.py --devices 2 --train_size 1.0 --num_epochs 4000
 
 python update.py --min_good_samples 3 --max_good_loss 5e-6
