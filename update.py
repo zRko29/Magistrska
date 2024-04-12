@@ -31,7 +31,13 @@ def get_loss_and_params(dir: str, logger: logging.Logger) -> pd.DataFrame:
                         parameter_dict = read_yaml(file_path)
 
                 if loss_value and parameter_dict:
-                    all_loss_hyperparams.append({**loss_value, **parameter_dict})
+                    all_loss_hyperparams.append(
+                        {
+                            "directory": directory,
+                            **loss_value,
+                            **parameter_dict,
+                        }
+                    )
     except FileNotFoundError as e:
         logger.error(e)
         raise e
@@ -50,8 +56,10 @@ def compute_new_parameter_intervals(
     parameters = []
     for column in results.columns:
         if (
-            len(results[column].unique()) > 1 or column in gridsearch_params.keys()
-        ) and column != "best_loss":
+            (len(results[column].unique()) > 1 or column in gridsearch_params.keys())
+            and column != "best_loss"
+            and column != "directory"
+        ):
             try:
                 type = gridsearch_params[column]["type"]
             except KeyError:
@@ -76,9 +84,13 @@ def compute_new_parameter_intervals(
         )
         return None
     else:
-        logger.warning(
-            f"Found {len(results)} (> {args.min_good_samples}) good samples. Parameters will be updated."
-        )
+        logger.warning(f"Found enough good samples. Parameters will be updated.")
+
+    # ensures newer results at the bottom
+    results = results.sort_values("directory", ascending=True)
+
+    # NOTE: ensures that older results, which set larger intervals, get deprecated, so that newer results can set smaller intervals
+    results = results.tail(args.min_good_samples)
 
     for param in parameters:
         if param.type == "float":
