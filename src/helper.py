@@ -128,7 +128,6 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
-            sync_dist=True,
         )
         self.training_step_outputs.append(loss)
         return loss
@@ -159,7 +158,6 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
-            sync_dist=True,
         )
         self.validation_step_outputs.append(loss)
         return loss
