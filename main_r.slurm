@@ -2,7 +2,7 @@
 #
 #SBATCH --partition=gpu                 # partition (queue)
 #SBATCH --qos=valhala
-#SBATCH --nodes=1                      # number of nodes
+#SBATCH --nodes=2                       # number of nodes
 #SBATCH --ntasks-per-node=2             # number of cores
 #SBATCH --mem=24G                       # memory per node
 #SBATCH --time=1-00:00                  # time (D-HH:MM)
@@ -30,7 +30,7 @@ do
     python gridsearch.py
     
     echo "Running trainer."
-    srun python trainer.py --num_nodes 1 --devices 2 --train_size 1.0 --epochs 4000
+    srun python trainer.py --num_nodes 2 --devices 2 --train_size 1.0 --epochs 4000
     
     echo "Updating parameter intervals."
     python update.py --min_good_samples 4 --max_good_loss 1e-6 --check_every_n_steps 3 --current_step $i
