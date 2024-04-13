@@ -15,11 +15,7 @@ from pytorch_lightning.callbacks import (
 
 from src.mapping_helper import StandardMap
 from src.helper import Model, Data
-from src.utils import (
-    import_parsed_args,
-    read_yaml,
-    setup_logger,
-)
+from src.utils import import_parsed_args, read_yaml, setup_logger, measure_time
 
 from argparse import Namespace
 import os
@@ -55,6 +51,7 @@ def get_callbacks(save_path: str) -> List[callbacks]:
     ]
 
 
+@measure_time
 def main(
     args: Namespace,
     params: dict,
@@ -78,10 +75,10 @@ def main(
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
 
     trainer = Trainer(
-        max_epochs=args.num_epochs,
+        max_epochs=args.epochs,
         precision=params.get("precision"),
         logger=tb_logger,
-        check_val_every_n_epoch=10,
+        check_val_every_n_epoch=5,
         callbacks=get_callbacks(save_path),
         deterministic=True,
         enable_progress_bar=args.progress_bar,
@@ -112,4 +109,6 @@ if __name__ == "__main__":
 
     logger = setup_logger(params["name"])
 
-    main(args, params, logger)
+    required_time = main(args, params, logger)
+
+    logger.info(f"Finished trainer.py in {required_time}.")

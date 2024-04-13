@@ -1,4 +1,6 @@
-from typing import List
+from typing import List, Callable
+import time
+from datetime import timedelta
 import numpy as np
 import yaml
 from argparse import Namespace, ArgumentParser
@@ -81,6 +83,18 @@ def extract_best_loss_from_event_file(events_file_path: str) -> str | float | in
             return {"best_loss": event_values.Scalars(tag)[-1].value}
 
 
+def measure_time(func: Callable) -> Callable:
+    def wrapper(*args, **kwargs):
+        t1 = time.time()
+        val = func(*args, **kwargs)
+        t2 = timedelta(seconds=time.time() - t1)
+        if val == None:
+            return t2
+        return val
+
+    return wrapper
+
+
 class Gridsearch:
     def __init__(self, params_path: str, use_defaults: bool = False) -> None:
         self.path = params_path
@@ -125,7 +139,7 @@ def import_parsed_args(script_name: str) -> Namespace:
 
     if script_name == "Autoregressor trainer":
         parser.add_argument(
-            "--num_epochs",
+            "--epochs",
             type=int,
             default=1000,
             help="Number of epochs to train the model for. (default: %(default)s)",
@@ -153,7 +167,7 @@ def import_parsed_args(script_name: str) -> Namespace:
         parser.add_argument(
             "--devices",
             default="auto",
-            # nargs="*",
+            nargs="*",
             type=int,
             help="Number or list of devices to use. (default: %(default)s)",
         )
@@ -181,13 +195,13 @@ def import_parsed_args(script_name: str) -> Namespace:
             "--min_good_samples",
             type=int,
             default=3,
-            help="Minimum number of good samples required for parameter selection, otherwise parameters aren't updated, but training continues. (default: %(default)s)",
+            help="Minimum number of good samples required to start updating parameters. (default: %(default)s)",
         )
         parser.add_argument(
             "--check_every_n_steps",
             type=int,
             default=1,
-            help="Check for new good samples every n steps. (default: %(default)s)",
+            help="Check for new good samples every n steps. Its suggested that check_every_n_steps < min_good_samples, so that results are less likely to converge to a local optimium. (default: %(default)s)",
         )
         parser.add_argument(
             "--current_step",

@@ -10,6 +10,7 @@ from src.utils import (
     save_yaml,
     setup_logger,
     extract_best_loss_from_event_file,
+    measure_time,
     Parameter,
 )
 
@@ -80,11 +81,11 @@ def compute_new_parameter_intervals(
 
     if len(results) < args.min_good_samples:
         logger.warning(
-            f"Found {len(results)} (< {args.min_good_samples}) good samples. Parameters will not be updated."
+            f"Found {len(results)} (< {args.min_good_samples}) good samples. Updating parameters."
         )
         return None
     else:
-        logger.warning(f"Found enough good samples. Parameters will be updated.")
+        logger.warning(f"Updating parameters.")
 
     # ensures newer results at the bottom
     results = results.sort_values("directory", ascending=True)
@@ -139,6 +140,7 @@ def update_yaml_file(params_path: str, parameters: List[Parameter]) -> None:
         save_yaml(yaml_params, params_path)
 
 
+@measure_time
 def main(args: Namespace, logger: logging.Logger, params_dir=str) -> None:
     events_dir = params["name"]
 
@@ -172,4 +174,6 @@ if __name__ == "__main__":
     logger.info("Running update.py")
     logger.info(f"args = {args.__dict__}")
 
-    main(args, logger, params_dir)
+    required_time = main(args, logger, params_dir)
+
+    logger.info(f"Finished update.py in {required_time}.")
