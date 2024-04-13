@@ -47,7 +47,7 @@ def get_callbacks(save_path: str) -> List[callbacks]:
             min_delta=1e-8,
             patience=350,
         ),
-        DeviceStatsMonitor(),
+        DeviceStatsMonitor(cpu_stats=False),
     ]
 
 
@@ -91,13 +91,13 @@ def main(
     logger.info(
         f"Running trainer.py version_{tb_logger.version} (global_rank={trainer.global_rank})."
     )
-    if trainer.global_rank == 0 and trainer.local_rank == 0:
+    if trainer.global_rank == 0:
         logger.info(f"args = {args.__dict__}")
 
     trainer.fit(model, datamodule)
 
     logger.info(
-        f"version_{tb_logger.version}: min_train_loss={model.min_train_loss.item():.3e}, min_val_loss={model.min_val_loss.item():.3e}"
+        f"version_{tb_logger.version}: min_train_loss={model.min_train_loss:.3e}, min_val_loss={model.min_val_loss:.3e}"
     )
 
 
