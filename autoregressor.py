@@ -18,8 +18,8 @@ pl.seed_everything(42, workers=True)
 
 
 def main():
-    version: Optional[int] = 5
-    name: str = "overfitting_K=0.1/9"
+    version: Optional[int] = 8
+    name: str = "overfitting_K=0.1"
 
     directory_path: str = f"logs/{name}"
 
@@ -38,7 +38,7 @@ def main():
 
         for map, input_suffix in zip(maps, input_suffixes):
             model_path: str = os.path.join(log_path, f"model.ckpt")
-            model = Model(**params).load_from_checkpoint(model_path)
+            model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")
 
             model.regression_seed = params["seq_length"]
 

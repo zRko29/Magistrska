@@ -109,8 +109,8 @@ class Model(pl.LightningModule):
     def on_train_start(self):
         self.training_step_outputs = []
         self.validation_step_outputs = []
-        self.log("metrics/min_val_loss", np.inf)
-        self.log("metrics/min_train_loss", np.inf)
+        self.log("metrics/min_val_loss", np.inf, sync_dist=True)
+        self.log("metrics/min_train_loss", np.inf, sync_dist=True)
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
@@ -128,6 +128,7 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
+            sync_dist=True,
         )
         self.training_step_outputs.append(loss)
         return loss
@@ -139,6 +140,7 @@ class Model(pl.LightningModule):
             self.log(
                 "metrics/min_train_loss",
                 mean_loss,
+                sync_dist=True,
             )
         self.training_step_outputs.clear()
 
@@ -157,6 +159,7 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
+            sync_dist=True,
         )
         self.validation_step_outputs.append(loss)
         return loss
@@ -168,6 +171,7 @@ class Model(pl.LightningModule):
             self.log(
                 "metrics/min_val_loss",
                 mean_loss,
+                sync_dist=True,
             )
         self.validation_step_outputs.clear()
 
@@ -340,16 +344,46 @@ def plot_2d(
     predicted = predicted.detach().numpy()
     targets = targets.detach().numpy()
     plt.figure(figsize=(6, 4))
-    plt.plot(targets[:, 0, 0], targets[:, 1, 0], "ro", markersize=2, label="targets")
+    plt.plot(
+        targets[:, 0, 0],
+        targets[:, 1, 0],
+        "o",
+        color="blue",
+        markersize=3,
+        label="targets",
+    )
     plt.plot(
         predicted[:, 0, 0],
         predicted[:, 1, 0],
-        "bo",
-        markersize=2,
+        "o",
+        color="green",
+        markersize=3,
         label="predicted",
     )
-    plt.plot(targets[:, 0, 1:], targets[:, 1, 1:], "ro", markersize=0.5)
-    plt.plot(predicted[:, 0, 1:], predicted[:, 1, 1:], "bo", markersize=0.5)
+    plt.plot(
+        targets[:, 0, 1:],
+        targets[:, 1, 1:],
+        "o",
+        color="blue",
+        markersize=0.7,
+    )
+    plt.plot(
+        predicted[:, 0, 1:],
+        predicted[:, 1, 1:],
+        "o",
+        color="green",
+        markersize=0.7,
+    )
+
+    # connect points with lines
+    for i in range(len(targets)):
+        plt.plot(
+            [targets[i, 0], predicted[i, 0]],
+            [targets[i, 1], predicted[i, 1]],
+            "r-",
+            lw=0.1,
+        )
+
     plt.legend()
     if title is not None:
         plt.title(f"Loss = {title:.3e}")

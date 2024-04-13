@@ -81,7 +81,7 @@ def compute_new_parameter_intervals(
 
     if len(results) < args.min_good_samples:
         logger.warning(
-            f"Found {len(results)} (< {args.min_good_samples}) good samples. Updating parameters."
+            f"Found {len(results)} (< {args.min_good_samples}) good samples. Parameters will not be updated."
         )
         return None
     else:

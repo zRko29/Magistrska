@@ -45,9 +45,9 @@ def get_callbacks(save_path: str) -> List[callbacks]:
             monitor="loss/train",
             mode="min",
             min_delta=1e-8,
-            patience=350,
+            patience=400,
         ),
-        DeviceStatsMonitor(cpu_stats=False),
+        # DeviceStatsMonitor(cpu_stats=False),
     ]
 
 
