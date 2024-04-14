@@ -14,8 +14,8 @@ from pytorch_lightning.callbacks import (
 )
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data
-from src.utils import import_parsed_args, read_yaml, setup_logger, measure_time
+from src.helper import Model, Data, BestScoreCallback
+from src.utils import import_parsed_args, read_yaml, setup_logger
 
 from argparse import Namespace
 import os
@@ -47,11 +47,11 @@ def get_callbacks(save_path: str) -> List[callbacks]:
             min_delta=1e-8,
             patience=400,
         ),
+        BestScoreCallback(),
         # DeviceStatsMonitor(cpu_stats=False),
     ]
 
 
-@measure_time
 def main(
     args: Namespace,
     params: dict,
@@ -78,7 +78,6 @@ def main(
         max_epochs=args.epochs,
         precision=params.get("precision"),
         logger=tb_logger,
-        check_val_every_n_epoch=5,
         callbacks=get_callbacks(save_path),
         deterministic=True,
         enable_progress_bar=args.progress_bar,
@@ -97,7 +96,7 @@ def main(
     trainer.fit(model, datamodule)
 
     logger.info(
-        f"version_{tb_logger.version}: min_train_loss={model.min_train_loss:.3e}, min_val_loss={model.min_val_loss:.3e}"
+        f"version_{tb_logger.version}: best_loss={model._trainer.callbacks[-1].best_model_score :.3e}"
     )
 
 
@@ -113,6 +112,4 @@ if __name__ == "__main__":
 
     logger = setup_logger(params["name"])
 
-    required_time = main(args, params, logger)
-
-    logger.info(f"Finished trainer.py in {required_time}.")
+    main(args, params, logger)

@@ -10,7 +10,6 @@ from src.utils import (
     save_yaml,
     setup_logger,
     extract_best_loss_from_event_file,
-    measure_time,
     Parameter,
 )
 
@@ -140,7 +139,6 @@ def update_yaml_file(params_path: str, parameters: List[Parameter]) -> None:
         save_yaml(yaml_params, params_path)
 
 
-@measure_time
 def main(args: Namespace, logger: logging.Logger, params_dir=str) -> None:
     events_dir = params["name"]
 
@@ -174,6 +172,4 @@ if __name__ == "__main__":
     logger.info("Running update.py")
     logger.info(f"args = {args.__dict__}")
 
-    required_time = main(args, logger, params_dir)
-
-    logger.info(f"Finished update.py in {required_time}.")
+    main(args, logger, params_dir)

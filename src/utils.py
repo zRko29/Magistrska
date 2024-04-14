@@ -1,11 +1,11 @@
-from typing import List, Callable
-import time
-from datetime import timedelta
+from typing import List
 import numpy as np
 import yaml
 from argparse import Namespace, ArgumentParser
 import os
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+import torch
+import matplotlib.pyplot as plt
 
 import logging
 
@@ -79,20 +79,8 @@ def read_events_file(events_file_path: str) -> EventAccumulator:
 def extract_best_loss_from_event_file(events_file_path: str) -> str | float | int:
     event_values = read_events_file(events_file_path)
     for tag in event_values.Tags()["scalars"]:
-        if tag == "metrics/min_train_loss":
+        if tag == "best_loss":
             return {"best_loss": event_values.Scalars(tag)[-1].value}
-
-
-def measure_time(func: Callable) -> Callable:
-    def wrapper(*args, **kwargs):
-        t1 = time.time()
-        val = func(*args, **kwargs)
-        t2 = timedelta(seconds=time.time() - t1)
-        if val == None:
-            return t2
-        return val
-
-    return wrapper
 
 
 class Gridsearch:
@@ -132,6 +120,92 @@ class Gridsearch:
                 params[key] = rng.uniform(space["lower"], space["upper"])
 
         return params
+
+
+def plot_2d(
+    predicted: torch.Tensor,
+    targets: torch.Tensor,
+    show_plot: bool = True,
+    save_path: str = None,
+    title: str = None,
+) -> None:
+    predicted = predicted.detach().numpy()
+    targets = targets.detach().numpy()
+    plt.figure(figsize=(6, 4))
+    plt.plot(
+        targets[:, 0, 0],
+        targets[:, 1, 0],
+        "o",
+        color="blue",
+        markersize=3,
+        label="targets",
+    )
+    plt.plot(
+        predicted[:, 0, 0],
+        predicted[:, 1, 0],
+        "o",
+        color="green",
+        markersize=3,
+        label="predicted",
+    )
+    plt.plot(
+        targets[:, 0, 1:],
+        targets[:, 1, 1:],
+        "o",
+        color="blue",
+        markersize=0.7,
+    )
+    plt.plot(
+        predicted[:, 0, 1:],
+        predicted[:, 1, 1:],
+        "o",
+        color="green",
+        markersize=0.7,
+    )
+
+    # connect points with lines
+    for i in range(len(targets)):
+        plt.plot(
+            [targets[i, 0], predicted[i, 0]],
+            [targets[i, 1], predicted[i, 1]],
+            "r-",
+            lw=0.1,
+        )
+
+    plt.legend()
+    if title is not None:
+        plt.title(f"Loss = {title:.3e}")
+    if save_path is not None:
+        plt.savefig(save_path + ".pdf")
+    if show_plot:
+        plt.show()
+    else:
+        plt.close()
+
+
+def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
+    train_size = int(len(dataset) * train_ratio)
+    train_data = dataset[:train_size]
+    val_data = dataset[train_size:]
+    plt.figure(figsize=(6, 4))
+    plt.plot(
+        train_data[:, 0, 0],
+        train_data[:, 1, 0],
+        "bo",
+        markersize=2,
+        label="Training data",
+    )
+    plt.plot(
+        val_data[:, 0, 0],
+        val_data[:, 1, 0],
+        "ro",
+        markersize=2,
+        label="Validation data",
+    )
+    plt.plot(train_data[:, 0, 1:], train_data[:, 1, 1:], "bo", markersize=0.3)
+    plt.plot(val_data[:, 0, 1:], val_data[:, 1, 1:], "ro", markersize=0.3)
+    plt.legend()
+    plt.show()
 
 
 def import_parsed_args(script_name: str) -> Namespace:

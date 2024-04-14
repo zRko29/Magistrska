@@ -1,25 +1,22 @@
 import torch.optim as optim
-import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
+
+import pytorch_lightning as pl
+from pytorch_lightning.utilities import rank_zero_only
+
 import numpy as np
-import matplotlib.pyplot as plt
 from typing import Tuple
+import time
 
 from src.mapping_helper import StandardMap
-from src.utils import read_yaml
+from src.utils import plot_split
 
 
 class Model(pl.LightningModule):
-    def __init__(
-        self,
-        **params: dict,
-    ):
+    def __init__(self, **params):
         super(Model, self).__init__()
         self.save_hyperparameters()
-
-        self.min_train_loss = np.inf
-        self.min_val_loss = np.inf
 
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
@@ -36,9 +33,6 @@ class Model(pl.LightningModule):
         self.hidden_sizes: list[int] = [rnn_layer_size] * self.num_rnn_layers
         self.linear_sizes: list[int] = [lin_layer_size] * (self.num_lin_layers - 1)
         # ----------------------
-
-        self.training_step_outputs = []
-        self.validation_step_outputs = []
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
@@ -106,12 +100,6 @@ class Model(pl.LightningModule):
         elif self.optimizer == "sgd":
             return optim.SGD(self.parameters(), lr=self.lr, momentum=0.9, nesterov=True)
 
-    def on_train_start(self):
-        self.training_step_outputs = []
-        self.validation_step_outputs = []
-        self.log("metrics/min_val_loss", np.inf, sync_dist=True)
-        self.log("metrics/min_train_loss", np.inf, sync_dist=True)
-
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
         targets: torch.Tensor
@@ -122,26 +110,8 @@ class Model(pl.LightningModule):
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
         loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log(
-            "loss/train",
-            loss,
-            on_epoch=True,
-            prog_bar=True,
-            on_step=False,
-        )
-        self.training_step_outputs.append(loss)
+        self.log("loss/train", loss, on_epoch=True, on_step=False, prog_bar=True)
         return loss
-
-    def on_train_epoch_end(self):
-        mean_loss = torch.stack(self.training_step_outputs).mean()
-        if mean_loss < self.min_train_loss:
-            self.min_train_loss = mean_loss
-            self.log(
-                "metrics/min_train_loss",
-                mean_loss,
-                sync_dist=True,
-            )
-        self.training_step_outputs.clear()
 
     def validation_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
@@ -152,26 +122,8 @@ class Model(pl.LightningModule):
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
         loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log(
-            "loss/val",
-            loss,
-            on_epoch=True,
-            prog_bar=True,
-            on_step=False,
-        )
-        self.validation_step_outputs.append(loss)
+        self.log("loss/val", loss, on_epoch=True, on_step=False, prog_bar=True)
         return loss
-
-    def on_validation_epoch_end(self):
-        mean_loss = torch.stack(self.validation_step_outputs).mean()
-        if mean_loss < self.min_val_loss:
-            self.min_val_loss = mean_loss
-            self.log(
-                "metrics/min_val_loss",
-                mean_loss,
-                sync_dist=True,
-            )
-        self.validation_step_outputs.clear()
 
     def predict_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
         predicted: torch.Tensor = batch[:, :, : self.regression_seed]
@@ -225,7 +177,7 @@ class Data(pl.LightningDataModule):
         sequences = self._make_sequences(self.data, type=sequence_type)
 
         if plot_data_split:
-            self.plot_data_split(sequences, train_size)
+            plot_split(sequences, train_size)
 
         self.input_output_pairs = self._make_input_output_pairs(
             sequences, type=sequence_type
@@ -293,29 +245,32 @@ class Data(pl.LightningDataModule):
     def predict_dataloader(self) -> torch.Tensor:
         return torch.tensor(self.data).to(torch.double).unsqueeze(0)
 
-    def plot_data_split(self, dataset: torch.Tensor, train_ratio: float) -> None:
-        train_size = int(len(dataset) * train_ratio)
-        train_data = dataset[:train_size]
-        val_data = dataset[train_size:]
-        plt.figure(figsize=(6, 4))
-        plt.plot(
-            train_data[:, 0, 0],
-            train_data[:, 1, 0],
-            "bo",
-            markersize=2,
-            label="Training data",
+
+class BestScoreCallback(pl.Callback):
+    """
+    Callback to log the best_loss with hyperparameters.
+    """
+
+    def __init__(self) -> None:
+        super(BestScoreCallback, self).__init__()
+        self.best_loss = np.inf
+
+    @rank_zero_only
+    def on_train_start(self, trainer, pl_module):
+        trainer.logger.log_hyperparams(
+            pl_module.hparams,
+            {"best_loss": np.inf, "train_time": 0},
         )
-        plt.plot(
-            val_data[:, 0, 0],
-            val_data[:, 1, 0],
-            "ro",
-            markersize=2,
-            label="Validation data",
-        )
-        plt.plot(train_data[:, 0, 1:], train_data[:, 1, 1:], "bo", markersize=0.3)
-        plt.plot(val_data[:, 0, 1:], val_data[:, 1, 1:], "ro", markersize=0.3)
-        plt.legend()
-        plt.show()
+
+    @rank_zero_only
+    def on_fit_start(self, trainer, pl_module):
+        self.t_start = time.time()
+
+    @rank_zero_only
+    def on_validation_epoch_end(self, trainer, pl_module):
+        best_loss = trainer.callbacks[-1].best_model_score or np.inf
+        train_time = time.time() - self.t_start
+        pl_module.log_dict({"best_loss": best_loss, "train_time": train_time})
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -325,69 +280,8 @@ class Dataset(torch.utils.data.Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor]:
         x, y = self.data[idx]
         x = torch.tensor(x).to(torch.double)
         y = torch.tensor(y).to(torch.double)
         return x, y
-
-
-def plot_2d(
-    predicted: torch.Tensor,
-    targets: torch.Tensor,
-    show_plot: bool = True,
-    save_path: str = None,
-    title: str = None,
-) -> None:
-    predicted = predicted.detach().numpy()
-    targets = targets.detach().numpy()
-    plt.figure(figsize=(6, 4))
-    plt.plot(
-        targets[:, 0, 0],
-        targets[:, 1, 0],
-        "o",
-        color="blue",
-        markersize=3,
-        label="targets",
-    )
-    plt.plot(
-        predicted[:, 0, 0],
-        predicted[:, 1, 0],
-        "o",
-        color="green",
-        markersize=3,
-        label="predicted",
-    )
-    plt.plot(
-        targets[:, 0, 1:],
-        targets[:, 1, 1:],
-        "o",
-        color="blue",
-        markersize=0.7,
-    )
-    plt.plot(
-        predicted[:, 0, 1:],
-        predicted[:, 1, 1:],
-        "o",
-        color="green",
-        markersize=0.7,
-    )
-
-    # connect points with lines
-    for i in range(len(targets)):
-        plt.plot(
-            [targets[i, 0], predicted[i, 0]],
-            [targets[i, 1], predicted[i, 1]],
-            "r-",
-            lw=0.1,
-        )
-
-    plt.legend()
-    if title is not None:
-        plt.title(f"Loss = {title:.3e}")
-    if save_path is not None:
-        plt.savefig(save_path + ".pdf")
-    if show_plot:
-        plt.show()
-    else:
-        plt.close()

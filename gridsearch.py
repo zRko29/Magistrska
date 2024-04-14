@@ -3,12 +3,10 @@ from src.utils import (
     read_yaml,
     save_yaml,
     setup_logger,
-    measure_time,
     Gridsearch,
 )
 
 
-@measure_time
 def main(params_dir: str) -> None:
     params_path = os.path.join(params_dir, "parameters.yaml")
     gridsearch = Gridsearch(params_path, use_defaults=False)
@@ -28,6 +26,4 @@ if __name__ == "__main__":
     logger = setup_logger(params["name"])
     logger.info("Running gridsearch.py")
 
-    required_time = main(params_dir)
-
-    logger.info(f"Finished gridsearch.py in {required_time}.")
+    main(params_dir)
