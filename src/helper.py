@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
+from pytorch_lightning.utilities import rank_zero_only
 
 import numpy as np
 from typing import Tuple
@@ -136,7 +137,17 @@ class Model(pl.LightningModule):
 
         return {"predicted": predicted, "targets": targets, "loss": loss}
 
+    @rank_zero_only
+    def on_train_start(self):
+        """
+        Required to add best_loss to hparams in logger.
+        """
+        self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": np.inf})
+
     def on_train_epoch_end(self):
+        """
+        Required to log best_loss at the end of the epoch. sync_dist=True is required to average the best_loss over all devices.
+        """
         best_loss = self._trainer.callbacks[-1].best_model_score or np.inf
         self.log("best_loss", best_loss, sync_dist=True)
 
