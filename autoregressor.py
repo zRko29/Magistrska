@@ -1,9 +1,9 @@
 import os
 import pytorch_lightning as pl
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, plot_2d
+from src.helper import Model, Data
 from src.dmd import DMD
-from src.utils import read_yaml, get_inference_folders
+from src.utils import read_yaml, get_inference_folders, plot_2d
 from typing import Optional, List
 import warnings
 
@@ -18,7 +18,7 @@ pl.seed_everything(42, workers=True)
 
 
 def main():
-    version: Optional[int] = 8
+    version: Optional[int] = 0
     name: str = "overfitting_K=0.1"
 
     directory_path: str = f"logs/{name}"

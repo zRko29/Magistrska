@@ -86,17 +86,11 @@ def main(
         num_nodes=args.num_nodes,
     )
 
-    logger.info(
-        f"Running trainer.py version_{tb_logger.version} (global_rank={trainer.global_rank})."
-    )
     if trainer.is_global_zero:
+        logger.info(f"Running trainer.py.")
         logger.info(f"args = {args.__dict__}")
 
     trainer.fit(model, datamodule)
-
-    logger.info(
-        f"version_{tb_logger.version}: best_loss={model._trainer.callbacks[-1].best_model_score :.3e}"
-    )
 
 
 if __name__ == "__main__":
