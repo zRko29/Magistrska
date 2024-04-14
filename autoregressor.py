@@ -1,14 +1,10 @@
-import os, yaml
-
+import os
 import pytorch_lightning as pl
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, plot_2d
+from src.helper import Model, Data
 from src.dmd import DMD
-from src.utils import read_yaml, get_inference_folders
-from torch import Tensor
-
+from src.utils import read_yaml, get_inference_folders, plot_2d
 from typing import Optional, List
-
 import warnings
 
 warnings.filterwarnings(
@@ -18,11 +14,12 @@ warnings.filterwarnings(
 import logging
 
 logging.getLogger("pytorch_lightning").setLevel(0)
+pl.seed_everything(42, workers=True)
 
 
 def main():
-    version: Optional[int] = None
-    name: str = "overfitting_K=0.1/0"
+    version: Optional[int] = 0
+    name: str = "overfitting_K=0.1"
 
     directory_path: str = f"logs/{name}"
 
@@ -41,7 +38,7 @@ def main():
 
         for map, input_suffix in zip(maps, input_suffixes):
             model_path: str = os.path.join(log_path, f"model.ckpt")
-            model = Model(**params).load_from_checkpoint(model_path)
+            model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")
 
             model.regression_seed = params["seq_length"]
 
@@ -58,10 +55,11 @@ def main():
                 precision=params["precision"],
                 enable_progress_bar=False,
                 logger=False,
+                deterministic=True,
             )
             predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
 
-            print(f"{input_suffix} loss: {predictions["loss"].item():.3e}")
+            print(f"{input_suffix} loss: {predictions['loss'].item():.3e}")
             plot_2d(
                 predictions["predicted"],
                 predictions["targets"],

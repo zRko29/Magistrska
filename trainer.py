@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from pytorch_lightning.callbacks import callbacks
 
 from pytorch_lightning import Trainer
+from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import (
     EarlyStopping,
@@ -13,26 +14,22 @@ from pytorch_lightning.callbacks import (
 )
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, CustomCallback
-from src.utils import (
-    measure_time,
-    read_yaml,
-    import_parsed_args,
-    setup_logger,
-)
+from src.helper import Model, Data
+from src.utils import import_parsed_args, read_yaml, setup_logger
 
 from argparse import Namespace
 import os
 import warnings
 import logging
-from time import sleep
 
 os.environ["GLOO_SOCKET_IFNAME"] = "en0"
 warnings.filterwarnings(
     "ignore",
     module="pytorch_lightning",
 )
-logging.getLogger("pytorch_lightning").setLevel(0)
+
+logging.getLogger("pytorch_lightning").setLevel("INFO")
+seed_everything(42, workers=True)
 
 
 def get_callbacks(save_path: str) -> List[callbacks]:
@@ -48,20 +45,25 @@ def get_callbacks(save_path: str) -> List[callbacks]:
             monitor="loss/train",
             mode="min",
             min_delta=1e-8,
-            patience=350,
+            patience=400,
         ),
-        # DeviceStatsMonitor(),
-        CustomCallback(),
+        # DeviceStatsMonitor(cpu_stats=False),
     ]
 
 
-@measure_time
 def main(
-    args: Namespace, params: dict, sleep_sec: int, map_object: StandardMap
+    args: Namespace,
+    params: dict,
+    logger: logging.Logger,
 ) -> None:
-    sleep(sleep_sec)
 
-    datamodule = Data(map_object=map_object, train_size=0.8, params=params)
+    map_object = StandardMap(seed=42, params=params)
+
+    datamodule = Data(
+        map_object=map_object,
+        train_size=args.train_size,
+        params=params,
+    )
 
     model = Model(**params)
 
@@ -72,34 +74,35 @@ def main(
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
 
     trainer = Trainer(
-        max_epochs=params.get("epochs"),
+        max_epochs=args.epochs,
         precision=params.get("precision"),
         logger=tb_logger,
         callbacks=get_callbacks(save_path),
+        deterministic=True,
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
-        devices=args.num_devices,
+        devices=args.devices,
         strategy=args.strategy,
+        num_nodes=args.num_nodes,
     )
 
+    if trainer.is_global_zero:
+        logger.info(f"Running trainer.py.")
+        logger.info(f"args = {args.__dict__}")
+
     trainer.fit(model, datamodule)
-    logger.info(f"Model trained and saved in '{save_path}'.")
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
 
-    params = read_yaml(args.params_dir)
-    del params["gridsearch"]
+    params_dir = os.path.abspath("config")
 
-    logs_dir = args.logs_dir or params["name"]
+    params_path = os.path.join(params_dir, "current_params.yaml")
+    params = read_yaml(params_path)
 
-    logger = setup_logger(logs_dir)
-    logger.info("Started trainer.py")
-    logger.info(f"{args.__dict__=}")
+    params["name"] = os.path.abspath(params["name"])
 
-    map_object = StandardMap(seed=42, params=params)
+    logger = setup_logger(params["name"])
 
-    run_time = main(args, params, 0, map_object)
-
-    logger.info(f"Finished trainer.py in {run_time}.\n")
+    main(args, params, logger)

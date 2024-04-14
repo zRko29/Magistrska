@@ -1,37 +1,20 @@
-import yaml
 from typing import Dict, Tuple, List
 import os
-from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 import pandas as pd
 from argparse import Namespace
+import logging
 
 from src.utils import (
-    read_yaml,
     import_parsed_args,
-    setup_logger,
-    measure_time,
+    read_yaml,
     save_yaml,
-    save_last_params,
-    find_new_path,
+    setup_logger,
     extract_best_loss_from_event_file,
+    Parameter,
 )
 
 
-class Parameter:
-    def __init__(self, name: str, type: str) -> None:
-        self.name = name
-        self.type = type
-
-        if self.type in ["float", "int"]:
-            self.min = float("inf")
-            self.max = -float("inf")
-
-        elif self.type == "choice":
-            self.value_counts = {}
-            self.count = 0
-
-
-def get_loss_and_params(dir: str) -> pd.DataFrame:
+def get_loss_and_params(dir: str, logger: logging.Logger) -> pd.DataFrame:
     all_loss_hyperparams = []
     try:
         for directory in sorted(os.listdir(dir)):
@@ -48,7 +31,13 @@ def get_loss_and_params(dir: str) -> pd.DataFrame:
                         parameter_dict = read_yaml(file_path)
 
                 if loss_value and parameter_dict:
-                    all_loss_hyperparams.append({**loss_value, **parameter_dict})
+                    all_loss_hyperparams.append(
+                        {
+                            "directory": directory,
+                            **loss_value,
+                            **parameter_dict,
+                        }
+                    )
     except FileNotFoundError as e:
         logger.error(e)
         raise e
@@ -56,21 +45,26 @@ def get_loss_and_params(dir: str) -> pd.DataFrame:
     return pd.DataFrame(all_loss_hyperparams)
 
 
-def compute_parameter_intervals(
-    results: pd.DataFrame, args: Namespace
+def compute_new_parameter_intervals(
+    results: pd.DataFrame,
+    args: Namespace,
+    logger: logging.Logger,
+    params_path: str,
 ) -> Dict[str, Tuple[float, float]]:
-    gridsearch_params = read_yaml(args.params_dir)["gridsearch"]
+    gridsearch_params = read_yaml(params_path)["gridsearch"]
 
     parameters = []
     for column in results.columns:
         if (
-            len(results[column].unique()) > 1 or column in gridsearch_params.keys()
-        ) and column != "best_loss":
+            (len(results[column].unique()) > 1 or column in gridsearch_params.keys())
+            and column != "best_loss"
+            and column != "directory"
+        ):
             try:
                 type = gridsearch_params[column]["type"]
             except KeyError:
                 logger.warning(
-                    f"Variable parameter '{column}' is not included in the gridsearch parameters."
+                    f"Parameter '{column}' changed during training but it is not included in the gridsearch parameters."
                 )
                 continue
             if type:
@@ -79,7 +73,7 @@ def compute_parameter_intervals(
     # don't filter before because a parmeter could have the same value for all "good" rows
     # don't filter after because you wouldn't get optimal intervals
     try:
-        results = results[results["best_loss"] < args.max_loss]
+        results = results[results["best_loss"] < args.max_good_loss]
     except KeyError:
         logger.warning("There are probably no results in folder.")
         return None
@@ -90,18 +84,22 @@ def compute_parameter_intervals(
         )
         return None
     else:
-        logger.info(
-            f"Found {len(results)} (> {args.min_good_samples}) good samples. Parameters will be updated."
-        )
+        logger.warning(f"Updating parameters.")
+
+    # ensures newer results at the bottom
+    results = results.sort_values("directory", ascending=True)
+
+    # NOTE: ensures that older results, which set larger intervals, get deprecated, so that newer results can set smaller intervals
+    results = results.tail(args.min_good_samples)
 
     for param in parameters:
         if param.type == "float":
-            param.min = results[param.name].min()
-            param.max = results[param.name].max()
+            param.min = float(results[param.name].min())
+            param.max = float(results[param.name].max())
 
         elif param.type == "int":
-            param.min = results[param.name].min()
-            param.max = results[param.name].max()
+            param.min = int(results[param.name].min())
+            param.max = int(results[param.name].max())
 
         elif param.type == "choice":
             param.value_counts = results[param.name].value_counts().to_dict()
@@ -117,9 +115,7 @@ def compute_parameter_intervals(
     return parameters
 
 
-def update_yaml_file(
-    args: Namespace, events_dir: str, parameters: List[Parameter]
-) -> None:
+def update_yaml_file(params_path: str, parameters: List[Parameter]) -> None:
     if parameters is not None:
         gridsearch_dict = {}
         for param in parameters:
@@ -135,39 +131,45 @@ def update_yaml_file(
                     "type": param.type,
                 }
 
-        yaml_params = read_yaml(args.params_dir)
-
-        # specify new folder
-        yaml_params["name"] = find_new_path(events_dir)
+        yaml_params = read_yaml(params_path)
 
         # update gridsearch parameters
         yaml_params["gridsearch"] = gridsearch_dict
 
-        save_yaml(yaml_params, args.params_dir)
-        save_last_params(yaml_params, events_dir)
+        save_yaml(yaml_params, params_path)
 
 
-@measure_time
-def main(args: Namespace) -> None:
-    events_dir = read_yaml(args.params_dir)["name"]
+def main(args: Namespace, logger: logging.Logger, params_dir=str) -> None:
+    events_dir = params["name"]
 
-    loss_and_params = get_loss_and_params(events_dir)
-    parameters = compute_parameter_intervals(results=loss_and_params, args=args)
+    loss_and_params = get_loss_and_params(events_dir, logger)
 
-    update_yaml_file(args, events_dir, parameters)
+    params_path = os.path.join(params_dir, "parameters.yaml")
+    parameters = compute_new_parameter_intervals(
+        results=loss_and_params,
+        args=args,
+        logger=logger,
+        params_path=params_path,
+    )
+
+    update_yaml_file(params_path, parameters)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Parameter updater")
 
-    params = read_yaml(args.params_dir)
+    if args.current_step % args.check_every_n_steps != 0:
+        exit()
 
-    logs_dir = args.logs_dir or params["name"]
+    params_dir = os.path.abspath("config")
 
-    logger = setup_logger(logs_dir)
-    logger.info("Started update.py")
-    logger.info(f"{args.__dict__=}")
+    params_path = os.path.join(params_dir, "parameters.yaml")
+    params = read_yaml(params_path)
 
-    run_time = main(args)
+    params["name"] = os.path.abspath(params["name"])
 
-    logger.info(f"Finished trainer.py in {run_time}.\n")
+    logger = setup_logger(params["name"])
+    logger.info("Running update.py")
+    logger.info(f"args = {args.__dict__}")
+
+    main(args, logger, params_dir)

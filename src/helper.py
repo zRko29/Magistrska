@@ -1,23 +1,19 @@
 import torch.optim as optim
-import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
+
+import pytorch_lightning as pl
+from pytorch_lightning.utilities import rank_zero_only
+
 import numpy as np
-import matplotlib.pyplot as plt
-import time
-from datetime import timedelta
-import os
 from typing import Tuple
 
 from src.mapping_helper import StandardMap
-from src.utils import read_yaml
+from src.utils import plot_split
 
 
 class Model(pl.LightningModule):
-    def __init__(
-        self,
-        **params: dict,
-    ):
+    def __init__(self, **params):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
@@ -36,9 +32,6 @@ class Model(pl.LightningModule):
         self.hidden_sizes: list[int] = [rnn_layer_size] * self.num_rnn_layers
         self.linear_sizes: list[int] = [lin_layer_size] * (self.num_lin_layers - 1)
         # ----------------------
-
-        self.training_step_outputs = []
-        self.validation_step_outputs = []
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
@@ -110,20 +103,13 @@ class Model(pl.LightningModule):
         inputs: torch.Tensor
         targets: torch.Tensor
         inputs, targets = batch
-        print(inputs.shape, targets.shape)
 
         predicted = self(inputs)
+
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
         loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log(
-            "loss/train",
-            loss,
-            on_epoch=True,
-            prog_bar=True,
-            on_step=False,
-        )
-        self.training_step_outputs.append(loss)
+        self.log("loss/train", loss, on_epoch=True, on_step=False, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx) -> torch.Tensor:
@@ -135,14 +121,7 @@ class Model(pl.LightningModule):
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
         loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log(
-            "loss/val",
-            loss,
-            on_epoch=True,
-            prog_bar=True,
-            on_step=False,
-        )
-        self.validation_step_outputs.append(loss)
+        self.log("loss/val", loss, on_epoch=True, on_step=False, prog_bar=True)
         return loss
 
     def predict_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
@@ -157,6 +136,20 @@ class Model(pl.LightningModule):
         loss = torch.nn.functional.mse_loss(predicted, targets)
 
         return {"predicted": predicted, "targets": targets, "loss": loss}
+
+    @rank_zero_only
+    def on_train_start(self):
+        """
+        Required to add best_loss to hparams in logger.
+        """
+        self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": np.inf})
+
+    def on_train_epoch_end(self):
+        """
+        Required to log best_loss at the end of the epoch. sync_dist=True is required to average the best_loss over all devices.
+        """
+        best_loss = self._trainer.callbacks[-1].best_model_score or np.inf
+        self.log("best_loss", best_loss, sync_dist=True)
 
 
 class Data(pl.LightningDataModule):
@@ -197,7 +190,7 @@ class Data(pl.LightningDataModule):
         sequences = self._make_sequences(self.data, type=sequence_type)
 
         if plot_data_split:
-            self.plot_data_split(sequences, train_size)
+            plot_split(sequences, train_size)
 
         self.input_output_pairs = self._make_input_output_pairs(
             sequences, type=sequence_type
@@ -265,65 +258,6 @@ class Data(pl.LightningDataModule):
     def predict_dataloader(self) -> torch.Tensor:
         return torch.tensor(self.data).to(torch.double).unsqueeze(0)
 
-    def plot_data_split(self, dataset: torch.Tensor, train_ratio: float) -> None:
-        train_size = int(len(dataset) * train_ratio)
-        train_data = dataset[:train_size]
-        val_data = dataset[train_size:]
-        plt.figure(figsize=(6, 4))
-        plt.plot(
-            train_data[:, 0, 0],
-            train_data[:, 1, 0],
-            "bo",
-            markersize=2,
-            label="Training data",
-        )
-        plt.plot(
-            val_data[:, 0, 0],
-            val_data[:, 1, 0],
-            "ro",
-            markersize=2,
-            label="Validation data",
-        )
-        plt.plot(train_data[:, 0, 1:], train_data[:, 1, 1:], "bo", markersize=0.3)
-        plt.plot(val_data[:, 0, 1:], val_data[:, 1, 1:], "ro", markersize=0.3)
-        plt.legend()
-        plt.show()
-
-
-class CustomCallback(pl.Callback):
-    def __init__(self, print: bool) -> None:
-        super(CustomCallback, self).__init__()
-        self.min_train_loss = np.inf
-        self.min_val_loss = np.inf
-
-    def on_train_start(self, trainer, pl_module):
-        trainer.logger.log_hyperparams(
-            pl_module.hparams,
-            {"metrics/min_val_loss": np.inf, "metrics/min_train_loss": np.inf},
-        )
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        mean_loss = torch.stack(pl_module.training_step_outputs).mean()
-        if mean_loss < self.min_train_loss:
-            self.min_train_loss = mean_loss
-            pl_module.log(
-                "metrics/min_train_loss",
-                mean_loss,
-                sync_dist=False,
-            )
-        pl_module.training_step_outputs.clear()
-
-    def on_validation_epoch_end(self, trainer, pl_module):
-        mean_loss = torch.stack(pl_module.validation_step_outputs).mean()
-        if mean_loss < self.min_val_loss:
-            self.min_val_loss = mean_loss
-            pl_module.log(
-                "metrics/min_val_loss",
-                mean_loss,
-                sync_dist=False,
-            )
-        pl_module.validation_step_outputs.clear()
-
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data: np.ndarray):
@@ -332,85 +266,8 @@ class Dataset(torch.utils.data.Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor]:
         x, y = self.data[idx]
         x = torch.tensor(x).to(torch.double)
         y = torch.tensor(y).to(torch.double)
         return x, y
-
-
-class Gridsearch:
-    def __init__(self, path: str, use_defaults: bool = False) -> None:
-        self.path = path
-        self.use_defaults = use_defaults
-
-    def __next__(self):
-        return self.update_params()
-
-    def __iter__(self):
-        for _ in range(10**3):
-            yield self.update_params()
-
-    def update_params(self) -> dict:
-        params = read_yaml(self.path)
-        if not self.use_defaults:
-            params = self._update_params(params)
-
-        try:
-            del params["gridsearch"]
-        except KeyError:
-            pass
-
-        return params
-
-    def _update_params(self, params) -> dict:
-        # don't use any seed
-        rng: np.random.Generator = np.random.default_rng(None)
-
-        for key, space in params.get("gridsearch").items():
-            type = space.get("type")
-            if type == "int":
-                params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
-            elif type == "choice":
-                list = space.get("list")
-                choice = rng.choice(list)
-                try:
-                    choice = float(choice)
-                except:
-                    choice = str(choice)
-                params[key] = choice
-            elif type == "float":
-                params[key] = rng.uniform(space["lower"], space["upper"])
-
-        return params
-
-
-def plot_2d(
-    predicted: torch.Tensor,
-    targets: torch.Tensor,
-    show_plot: bool = True,
-    save_path: str = None,
-    title: str = None,
-) -> None:
-    predicted = predicted.detach().numpy()
-    targets = targets.detach().numpy()
-    plt.figure(figsize=(6, 4))
-    plt.plot(targets[:, 0, 0], targets[:, 1, 0], "ro", markersize=2, label="targets")
-    plt.plot(
-        predicted[:, 0, 0],
-        predicted[:, 1, 0],
-        "bo",
-        markersize=2,
-        label="predicted",
-    )
-    plt.plot(targets[:, 0, 1:], targets[:, 1, 1:], "ro", markersize=0.5)
-    plt.plot(predicted[:, 0, 1:], predicted[:, 1, 1:], "bo", markersize=0.5)
-    plt.legend()
-    if title is not None:
-        plt.title(f"Loss = {title:.3e}")
-    if save_path is not None:
-        plt.savefig(save_path + ".pdf")
-    if show_plot:
-        plt.show()
-    else:
-        plt.close()
