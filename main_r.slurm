@@ -36,4 +36,6 @@ do
     python update.py --min_good_samples 4 --max_good_loss 1e-6 --check_every_n_steps 3 --current_step $i
 done
 
+echo
+echo "-----------------------------"
 echo "Optimization finished."

@@ -253,24 +253,14 @@ class BestScoreCallback(pl.Callback):
 
     def __init__(self) -> None:
         super(BestScoreCallback, self).__init__()
-        self.best_loss = np.inf
 
     @rank_zero_only
     def on_train_start(self, trainer, pl_module):
-        trainer.logger.log_hyperparams(
-            pl_module.hparams,
-            {"best_loss": np.inf, "train_time": 0},
-        )
+        trainer.logger.log_hyperparams(pl_module.hparams, {"best_loss": np.inf})
 
-    @rank_zero_only
-    def on_fit_start(self, trainer, pl_module):
-        self.t_start = time.time()
-
-    @rank_zero_only
-    def on_validation_epoch_end(self, trainer, pl_module):
+    def on_train_epoch_end(self, trainer, pl_module):
         best_loss = trainer.callbacks[-1].best_model_score or np.inf
-        train_time = time.time() - self.t_start
-        pl_module.log_dict({"best_loss": best_loss, "train_time": train_time})
+        pl_module.log("best_loss", best_loss)
 
 
 class Dataset(torch.utils.data.Dataset):
