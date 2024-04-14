@@ -14,7 +14,7 @@ from pytorch_lightning.callbacks import (
 )
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data, BestScoreCallback
+from src.helper import Model, Data
 from src.utils import import_parsed_args, read_yaml, setup_logger
 
 from argparse import Namespace
@@ -47,7 +47,6 @@ def get_callbacks(save_path: str) -> List[callbacks]:
             min_delta=1e-8,
             patience=400,
         ),
-        BestScoreCallback(),
         # DeviceStatsMonitor(cpu_stats=False),
     ]
 

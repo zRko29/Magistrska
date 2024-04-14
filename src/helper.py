@@ -3,11 +3,9 @@ import torch
 from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
-from pytorch_lightning.utilities import rank_zero_only
 
 import numpy as np
 from typing import Tuple
-import time
 
 from src.mapping_helper import StandardMap
 from src.utils import plot_split
@@ -138,6 +136,10 @@ class Model(pl.LightningModule):
 
         return {"predicted": predicted, "targets": targets, "loss": loss}
 
+    def on_train_epoch_end(self):
+        best_loss = self._trainer.callbacks[-1].best_model_score or np.inf
+        self.log("best_loss", best_loss, sync_dist=True)
+
 
 class Data(pl.LightningDataModule):
     def __init__(
@@ -244,23 +246,6 @@ class Data(pl.LightningDataModule):
 
     def predict_dataloader(self) -> torch.Tensor:
         return torch.tensor(self.data).to(torch.double).unsqueeze(0)
-
-
-class BestScoreCallback(pl.Callback):
-    """
-    Callback to log the best_loss with hyperparameters.
-    """
-
-    def __init__(self) -> None:
-        super(BestScoreCallback, self).__init__()
-
-    @rank_zero_only
-    def on_train_start(self, trainer, pl_module):
-        trainer.logger.log_hyperparams(pl_module.hparams, {"best_loss": np.inf})
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        best_loss = trainer.callbacks[-1].best_model_score or np.inf
-        pl_module.log("best_loss", best_loss)
 
 
 class Dataset(torch.utils.data.Dataset):
