@@ -1,0 +1,618 @@
+2024-04-14 12:11:47,201 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 12:11:51,817 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 12:11:51,817 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 12:23:11,698 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 12:23:16,186 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 12:23:16,187 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 12:37:28,597 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 12:37:33,209 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 12:37:33,209 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 12:52:48,829 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 12:52:48,829 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 3}
+2024-04-14 12:52:49,522 - rnn_autoregressor - WARNING - Found 0 (< 4) good samples. Parameters will not be updated.
+2024-04-14 12:52:52,272 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 12:52:56,837 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 12:52:56,837 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 13:08:09,682 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 13:08:14,212 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 13:08:14,212 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 13:18:46,250 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 13:18:50,755 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 13:18:50,755 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 13:23:47,107 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 13:23:47,107 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 6}
+2024-04-14 13:23:48,294 - rnn_autoregressor - WARNING - Found 0 (< 4) good samples. Parameters will not be updated.
+2024-04-14 13:23:51,021 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 13:23:55,573 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 13:23:55,573 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 13:48:46,580 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 13:48:51,222 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 13:48:51,222 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 14:04:44,724 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 14:04:49,323 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 14:04:49,323 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 14:11:38,226 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 14:11:38,226 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 9}
+2024-04-14 14:11:39,810 - rnn_autoregressor - WARNING - Found 0 (< 4) good samples. Parameters will not be updated.
+2024-04-14 14:11:42,490 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 14:11:47,163 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 14:11:47,163 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 14:20:21,307 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 14:20:25,865 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 14:20:25,865 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 14:33:43,908 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 14:33:48,441 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 14:33:48,441 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 14:41:44,948 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 14:41:44,948 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 12}
+2024-04-14 14:41:46,985 - rnn_autoregressor - WARNING - Found 0 (< 4) good samples. Parameters will not be updated.
+2024-04-14 14:41:49,677 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 14:41:54,195 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 14:41:54,195 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 14:56:08,172 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 14:56:12,753 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 14:56:12,753 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 15:18:49,577 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 15:18:54,161 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 15:18:54,161 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 15:39:42,321 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 15:39:42,321 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 15}
+2024-04-14 15:39:45,097 - rnn_autoregressor - WARNING - Found 0 (< 4) good samples. Parameters will not be updated.
+2024-04-14 15:39:47,819 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 15:39:52,454 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 15:39:52,454 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 15:43:15,546 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 15:43:20,071 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 15:43:20,071 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 15:55:36,861 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 15:55:41,411 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 15:55:41,411 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 16:10:51,264 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 16:10:51,264 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 18}
+2024-04-14 16:10:54,434 - rnn_autoregressor - WARNING - Found 1 (< 4) good samples. Parameters will not be updated.
+2024-04-14 16:10:57,144 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 16:11:01,743 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 16:11:01,743 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 16:18:02,950 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 16:18:07,530 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 16:18:07,530 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 16:35:57,847 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 16:36:02,361 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 16:36:02,361 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 16:52:09,170 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 16:52:09,170 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 21}
+2024-04-14 16:52:12,757 - rnn_autoregressor - WARNING - Found 1 (< 4) good samples. Parameters will not be updated.
+2024-04-14 16:52:15,519 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 16:52:20,042 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 16:52:20,042 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 17:04:52,472 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 17:04:57,027 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 17:04:57,027 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 17:23:45,008 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 17:23:49,579 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 17:23:49,579 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 17:41:33,940 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 17:41:33,940 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 24}
+2024-04-14 17:41:38,053 - rnn_autoregressor - WARNING - Found 2 (< 4) good samples. Parameters will not be updated.
+2024-04-14 17:41:40,730 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 17:41:45,265 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 17:41:45,265 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 17:50:22,630 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 17:50:27,107 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 17:50:27,107 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 17:55:14,783 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 17:55:19,374 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 17:55:19,374 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 18:00:26,176 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 18:00:26,176 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 27}
+2024-04-14 18:00:30,790 - rnn_autoregressor - WARNING - Found 2 (< 4) good samples. Parameters will not be updated.
+2024-04-14 18:00:33,459 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 18:00:38,044 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 18:00:38,044 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 18:14:56,150 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 18:15:00,676 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 18:15:00,676 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 18:25:30,738 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 18:25:35,338 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 18:25:35,338 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 18:38:21,476 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 18:38:21,476 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 30}
+2024-04-14 18:38:26,349 - rnn_autoregressor - WARNING - Found 2 (< 4) good samples. Parameters will not be updated.
+2024-04-14 18:38:29,081 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 18:38:33,690 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 18:38:33,690 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 18:57:39,862 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 18:57:44,455 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 18:57:44,456 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 19:14:07,840 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 19:14:12,392 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 19:14:12,392 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 19:19:22,021 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 19:19:22,021 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 33}
+2024-04-14 19:19:27,466 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-14 19:19:30,261 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 19:19:34,860 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 19:19:34,861 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 19:34:25,187 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 19:34:29,717 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 19:34:29,717 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 19:48:57,360 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 19:49:02,009 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 19:49:02,009 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 19:54:07,828 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 19:54:07,828 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 36}
+2024-04-14 19:54:13,813 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-14 19:54:16,655 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 19:54:21,187 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 19:54:21,187 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 20:09:34,417 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 20:09:39,013 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 20:09:39,013 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 20:19:57,276 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 20:20:01,930 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 20:20:01,930 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 20:28:51,499 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 20:28:51,499 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 39}
+2024-04-14 20:28:57,955 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-14 20:29:00,713 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 20:29:05,238 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 20:29:05,238 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 20:42:33,292 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 20:42:37,829 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 20:42:37,829 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 20:57:32,132 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 20:57:38,972 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 20:57:38,972 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 21:03:51,760 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 21:03:51,760 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 42}
+2024-04-14 21:03:58,694 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-14 21:04:01,438 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 21:04:05,954 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 21:04:05,954 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 21:14:05,485 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 21:14:10,012 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 21:14:10,012 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 21:34:34,703 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 21:34:39,332 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 21:34:39,332 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 21:51:24,344 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 21:51:24,344 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 45}
+2024-04-14 21:51:31,888 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-14 21:51:34,556 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 21:51:39,095 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 21:51:39,095 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 22:01:07,704 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 22:01:12,282 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 22:01:12,283 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 22:07:24,074 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 22:07:28,750 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 22:07:28,750 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 22:21:56,141 - rnn_autoregressor - INFO - Running update.py
+2024-04-14 22:21:56,141 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 48}
+2024-04-14 22:22:04,246 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-14 22:22:07,012 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 22:22:11,528 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 22:22:11,528 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-14 22:37:25,969 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-14 22:37:30,575 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-14 22:37:30,575 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 08:02:40,002 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 08:02:46,520 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 08:02:46,520 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 08:12:25,807 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 08:12:32,348 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 08:12:32,348 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 08:19:00,553 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 08:19:05,175 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 08:19:05,175 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 08:22:45,332 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 08:22:45,332 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 3}
+2024-04-15 08:22:54,074 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 08:22:56,808 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 08:23:01,324 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 08:23:01,324 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 08:32:47,715 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 08:32:52,270 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 08:32:52,270 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 08:39:00,859 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 08:39:05,484 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 08:39:05,484 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 08:44:26,826 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 08:44:26,826 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 6}
+2024-04-15 08:44:35,742 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 08:44:38,503 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 08:44:43,002 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 08:44:43,002 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 09:03:56,785 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 09:04:01,389 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 09:04:01,389 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 09:13:49,965 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 09:13:54,539 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 09:13:54,539 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 09:22:06,991 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 09:22:06,991 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 9}
+2024-04-15 09:22:16,625 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 09:22:19,387 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 09:22:23,983 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 09:22:23,983 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 09:31:12,723 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 09:31:17,276 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 09:31:17,276 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 09:41:24,037 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 09:41:28,582 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 09:41:28,582 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 09:47:52,158 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 09:47:52,158 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 12}
+2024-04-15 09:48:02,158 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 09:48:04,912 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 09:48:09,441 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 09:48:09,441 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 09:55:06,260 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 09:55:11,032 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 09:55:11,032 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 10:07:09,800 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 10:07:14,301 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 10:07:14,301 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 10:11:48,307 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 10:11:48,307 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 15}
+2024-04-15 10:11:58,698 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 10:12:01,448 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 10:12:06,066 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 10:12:06,066 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 10:17:15,730 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 10:17:20,297 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 10:17:20,297 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 10:34:59,411 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 10:35:04,159 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 10:35:04,159 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 10:44:36,186 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 10:44:36,186 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 18}
+2024-04-15 10:44:46,942 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 10:44:49,702 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 10:44:54,217 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 10:44:54,217 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 10:58:37,137 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 10:58:41,683 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 10:58:41,683 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 11:12:47,999 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 11:12:52,546 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 11:12:52,546 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 11:16:41,339 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 11:16:41,339 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 21}
+2024-04-15 11:16:52,281 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 11:16:55,001 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 11:16:59,515 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 11:16:59,515 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 11:26:01,946 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 11:26:06,516 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 11:26:06,517 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 11:36:07,132 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 11:36:11,694 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 11:36:11,694 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 11:53:03,487 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 11:53:03,487 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 24}
+2024-04-15 11:53:15,130 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 11:53:17,924 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 11:53:22,469 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 11:53:22,469 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 12:02:58,539 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 12:03:03,079 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 12:03:03,079 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 12:09:46,746 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 12:09:51,295 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 12:09:51,295 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 12:29:43,073 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 12:29:43,073 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 27}
+2024-04-15 12:29:55,278 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 12:29:57,943 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 12:30:02,580 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 12:30:02,580 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 12:39:06,489 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 12:39:10,991 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 12:39:10,991 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 12:43:50,257 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 12:43:54,718 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 12:43:54,718 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 12:57:04,302 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 12:57:04,302 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 30}
+2024-04-15 12:57:17,140 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 12:57:19,856 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 12:57:24,413 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 12:57:24,413 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 13:05:32,696 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 13:05:37,264 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 13:05:37,264 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 13:14:15,895 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 13:14:20,420 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 13:14:20,420 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 13:25:19,611 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 13:25:19,611 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 33}
+2024-04-15 13:25:32,721 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 13:25:35,478 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 13:25:39,992 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 13:25:39,993 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 13:31:54,897 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 13:31:59,444 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 13:31:59,444 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 13:49:08,932 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 13:49:13,480 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 13:49:13,480 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 14:03:38,056 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 14:03:38,056 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 36}
+2024-04-15 14:03:51,628 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 14:03:54,332 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 14:03:58,828 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 14:03:58,828 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 14:14:05,759 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 14:14:10,392 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 14:14:10,392 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 14:23:53,745 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 14:23:58,347 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 14:23:58,347 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 14:35:51,463 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 14:35:51,463 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 39}
+2024-04-15 14:36:05,645 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 14:36:08,498 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 14:36:13,049 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 14:36:13,049 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 14:48:47,458 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 14:48:52,101 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 14:48:52,102 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 15:05:00,579 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 15:05:05,407 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 15:05:05,408 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 15:10:39,554 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 15:10:39,554 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 42}
+2024-04-15 15:10:54,217 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 15:10:56,964 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 15:11:01,525 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 15:11:01,525 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 15:27:51,205 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 15:27:55,781 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 15:27:55,781 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 15:39:30,377 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 15:39:34,884 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 15:39:34,884 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 15:47:12,724 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 15:47:12,724 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 45}
+2024-04-15 15:47:28,035 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 15:47:30,781 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 15:47:35,327 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 15:47:35,327 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 16:08:35,816 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 16:08:40,391 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 16:08:40,391 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 16:23:17,510 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 16:23:22,081 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 16:23:22,081 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 16:36:23,586 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 16:36:23,586 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 48}
+2024-04-15 16:36:39,278 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 16:36:41,996 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 16:36:46,510 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 16:36:46,510 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 16:43:27,242 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 16:43:32,044 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 16:43:32,044 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 2}
+2024-04-15 17:18:11,518 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 17:18:15,997 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 17:18:15,997 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 17:30:18,646 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 17:30:23,148 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 17:30:23,148 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 17:56:45,414 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 17:56:49,871 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 17:56:49,871 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 18:16:41,675 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 18:16:41,675 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 3}
+2024-04-15 18:16:58,236 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 18:17:00,945 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 18:17:05,459 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 18:17:05,459 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 18:31:36,745 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 18:31:41,254 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 18:31:41,254 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 18:44:48,680 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 18:44:53,140 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 18:44:53,140 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 18:58:06,060 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 18:58:06,060 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 6}
+2024-04-15 18:58:23,066 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 18:58:25,786 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 18:58:30,308 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 18:58:30,309 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 19:11:25,529 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 19:11:29,955 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 19:11:29,955 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 19:29:32,524 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 19:29:37,027 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 19:29:37,027 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 19:45:05,196 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 19:45:05,196 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 9}
+2024-04-15 19:45:22,420 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 19:45:25,134 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 19:45:29,621 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 19:45:29,621 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 19:51:25,657 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 19:51:30,159 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 19:51:30,159 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 20:05:03,012 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 20:05:07,651 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 20:05:07,651 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 20:16:07,743 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 20:16:07,743 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 12}
+2024-04-15 20:16:25,454 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 20:16:28,187 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 20:16:32,717 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 20:16:32,717 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 20:31:09,937 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 20:31:14,482 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 20:31:14,483 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 20:42:22,527 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 20:42:27,102 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 20:42:27,102 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 20:54:48,053 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 20:54:48,053 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 15}
+2024-04-15 20:55:06,388 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 20:55:09,064 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 20:55:13,540 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 20:55:13,540 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 21:08:12,094 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 21:08:16,635 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 21:08:16,636 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 21:24:08,396 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 21:24:12,875 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 21:24:12,875 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 21:31:57,905 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 21:31:57,905 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 18}
+2024-04-15 21:32:16,530 - rnn_autoregressor - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-15 21:32:19,257 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 21:32:23,801 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 21:32:23,801 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 21:44:30,672 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 21:44:35,185 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 21:44:35,185 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 21:56:41,693 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 21:56:46,194 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 21:56:46,194 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 22:23:43,975 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 22:23:43,976 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 21}
+2024-04-15 22:24:03,084 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-15 22:24:05,847 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 22:24:10,324 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 22:24:10,324 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 22:38:06,217 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 22:38:10,726 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 22:38:10,727 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 22:47:00,197 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 22:47:04,686 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 22:47:04,687 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 22:53:12,700 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 22:53:12,700 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 24}
+2024-04-15 22:53:32,019 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-15 22:53:34,830 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 22:53:39,363 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 22:53:39,363 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 23:14:55,447 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 23:14:59,910 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 23:14:59,910 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 23:29:14,126 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 23:29:18,654 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 23:29:18,654 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 23:39:46,553 - rnn_autoregressor - INFO - Running update.py
+2024-04-15 23:39:46,553 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 27}
+2024-04-15 23:40:06,446 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-15 23:40:09,148 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 23:40:13,616 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 23:40:13,616 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-15 23:49:50,988 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-15 23:49:55,533 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-15 23:49:55,533 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 00:01:45,390 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 00:01:49,905 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 00:01:49,905 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 00:20:54,266 - rnn_autoregressor - INFO - Running update.py
+2024-04-16 00:20:54,266 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 30}
+2024-04-16 00:21:14,204 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-16 00:21:16,922 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 00:21:21,436 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 00:21:21,436 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 00:34:51,445 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 00:34:55,980 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 00:34:55,980 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 00:44:36,599 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 00:44:41,160 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 00:44:41,161 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 00:59:22,078 - rnn_autoregressor - INFO - Running update.py
+2024-04-16 00:59:22,078 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 33}
+2024-04-16 00:59:42,486 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-16 00:59:45,218 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 00:59:49,761 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 00:59:49,761 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 01:09:09,027 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 01:09:13,683 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 01:09:13,683 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 01:16:08,479 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 01:16:12,940 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 01:16:12,940 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 01:24:56,395 - rnn_autoregressor - INFO - Running update.py
+2024-04-16 01:24:56,395 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 36}
+2024-04-16 01:25:17,295 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-16 01:25:20,070 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 01:25:24,632 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 01:25:24,632 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 01:37:49,093 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 01:37:53,614 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 01:37:53,614 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 01:46:36,888 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 01:46:41,326 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 01:46:41,326 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 01:55:51,905 - rnn_autoregressor - INFO - Running update.py
+2024-04-16 01:55:51,905 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 39}
+2024-04-16 01:56:12,956 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-16 01:56:15,680 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 01:56:20,139 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 01:56:20,139 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 02:04:42,849 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 02:04:47,377 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 02:04:47,377 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 02:11:42,709 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 02:11:47,190 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 02:11:47,190 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 02:17:12,324 - rnn_autoregressor - INFO - Running update.py
+2024-04-16 02:17:12,324 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 42}
+2024-04-16 02:17:33,621 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-16 02:17:36,386 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 02:17:40,982 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 02:17:40,982 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 02:24:13,421 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 02:24:17,892 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 02:24:17,892 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 02:34:56,803 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 02:35:01,362 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 02:35:01,362 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 02:44:11,085 - rnn_autoregressor - INFO - Running update.py
+2024-04-16 02:44:11,085 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 45}
+2024-04-16 02:44:32,709 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-16 02:44:35,472 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 02:44:40,003 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 02:44:40,003 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 02:53:10,993 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 02:53:15,546 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 02:53:15,546 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 02:58:50,091 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 02:58:54,577 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 02:58:54,577 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 03:07:33,515 - rnn_autoregressor - INFO - Running update.py
+2024-04-16 03:07:33,515 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 48}
+2024-04-16 03:07:55,608 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-16 03:07:58,402 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 03:08:02,882 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 03:08:02,882 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 03:28:06,593 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 03:28:11,116 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 03:28:11,116 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 12:30:12,984 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 12:30:24,200 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 12:30:24,200 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 12:39:52,790 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 12:39:57,325 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 12:39:57,325 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 12:48:30,113 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 12:48:34,602 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 12:48:34,602 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 12:54:55,986 - rnn_autoregressor - INFO - Running update.py
+2024-04-16 12:54:55,986 - rnn_autoregressor - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 3}
+2024-04-16 12:55:23,082 - rnn_autoregressor - WARNING - Updating parameters.
+2024-04-16 12:55:25,800 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 12:55:30,327 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 12:55:30,327 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 13:02:05,227 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 13:02:09,724 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 13:02:09,724 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 13:12:10,650 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 13:12:15,120 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 13:12:15,120 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 2, 'strategy': 'auto', 'num_nodes': 1}
+2024-04-16 18:57:44,526 - rnn_autoregressor - INFO - Running gridsearch.py
+2024-04-16 18:57:48,373 - rnn_autoregressor - INFO - Running trainer.py.
+2024-04-16 18:57:48,373 - rnn_autoregressor - INFO - args = {'epochs': 4000, 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': 1, 'strategy': 'auto', 'num_nodes': 1}
