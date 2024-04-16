@@ -32,18 +32,18 @@ logging.getLogger("pytorch_lightning").setLevel("INFO")
 seed_everything(42, workers=True)
 
 
-def get_callbacks(save_path: str) -> List[callbacks]:
+def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
     return [
         ModelCheckpoint(
-            monitor="loss/train",
-            mode="min",
+            monitor=args.monitor,
+            mode=args.mode,
             dirpath=save_path,
             filename="model",
             save_on_train_epoch_end=True,
         ),
         EarlyStopping(
-            monitor="loss/train",
-            mode="min",
+            monitor=args.monitor,
+            mode=args.mode,
             min_delta=1e-8,
             patience=400,
         ),
@@ -68,7 +68,7 @@ def main(
     model = Model(**params)
 
     tb_logger = TensorBoardLogger(
-        save_dir="", name=params.get("name"), default_hp_metric=False
+        save_dir="", name=args.experiment_path, default_hp_metric=False
     )
 
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
@@ -77,7 +77,7 @@ def main(
         max_epochs=args.epochs,
         precision=params.get("precision"),
         logger=tb_logger,
-        callbacks=get_callbacks(save_path),
+        callbacks=get_callbacks(args, save_path),
         deterministic=True,
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
@@ -88,21 +88,23 @@ def main(
 
     if trainer.is_global_zero:
         logger.info(f"Running trainer.py.")
-        logger.info(f"args = {args.__dict__}")
+
+        print_args = args.__dict__.copy()
+        del print_args["experiment_path"]
+        logger.info(f"args = {print_args}")
 
     trainer.fit(model, datamodule)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
+    args.experiment_path = os.path.abspath(args.experiment_path)
 
-    params_dir = os.path.abspath("config")
+    print(args.devices)
 
-    params_path = os.path.join(params_dir, "current_params.yaml")
+    logger = setup_logger(args.experiment_path)
+
+    params_path = os.path.join(args.experiment_path, "current_params.yaml")
     params = read_yaml(params_path)
-
-    params["name"] = os.path.abspath(params["name"])
-
-    logger = setup_logger(params["name"])
 
     main(args, params, logger)

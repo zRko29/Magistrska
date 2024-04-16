@@ -211,12 +211,39 @@ def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
 def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
-    if script_name == "Autoregressor trainer":
+    parser.add_argument(
+        "--experiment_path",
+        type=str,
+        default="logs/",
+        help="Path to the experiment directory. (default: %(default)s)",
+    )
+
+    if script_name == "Gridsearch step":
+        parser.add_argument(
+            "--default_params",
+            "-dflt",
+            action="store_true",
+            help="Use default parameters for the gridsearch. (default: False)",
+        )
+
+    elif script_name == "Autoregressor trainer":
         parser.add_argument(
             "--epochs",
             type=int,
             default=1000,
             help="Number of epochs to train the model for. (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--monitor",
+            type=str,
+            default="loss/train",
+            help="Metric to monitor for early stopping and checkpointing. (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--mode",
+            type=str,
+            default="min",
+            help="Mode (min/max) for early stopping and checkpointing. (default: %(default)s)",
         )
         parser.add_argument(
             "--train_size",
@@ -232,7 +259,6 @@ def import_parsed_args(script_name: str) -> Namespace:
         )
         parser.add_argument(
             "--accelerator",
-            "-acc",
             type=str,
             default="auto",
             choices=["auto", "cpu", "gpu"],
@@ -240,10 +266,9 @@ def import_parsed_args(script_name: str) -> Namespace:
         )
         parser.add_argument(
             "--devices",
-            default=1,
-            # nargs="*",
+            nargs="*",
             type=int,
-            help="Number or list of devices to use. (default: %(default)s)",
+            help="List of devices to use. (default: %(default)s)",
         )
         parser.add_argument(
             "--strategy",
@@ -258,7 +283,7 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Specify number of nodes to use. (default: 1)",
         )
 
-    if script_name == "Parameter updater":
+    elif script_name == "Parameter updater":
         parser.add_argument(
             "--max_good_loss",
             type=float,
