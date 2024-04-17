@@ -121,6 +121,8 @@ def get_new_intervals(
                     del dict_copy[key]
             param.value_counts = list(dict_copy.keys())
 
+    return parameters
+
 
 def update_yaml_file(
     params_path: str,
@@ -148,11 +150,8 @@ def update_yaml_file(
             logger.info("Parameter intervals remained the same.")
         else:
             logger.info("Parameter intervals changed.")
-
-        # update gridsearch parameters
-        yaml_params["gridsearch"] = gridsearch_dict
-
-        save_yaml(yaml_params, params_path)
+            yaml_params["gridsearch"] = gridsearch_dict
+            save_yaml(yaml_params, params_path)
 
 
 def main(args: Namespace, logger: logging.Logger) -> None:
@@ -174,17 +173,15 @@ if __name__ == "__main__":
     args: Namespace = import_parsed_args("Parameter updater")
     args.experiment_path = os.path.abspath(args.experiment_path)
 
-    if args.current_step % args.check_every_n_steps != 0:
-        exit()
-
     logger = setup_logger(args.experiment_path)
     logger.info("Running update.py")
+
+    if args.current_step % args.check_every_n_steps != 0:
+        logger.warning("Skipping parameter update this step.")
+        exit()
 
     print_args = args.__dict__.copy()
     del print_args["experiment_path"]
     logger.info(f"args = {print_args}")
-
-    params_path = os.path.join(args.experiment_path, "parameters.yaml")
-    params = read_yaml(params_path)
 
     main(args, logger)
