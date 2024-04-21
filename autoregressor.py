@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 from src.mapping_helper import StandardMap
 from src.helper import Model, Data
 from src.dmd import DMD
-from src.utils import read_yaml, get_inference_folders, plot_2d
+from src.utils import read_yaml, get_inference_folders, plot_2d, plot_3d_histogram
 from typing import Optional, List
 import warnings
 
@@ -18,8 +18,8 @@ pl.seed_everything(42, workers=True)
 
 
 def main():
-    version: Optional[int] = 0
-    name: str = "overfitting_K=0.1"
+    version: Optional[int] = None
+    name: str = "overfitting_K=2.0"
 
     directory_path: str = f"logs/{name}"
 
@@ -63,15 +63,21 @@ def main():
             plot_2d(
                 predictions["predicted"],
                 predictions["targets"],
-                show_plot=True,
+                show_plot=False,
                 save_path=os.path.join(log_path, input_suffix),
                 title=predictions["loss"].item(),
             )
 
-            dmd: DMD = DMD([predictions["predicted"], predictions["targets"]])
-            dmd.plot_source_matrix(titles=["Predicted", "Targets"])
-            dmd._generate_dmd_results()
-            dmd.plot_eigenvalues(titles=["Predicted", "Targets"])
+            plot_3d_histogram(
+                predictions["predicted"],
+                predictions["targets"],
+                save_path=os.path.join(log_path, input_suffix) + "_histogram",
+            )
+
+            # dmd: DMD = DMD([predictions["predicted"], predictions["targets"]])
+            # dmd.plot_source_matrix(titles=["Predicted", "Targets"])
+            # dmd._generate_dmd_results()
+            # dmd.plot_eigenvalues(titles=["Predicted", "Targets"])
             # dmd.plot_abs_values(titles=["Predicted", "Targets"])
 
         print("-----------------------------")

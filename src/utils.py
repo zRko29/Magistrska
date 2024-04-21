@@ -181,6 +181,44 @@ def plot_2d(
         plt.close()
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_3d_histogram(
+    predicted: np.ndarray,
+    targets: np.ndarray,
+    save_path: str = None,
+    show_plot: bool = False,
+) -> None:
+    predicted = predicted.detach().numpy().T
+    targets = targets.detach().numpy().T
+    distances = np.sum((predicted - targets) ** 2, axis=1)
+
+    sorted_dist = np.sort(distances[-1])[: int(0.9 * len(distances[0]))]
+    _, bins = np.histogram(sorted_dist, bins=30)
+
+    distributions = [np.histogram(timestep, bins=bins)[0] for timestep in distances]
+
+    plt.imshow(
+        distributions,
+        aspect="auto",
+        origin="lower",
+        extent=(bins[0], bins[-1], -0.5, predicted.shape[0] - 0.5),
+    )
+    plt.xlabel("distance")
+    plt.ticklabel_format(axis="x", style="scientific", scilimits=(0, 0))
+    plt.ylabel("timestep")
+    plt.colorbar(label="counts")
+    plt.title("Distribution of squared errors")
+    if save_path is not None:
+        plt.savefig(save_path + ".pdf")
+    if show_plot:
+        plt.show()
+    else:
+        plt.close()
+
+
 def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
     train_size = int(len(dataset) * train_ratio)
     train_data = dataset[:train_size]
