@@ -181,8 +181,21 @@ def plot_2d(
         plt.close()
 
 
-import numpy as np
-import matplotlib.pyplot as plt
+def plot_losses(
+    seq_lens: np.ndarray,
+    losses: np.ndarray,
+    K: float,
+    save_path: str = None,
+) -> None:
+    plt.figure(figsize=(6, 4))
+    plt.plot(seq_lens, losses, "tab:blue")
+    plt.xlabel("seq_len")
+    plt.ylabel("Loss")
+    plt.grid()
+    if save_path is not None:
+        plt.savefig(save_path + ".pdf")
+        plt.close()
+    plt.show()
 
 
 def plot_3d_histogram(
