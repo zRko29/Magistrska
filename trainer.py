@@ -90,6 +90,7 @@ def main(
     )
 
     if trainer.is_global_zero:
+        print(f"Running version_{tb_logger.version}.")
         logger.info(f"Running trainer.py (version_{tb_logger.version}).")
 
         print_args = args.__dict__.copy()

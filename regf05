@@ -34,7 +34,7 @@ do
     python trainer.py --num_nodes 1 --devices 1 --train_size 0.8 --monitor loss/val --epochs 4500 --experiment_path $experiment
     
     echo "Updating parameter intervals."
-    python update.py --min_good_samples 4 --max_good_loss 1e-6 --check_every_n_steps 3 --current_step $i --experiment_path $experiment
+    python update.py --min_good_samples 4 --max_good_loss 1e-5 --check_every_n_steps 3 --current_step $i --experiment_path $experiment
 done
 
 echo
