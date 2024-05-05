@@ -36,13 +36,7 @@ def main():
         seq_lens = np.arange(3, 50, 1)
         losses = []
 
-        pbar = pyprind.ProgBar(
-            iterations=len(seq_lens),
-            bar_char="█",
-            width=30,
-            track_time=False,
-            title="Computing losses...",
-        )
+        pbar = pyprind.ProgBar(iterations=len(seq_lens), bar_char="█", track_time=False)
 
         for seq_len in seq_lens:
             model_path: str = os.path.join(log_path, f"model.ckpt")
@@ -76,7 +70,7 @@ def main():
             seq_lens,
             losses,
             params.get("K"),
-            save_path=f"{log_path}/losses_K={params.get('K')}",
+            # save_path=f"{log_path}/losses_K={params.get('K')}",
         )
 
 

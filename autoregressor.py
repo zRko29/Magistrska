@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 from src.mapping_helper import StandardMap
 from src.helper import Model, Data
 from src.dmd import DMD
-from src.utils import read_yaml, get_inference_folders, plot_2d, plot_3d_histogram
+from src.utils import read_yaml, get_inference_folders, plot_2d, plot_heat_map
 from typing import Optional, List
 import warnings
 
@@ -19,9 +19,7 @@ pl.seed_everything(42, workers=True)
 
 def main():
     version: Optional[int] = None
-    name: str = "overfitting_K=2.0"
-
-    directory_path: str = f"logs/{name}"
+    directory_path: str = "logs/fitting_K=0.1"
 
     folders = get_inference_folders(directory_path, version)
 
@@ -29,6 +27,14 @@ def main():
         print(f"log_path: {log_path}")
         params_path: str = os.path.join(log_path, "hparams.yaml")
         params: dict = read_yaml(params_path)
+
+        # params.update({"K": 0.1009})
+        params.update(
+            {
+                "init_points": 40,
+                "steps": 60,
+            }
+        )
 
         maps: List[StandardMap] = [
             StandardMap(seed=42, params=params),
@@ -40,8 +46,10 @@ def main():
             model_path: str = os.path.join(log_path, f"model.ckpt")
             model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")
 
+            # regression seed to take
             model.regression_seed = params["seq_length"]
 
+            # how many steps to predict
             temp_params: dict = params.copy()
             temp_params.update({"seq_length": params.get("steps")})
 
@@ -64,11 +72,12 @@ def main():
                 predictions["predicted"],
                 predictions["targets"],
                 show_plot=False,
+                plot_lines=False,
                 save_path=os.path.join(log_path, input_suffix),
                 title=predictions["loss"].item(),
             )
 
-            plot_3d_histogram(
+            plot_heat_map(
                 predictions["predicted"],
                 predictions["targets"],
                 save_path=os.path.join(log_path, input_suffix) + "_histogram",

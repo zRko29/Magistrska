@@ -124,6 +124,7 @@ def plot_2d(
     predicted: torch.Tensor,
     targets: torch.Tensor,
     show_plot: bool = True,
+    plot_lines: bool = False,
     save_path: str = None,
     title: str = None,
 ) -> None:
@@ -162,13 +163,14 @@ def plot_2d(
     )
 
     # connect points with lines
-    for i in range(len(targets)):
-        plt.plot(
-            [targets[i, 0], predicted[i, 0]],
-            [targets[i, 1], predicted[i, 1]],
-            "r-",
-            lw=0.1,
-        )
+    if plot_lines:
+        for i in range(len(targets)):
+            plt.plot(
+                [targets[i, 0], predicted[i, 0]],
+                [targets[i, 1], predicted[i, 1]],
+                "r-",
+                lw=0.1,
+            )
 
     plt.legend()
     if title is not None:
@@ -198,7 +200,7 @@ def plot_losses(
     plt.show()
 
 
-def plot_3d_histogram(
+def plot_heat_map(
     predicted: np.ndarray,
     targets: np.ndarray,
     save_path: str = None,
@@ -219,7 +221,7 @@ def plot_3d_histogram(
         origin="lower",
         extent=(bins[0], bins[-1], -0.5, predicted.shape[0] - 0.5),
     )
-    plt.xlabel("distance")
+    plt.xlabel("mse")
     plt.ticklabel_format(axis="x", style="scientific", scilimits=(0, 0))
     plt.ylabel("timestep")
     plt.colorbar(label="counts")
