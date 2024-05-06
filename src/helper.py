@@ -17,6 +17,8 @@ class Model(pl.LightningModule):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
+        self.non_lin = self.configure_non_linearity(params.get("non_linearity"))
+
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
         self.sequence_type: str = params.get("sequence_type")
@@ -84,12 +86,28 @@ class Model(pl.LightningModule):
 
             # linear layers
             output = self.lins[0](h_ts[-1])
+            output = self.non_lin(output)
             for i in range(1, self.num_lin_layers):
                 output = self.lins[i](output)
+                output = self.non_lin(output)
 
             outputs.append(output)
 
         return torch.stack(outputs, dim=2)
+
+    def configure_non_linearity(self, non_linearity: str) -> torch.nn.Module:
+        if non_linearity is None:
+            return torch.nn.Identity()
+        elif non_linearity.lower() == "relu":
+            return torch.nn.ReLU()
+        elif non_linearity.lower() == "leaky_relu":
+            return torch.nn.LeakyReLU()
+        elif non_linearity.lower() == "tanh":
+            return torch.nn.Tanh()
+        elif non_linearity.lower() == "elu":
+            return torch.nn.ELU()
+        elif non_linearity.lower() == "selu":
+            return torch.nn.SELU()
 
     def configure_optimizers(self) -> optim.Optimizer:
         if self.optimizer == "adam":
