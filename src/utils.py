@@ -17,7 +17,7 @@ def read_yaml(parameters_path: str) -> dict:
 
 def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
     with open(param_file_path, "w") as f:
-        yaml.dump(file, f, default_flow_style=None, default_style=None)
+        yaml.dump(file, f, default_flow_style=None, default_style=None, sort_keys=False)
 
 
 def get_inference_folders(directory_path: str, version: str) -> List[str]:
