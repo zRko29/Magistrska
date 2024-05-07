@@ -1,5 +1,5 @@
-init_points: 300
-steps: 100 # ≤ 100
+init_points: 80
+steps: 60 # ≤ 100
 K: 1.5 # ≤ 1.5
 sampling: random
 
@@ -24,10 +24,10 @@ shuffle_sequences: False # shuffle sequences
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
 gridsearch:
-  batch_size: { lower: 150, upper: 300, type: int }
-  seq_length: { lower: 40, upper: 60, type: int }
-  lr: { lower: 0.0004, upper: 0.002, type: float }
-  num_rnn_layers: { lower: 2, upper: 5, type: int }
-  num_lin_layers: { lower: 2, upper: 5, type: int }
-  hidden_size: { lower: 100, upper: 250, type: int }
-  linear_size: { lower: 50, upper: 150, type: int }
+  batch_size: { lower: 170, type: int, upper: 230 }
+  seq_length: { lower: 27, type: int, upper: 27 }
+  lr: { lower: 0.001, type: float, upper: 0.003 }
+  num_lin_layers: { lower: 2, type: int, upper: 6 }
+  num_rnn_layers: { lower: 2, type: int, upper: 6 }
+  hidden_size: { lower: 110, type: int, upper: 210 }
+  linear_size: { lower: 70, type: int, upper: 150 }
