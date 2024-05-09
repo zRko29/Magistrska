@@ -1,4 +1,4 @@
-init_points: 80
+init_points: 100
 steps: 60 # ≤ 100
 K: 2.0 # ≤ 1.5
 sampling: random
@@ -8,7 +8,7 @@ linear_size: 128 # used when num_lin_layers > 1
 num_rnn_layers: 2
 num_lin_layers: 2
 non_linearity: selu
-dropout: 0.0 # doesn't seem necessary
+dropout: 0.0
 
 batch_size: 256
 seq_length: 20
@@ -27,6 +27,7 @@ gridsearch:
   batch_size: { lower: 180, type: int, upper: 240 }
   seq_length: { lower: 20, type: int, upper: 50 }
   lr: { lower: 0.0007, type: float, upper: 0.002 }
+  dropout: { lower: 0.0, upper: 0.03, type: float }
   num_lin_layers: { lower: 1, type: int, upper: 5 }
   num_rnn_layers: { lower: 2, type: int, upper: 5 }
   hidden_size: { lower: 80, type: int, upper: 150 }

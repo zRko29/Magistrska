@@ -1,4 +1,4 @@
-init_points: 80
+init_points: 100
 steps: 60 # ≤ 100
 K: 0.1 # ≤ 1.5
 sampling: random
@@ -8,7 +8,7 @@ linear_size: 128 # used when num_lin_layers > 1
 num_rnn_layers: 2
 num_lin_layers: 2
 non_linearity: selu
-dropout: 0.0 # doesn't seem necessary
+dropout: 0.0
 
 batch_size: 256
 seq_length: 20
@@ -24,10 +24,11 @@ shuffle_sequences: False # shuffle sequences
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
 gridsearch:
-  batch_size: { lower: 180, upper: 230, type: int }
-  seq_length: { lower: 30, upper: 50, type: int }
-  lr: { lower: 0.0007, upper: 0.002, type: float }
-  num_rnn_layers: { lower: 2, upper: 5, type: int }
-  num_lin_layers: { lower: 1, upper: 3, type: int }
-  hidden_size: { lower: 120, upper: 200, type: int }
-  linear_size: { lower: 50, upper: 110, type: int }
+  batch_size: { lower: 160, upper: 250, type: int }
+  seq_length: { lower: 25, upper: 50, type: int }
+  lr: { lower: 0.0006, upper: 0.003, type: float }
+  dropout: { lower: 0.0, upper: 0.03, type: float }
+  num_rnn_layers: { lower: 1, upper: 5, type: int }
+  num_lin_layers: { lower: 1, upper: 4, type: int }
+  hidden_size: { lower: 100, upper: 220, type: int }
+  linear_size: { lower: 40, upper: 120, type: int }
