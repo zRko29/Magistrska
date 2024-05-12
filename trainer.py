@@ -45,7 +45,7 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             monitor=args.monitor,
             mode=args.mode,
             min_delta=1e-8,
-            patience=600,
+            patience=400,
         ),
         # DeviceStatsMonitor(cpu_stats=False),
     ]

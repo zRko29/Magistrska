@@ -1,4 +1,4 @@
-init_points: 100
+init_points: 150
 steps: 60 # ≤ 100
 K: 1.5 # ≤ 1.5
 sampling: random
@@ -11,7 +11,7 @@ non_linearity: selu
 dropout: 0.0
 
 batch_size: 256
-seq_length: 20
+seq_length: 30
 loss: mse
 optimizer: adam
 lr: 0.0003
@@ -24,11 +24,9 @@ shuffle_sequences: False # shuffle sequences
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 
 gridsearch:
-  batch_size: { lower: 170, type: int, upper: 230 }
-  seq_length: { lower: 27, type: int, upper: 27 }
-  lr: { lower: 0.001, type: float, upper: 0.003 }
-  dropout: { lower: 0.0, upper: 0.03, type: float }
+  batch_size: { lower: 130, type: int, upper: 280 }
+  lr: { lower: 0.0007, type: float, upper: 0.005 }
   num_lin_layers: { lower: 2, type: int, upper: 6 }
   num_rnn_layers: { lower: 2, type: int, upper: 6 }
-  hidden_size: { lower: 110, type: int, upper: 210 }
-  linear_size: { lower: 70, type: int, upper: 150 }
+  hidden_size: { lower: 30, type: int, upper: 280 }
+  linear_size: { lower: 30, type: int, upper: 210 }
