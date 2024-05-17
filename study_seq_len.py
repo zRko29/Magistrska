@@ -8,6 +8,8 @@ import warnings
 import numpy as np
 import pyprind
 
+from autoregressor import inference
+
 warnings.filterwarnings(
     "ignore",
     module="pytorch_lightning",
@@ -20,9 +22,7 @@ pl.seed_everything(42, workers=True)
 
 def main():
     version: Optional[int] = 0
-    name: str = "overfitting_K=2.0"
-
-    directory_path: str = f"logs/{name}"
+    directory_path: str = "logs/overfitting_K=2.0"
 
     folders = get_inference_folders(directory_path, version)
 
@@ -39,29 +39,7 @@ def main():
         pbar = pyprind.ProgBar(iterations=len(seq_lens), bar_char="█", track_time=False)
 
         for seq_len in seq_lens:
-            model_path: str = os.path.join(log_path, f"model.ckpt")
-            model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")
-
-            # regression seed to take
-            model.regression_seed = seq_len
-
-            # how many steps to predict
-            temp_params: dict = params.copy()
-            temp_params.update({"seq_length": params.get("steps")})
-
-            datamodule: Data = Data(
-                map_object=map,
-                train_size=1.0,
-                params=temp_params,
-            )
-
-            trainer = pl.Trainer(
-                precision=params["precision"],
-                enable_progress_bar=False,
-                logger=False,
-                deterministic=True,
-            )
-            predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
+            predictions, datamodule = inference(log_path, params, map, seq_len=seq_len)
 
             losses.append(predictions["loss"].item())
             pbar.update()

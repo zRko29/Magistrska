@@ -18,8 +18,8 @@ pl.seed_everything(42, workers=True)
 
 
 def main():
-    version: Optional[int] = None
-    directory_path: str = "logs/fitting_K=0.1"
+    version: Optional[int] = 11
+    directory_path: str = "../autoregressor_backup_1/overfitting_K=0.5"
 
     folders = get_inference_folders(directory_path, version)
 
@@ -28,14 +28,6 @@ def main():
         params_path: str = os.path.join(log_path, "hparams.yaml")
         params: dict = read_yaml(params_path)
 
-        # params.update({"K": 0.1009})
-        params.update(
-            {
-                "init_points": 40,
-                "steps": 60,
-            }
-        )
-
         maps: List[StandardMap] = [
             StandardMap(seed=42, params=params),
             StandardMap(seed=41, params=params),
@@ -43,37 +35,18 @@ def main():
         input_suffixes: list[str] = ["standard", "random"]
 
         for map, input_suffix in zip(maps, input_suffixes):
-            model_path: str = os.path.join(log_path, f"model.ckpt")
-            model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")
 
-            # regression seed to take
-            model.regression_seed = params["seq_length"]
-
-            # how many steps to predict
-            temp_params: dict = params.copy()
-            temp_params.update({"seq_length": params.get("steps")})
-
-            datamodule: Data = Data(
-                map_object=map,
-                train_size=1.0,
-                params=temp_params,
-            )
-
-            trainer = pl.Trainer(
-                precision=params["precision"],
-                enable_progress_bar=False,
-                logger=False,
-                deterministic=True,
-            )
-            predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
+            predictions, datamodule = inference(log_path, params, map)
 
             print(f"{input_suffix} loss: {predictions['loss'].item():.3e}")
+            print()
+
             plot_2d(
                 predictions["predicted"],
                 predictions["targets"],
                 show_plot=False,
-                plot_lines=False,
-                save_path=os.path.join(log_path, input_suffix),
+                plot_lines=True,
+                # save_path=os.path.join(log_path, input_suffix),
                 title=predictions["loss"].item(),
             )
 
@@ -81,6 +54,7 @@ def main():
                 predictions["predicted"],
                 predictions["targets"],
                 save_path=os.path.join(log_path, input_suffix) + "_histogram",
+                show_plot=False,
             )
 
             # dmd: DMD = DMD([predictions["predicted"], predictions["targets"]])
@@ -90,6 +64,43 @@ def main():
             # dmd.plot_abs_values(titles=["Predicted", "Targets"])
 
         print("-----------------------------")
+
+
+def inference(
+    log_path: str,
+    params: dict,
+    map: StandardMap,
+    params_update: dict = None,
+) -> tuple[dict, Data]:
+    if params_update is not None:
+        params.update(params_update)
+
+    model_path: str = os.path.join(log_path, f"model.ckpt")
+    model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")
+
+    # regression seed to take
+    model.regression_seed = params.get("seq_length")
+
+    # how many steps to predict
+    temp_params: dict = params.copy()
+    temp_params.update({"seq_length": params.get("steps")})
+
+    datamodule: Data = Data(
+        map_object=map,
+        train_size=1.0,
+        params=temp_params,
+    )
+
+    trainer = pl.Trainer(
+        precision=params["precision"],
+        enable_progress_bar=False,
+        logger=False,
+        deterministic=True,
+    )
+
+    predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
+
+    return predictions, datamodule
 
 
 if __name__ == "__main__":
