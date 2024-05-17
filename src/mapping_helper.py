@@ -81,17 +81,41 @@ class StandardMap:
 
     def plot_data(self) -> None:
         plt.figure(figsize=(7, 4))
-        plt.plot(self.theta_values, self.p_values, "bo", markersize=0.5)
+        print(self.theta_values.shape, self.p_values.shape)
+        plt.plot(self.theta_values, self.p_values, "bo", markersize=0.2)
         plt.xlabel(r"$\theta$")
         plt.ylabel("p")
         plt.xlim(-0.05, 1.05)
         plt.ylim(-0.05, 1.05)
+        plt.title(f"K = {self.K}")
+        plt.show()
+
+    def subplot_data(self) -> None:
+        fig, ax = plt.subplots(2, 2, figsize=(8, 7), sharex=True, sharey=True)
+        ind = 0
+        for i in range(2):
+            for j in range(2):
+                pts = self.init_points
+                ax[i, j].plot(
+                    self.theta_values[:, ind * pts : (ind + 1) * pts],
+                    self.p_values[:, ind * pts : (ind + 1) * pts],
+                    "bo",
+                    markersize=0.2,
+                )
+                ax[i, j].set_title(f"K = {self.K[ind]}")
+                if j == 0:
+                    ax[i, j].set_ylabel("p")
+                if i == 1:
+                    ax[i, j].set_xlabel(r"$\theta$")
+                ind += 1
+        plt.tight_layout()
+        plt.savefig("figures/standard_map.png")
         plt.show()
 
 
 if __name__ == "__main__":
     map = StandardMap(
-        init_points=50, steps=200, sampling="random", K=[0.1, 1.0, 5], seed=42
+        init_points=196, steps=200, sampling="grid", K=[0.4, 0.9, 1.5, 2.1], seed=42
     )
     map.generate_data()
-    map.plot_data()
+    map.subplot_data()

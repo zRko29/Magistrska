@@ -99,7 +99,7 @@ class DMD:
                 axs[i].set_title(f"Data {i}")
             else:
                 axs[i].set_title(titles[i])
-            axs[i].legend()
+            axs[i].legend(loc="upper right")
             axs[i].grid()
 
         plt.tight_layout()

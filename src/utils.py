@@ -172,7 +172,7 @@ def plot_2d(
                 lw=0.1,
             )
 
-    plt.legend()
+    plt.legend(loc="upper right")
     if title is not None:
         plt.title(f"Loss = {title:.3e}")
     if save_path is not None:
@@ -208,11 +208,13 @@ def plot_heat_map(
 ) -> None:
     predicted = predicted.detach().numpy().T
     targets = targets.detach().numpy().T
+
     distances = np.sum((predicted - targets) ** 2, axis=1)
+    distances = np.log10(distances)
 
-    sorted_dist = np.sort(distances[-1])[: int(0.9 * len(distances[0]))]
-    _, bins = np.histogram(sorted_dist, bins=30)
+    avg_distance = np.mean(distances, axis=1)
 
+    _, bins = np.histogram(distances, bins=20)
     distributions = [np.histogram(timestep, bins=bins)[0] for timestep in distances]
 
     plt.imshow(
@@ -221,11 +223,11 @@ def plot_heat_map(
         origin="lower",
         extent=(bins[0], bins[-1], -0.5, predicted.shape[0] - 0.5),
     )
+    plt.plot(avg_distance, range(len(avg_distance)), "tab:red", lw=2)
     plt.xlabel("mse")
-    plt.ticklabel_format(axis="x", style="scientific", scilimits=(0, 0))
     plt.ylabel("timestep")
     plt.colorbar(label="counts")
-    plt.title("Distribution of squared errors")
+    plt.title("Squared errors")
     if save_path is not None:
         plt.savefig(save_path + ".pdf")
     if show_plot:
@@ -255,7 +257,7 @@ def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
     )
     plt.plot(train_data[:, 0, 1:], train_data[:, 1, 1:], "bo", markersize=0.3)
     plt.plot(val_data[:, 0, 1:], val_data[:, 1, 1:], "ro", markersize=0.3)
-    plt.legend()
+    plt.legend(loc="upper right")
     plt.show()
 
 
