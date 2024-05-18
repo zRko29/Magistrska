@@ -46,10 +46,13 @@ class StandardMap:
         )
         self.p_values: np.ndarray = np.empty((self.steps, p_i.shape[0] * len(K_list)))
 
+        self.theta_values[0] = theta_i
+        self.p_values[0] = p_i
+
         for i, K in enumerate(K_list):
             theta = theta_i.copy()
             p = p_i.copy()
-            for step in range(self.steps):
+            for step in range(self.steps - 1):
                 theta = np.mod(theta + p, 1)
                 p = np.mod(p + K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
                 self.theta_values[
@@ -81,7 +84,6 @@ class StandardMap:
 
     def plot_data(self) -> None:
         plt.figure(figsize=(7, 4))
-        print(self.theta_values.shape, self.p_values.shape)
         plt.plot(self.theta_values, self.p_values, "bo", markersize=0.2)
         plt.xlabel(r"$\theta$")
         plt.ylabel("p")
@@ -114,8 +116,6 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    map = StandardMap(
-        init_points=196, steps=200, sampling="grid", K=[0.4, 0.9, 1.5, 2.1], seed=42
-    )
+    map = StandardMap(init_points=100, steps=50, sampling="random", K=0.1, seed=42)
     map.generate_data()
-    map.subplot_data()
+    map.plot_data()
