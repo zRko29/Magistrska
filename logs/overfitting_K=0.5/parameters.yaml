@@ -1,6 +1,6 @@
 init_points: 100
 steps: 50 # ≤ 100
-K: 0.1
+K: 0.5
 sampling: random
 
 hidden_size: 128
