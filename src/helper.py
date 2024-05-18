@@ -10,6 +10,7 @@ from typing import Tuple
 
 from src.mapping_helper import StandardMap
 from src.utils import plot_split
+from src.custom_metrics import MSDLoss, PathAccuracy
 
 
 class Model(pl.LightningModule):
@@ -18,6 +19,9 @@ class Model(pl.LightningModule):
         self.save_hyperparameters()
 
         self.non_lin = self.configure_non_linearity(params.get("non_linearity"))
+
+        self.loss = self.configure_loss(params.get("loss"))
+        self.accuracy = PathAccuracy(threshold=1e-5)
 
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
@@ -109,6 +113,16 @@ class Model(pl.LightningModule):
         elif non_linearity.lower() == "selu":
             return torch.nn.SELU()
 
+    def configure_loss(self, loss: str) -> torch.nn.Module:
+        if loss in [None, "mse"]:
+            return torch.nn.MSELoss()
+        elif loss == "msd":
+            return MSDLoss()
+        elif loss == "rmse":
+            return torch.nn.L1Loss()
+        elif loss == "hubber":
+            return torch.nn.SmoothL1Loss()
+
     def configure_optimizers(self) -> optim.Optimizer:
         if self.optimizer == "adam":
             return optim.Adam(self.parameters(), lr=self.lr, amsgrad=True)
@@ -126,8 +140,15 @@ class Model(pl.LightningModule):
 
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
-        loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log("loss/train", loss, on_epoch=True, on_step=False, prog_bar=True)
+
+        loss, accuracy = self.compute_scores(predicted, targets)
+
+        self.log_dict(
+            {"loss/train": loss, "acc/train": accuracy},
+            on_epoch=True,
+            prog_bar=True,
+            on_step=False,
+        )
         return loss
 
     def validation_step(self, batch, batch_idx) -> torch.Tensor:
@@ -138,8 +159,15 @@ class Model(pl.LightningModule):
         predicted = self(inputs)
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
-        loss = torch.nn.functional.mse_loss(predicted, targets)
-        self.log("loss/val", loss, on_epoch=True, on_step=False, prog_bar=True)
+
+        loss, accuracy = self.compute_scores(predicted, targets)
+
+        self.log_dict(
+            {"loss/val": loss, "acc/val": accuracy},
+            on_epoch=True,
+            prog_bar=True,
+            on_step=False,
+        )
         return loss
 
     def predict_step(self, batch, batch_idx) -> dict[str, torch.Tensor]:
@@ -147,13 +175,28 @@ class Model(pl.LightningModule):
         targets: torch.Tensor = batch[:, :, self.regression_seed :]
 
         for i in range(batch.shape[2] - self.regression_seed):
-            predicted_value = self(predicted[:, :, i:])[:, :, -1:]
+            predicted_value = self(predicted[:, :, i:])
+            # even with many-to-many training
+            predicted_value = predicted_value[:, :, -1:]
             predicted = torch.cat([predicted, predicted_value], axis=2)
 
         predicted = predicted[:, :, self.regression_seed :]
-        loss = torch.nn.functional.mse_loss(predicted, targets)
 
-        return {"predicted": predicted, "targets": targets, "loss": loss}
+        loss, accuracy = self.compute_scores(predicted, targets)
+
+        return {
+            "predicted": predicted,
+            "targets": targets,
+            "loss": loss,
+            "accuracy": accuracy,
+        }
+
+    def compute_scores(
+        self, predicted: torch.Tensor, targets: torch.Tensor
+    ) -> Tuple[torch.Tensor]:
+        loss = self.loss(predicted, targets)
+        accuracy = self.accuracy(predicted, targets)
+        return loss, accuracy
 
     @rank_zero_only
     def on_train_start(self):
@@ -221,31 +264,31 @@ class Data(pl.LightningDataModule):
         steps: int
         init_points, features, steps = data.shape
 
-        if type == "many-to-many":
-            # sequences.shape = [init_points*(steps//seq_len), 2, seq_len]
-            sequences = np.split(data, steps // self.seq_len, axis=2)
+        # if type == "many-to-many":
+        #     # sequences.shape = [init_points*(steps//seq_len), 2, seq_len]
+        #     sequences = np.split(data, steps // self.seq_len, axis=2)
 
-            if not self.shuffle_sequences:
-                sequences = np.array(
-                    [seq[i] for i in range(init_points) for seq in sequences]
-                )
-            else:
-                sequences = np.concatenate((sequences), axis=0)
-                self.rng.shuffle(sequences)
+        #     if not self.shuffle_sequences:
+        #         sequences = np.array(
+        #             [seq[i] for i in range(init_points) for seq in sequences]
+        #         )
+        #     else:
+        #         sequences = np.concatenate((sequences), axis=0)
+        #         self.rng.shuffle(sequences)
 
-        elif type == "many-to-one":
-            if self.seq_len < steps:
-                # sequences.shape = [init_points * (steps - seq_len), features, seq_len + 1]
-                sequences = np.lib.stride_tricks.sliding_window_view(
-                    data, (1, features, self.seq_len + 1)
-                )
-                sequences = sequences.reshape(
-                    init_points * (steps - self.seq_len), features, self.seq_len + 1
-                )
-            elif self.seq_len == steps:
-                sequences = data
-        else:
-            raise ValueError("Invalid type.")
+        # elif type == "many-to-one":
+        if self.seq_len < steps:
+            # sequences.shape = [init_points * (steps - seq_len), features, seq_len + 1]
+            sequences = np.lib.stride_tricks.sliding_window_view(
+                data, (1, features, self.seq_len + 1)
+            )
+            sequences = sequences.reshape(
+                init_points * (steps - self.seq_len), features, self.seq_len + 1
+            )
+        elif self.seq_len == steps:
+            sequences = data
+        # else:
+        #     raise ValueError("Invalid type.")
 
         return sequences
 

@@ -126,7 +126,8 @@ def plot_2d(
     show_plot: bool = True,
     plot_lines: bool = False,
     save_path: str = None,
-    title: str = None,
+    loss: float = None,
+    accuracy: float = None,
 ) -> None:
     predicted = predicted.detach().numpy()
     targets = targets.detach().numpy()
@@ -173,8 +174,8 @@ def plot_2d(
             )
 
     plt.legend(loc="upper right")
-    if title is not None:
-        plt.title(f"Loss = {title:.3e}")
+    if loss is not None:
+        f"Loss: {loss:.3e}, Accuracy: {accuracy:.1f}"
     if save_path is not None:
         plt.savefig(save_path + ".pdf")
     if show_plot:
