@@ -52,7 +52,7 @@ class StandardMap:
         for i, K in enumerate(K_list):
             theta = theta_i.copy()
             p = p_i.copy()
-            for step in range(self.steps):
+            for step in range(1, self.steps - 1):
                 theta = np.mod(theta + p, 1)
                 p = np.mod(p + K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
                 self.theta_values[
@@ -116,6 +116,6 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    map = StandardMap(init_points=3, steps=5, sampling="random", K=[0.1, 0.2], seed=42)
+    map = StandardMap(init_points=50, steps=100, sampling="random", K=[0.1], seed=42)
     map.generate_data()
     map.plot_data()
