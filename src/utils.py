@@ -175,7 +175,7 @@ def plot_2d(
 
     plt.legend(loc="upper right")
     if loss is not None:
-        f"Loss: {loss:.3e}, Accuracy: {accuracy:.1f}"
+        plt.title(f"Loss: {loss:.3e}, Accuracy: {accuracy:.1f}")
     if save_path is not None:
         plt.savefig(save_path + ".pdf")
     if show_plot:
@@ -227,7 +227,7 @@ def plot_heat_map(
     plt.plot(avg_distance, range(len(avg_distance)), "tab:red", lw=2)
     plt.xlabel("mse")
     plt.ylabel("timestep")
-    plt.colorbar(label="counts")
+    plt.colorbar(label="log10 counts")
     plt.title("Squared errors")
     if save_path is not None:
         plt.savefig(save_path + ".pdf")
@@ -320,9 +320,9 @@ def import_parsed_args(script_name: str) -> Namespace:
         )
         parser.add_argument(
             "--devices",
-            nargs="*",
             type=int,
-            help="List of devices to use. (default: %(default)s)",
+            default=1,
+            help="Number of devices to use. (default: %(default)s)",
         )
         parser.add_argument(
             "--strategy",

@@ -1,4 +1,4 @@
-init_points: 100
+init_points: 80
 steps: 50 # ≤ 100
 K: 0.5
 sampling: random
