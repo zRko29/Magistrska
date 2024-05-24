@@ -157,6 +157,7 @@ class Model(pl.LightningModule):
         inputs, targets = batch
 
         predicted = self(inputs)
+
         if self.sequence_type == "many-to-one":
             predicted = predicted[:, :, -1:]
 
