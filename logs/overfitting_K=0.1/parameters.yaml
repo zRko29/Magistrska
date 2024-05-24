@@ -1,4 +1,4 @@
-init_points: 80
+init_points: 60
 steps: 50 # ≤ 100
 K: 0.1
 sampling: random
@@ -7,7 +7,7 @@ hidden_size: 128
 linear_size: 128 # used when num_lin_layers > 1
 num_rnn_layers: 2
 num_lin_layers: 2
-non_linearity: selu
+non_linearity: null
 dropout: 0.0
 
 batch_size: 256
@@ -30,6 +30,4 @@ gridsearch:
   num_lin_layers: { lower: 1, upper: 6, type: int }
   hidden_size: { lower: 20, upper: 300, type: int }
   linear_size: { lower: 20, upper: 300, type: int }
-  sequence_type: { list: ["many-to-one", "many-to-many"], type: choice }
-  non_linearity:
-    { list: ["relu", "leaky_relu", "tanh", "elu", "selu"], type: choice }
+  non_linearity: { list: [null, "tanh", "elu", "selu"], type: choice }
