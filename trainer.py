@@ -46,11 +46,9 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
     ]
 
 
-def main(
-    args: Namespace,
-    params: dict,
-    logger: logging.Logger,
-) -> None:
+def main(args: Namespace, params: dict) -> None:
+
+    logger = logging.getLogger("rnn_autoregressor")
 
     map_object = StandardMap(seed=42, params=params)
 
@@ -101,9 +99,9 @@ if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
     args.experiment_path = os.path.abspath(args.experiment_path)
 
-    logger = setup_logger(args.experiment_path)
+    logger = setup_logger(args.experiment_path, "rnn_autoregressor")
 
     params_path = os.path.join(args.experiment_path, "current_params.yaml")
     params = read_yaml(params_path)
 
-    main(args, params, logger)
+    main(args, params)
