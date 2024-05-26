@@ -74,30 +74,30 @@ class Model(pl.LightningModule):
         ]
 
     def forward(self, input_t: torch.Tensor) -> torch.Tensor:
-        outputs = []
         # h_ts[i].shape = [features, hidden_sizes]
         h_ts = self._init_hidden(input_t.shape[0], self.hidden_sizes)
 
+        outputs = []
+        # rnn layers
         for input in input_t.split(1, dim=2):
             input = input.squeeze(2)
-
-            # rnn layers
             h_ts[0] = self.rnns[0](input, h_ts[0])
             h_ts[0] = self.dropout(h_ts[0])
             for i in range(1, self.num_rnn_layers):
                 h_ts[i] = self.rnns[i](h_ts[i - 1], h_ts[i])
                 h_ts[i] = self.dropout(h_ts[i])
+            outputs.append(h_ts[-1])
 
-            # linear layers
-            output = self.lins[0](h_ts[-1])
-            output = self.non_lin(output)
-            for i in range(1, self.num_lin_layers):
-                output = self.lins[i](output)
-                output = self.non_lin(output)
+        outputs = torch.stack(outputs, dim=1)
 
-            outputs.append(output)
+        # linear layers
+        for i in range(self.num_lin_layers):
+            outputs = self.lins[i](outputs)
+            outputs = self.non_lin(outputs)
 
-        return torch.stack(outputs, dim=2)
+        outputs = outputs.transpose(1, 2)
+
+        return outputs
 
     def configure_non_linearity(self, non_linearity: str) -> torch.nn.Module:
         if non_linearity is None:
