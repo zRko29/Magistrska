@@ -29,7 +29,9 @@ def get_inference_folders(directory_path: str, version: str) -> List[str]:
             for folder in os.listdir(directory_path)
             if os.path.isdir(os.path.join(directory_path, folder))
         ]
+        folders = [int(i.split("_")[-1]) for i in folders]
         folders.sort()
+        folders = [os.path.join(directory_path, f"version_{i}") for i in folders]
     return folders
 
 
@@ -116,6 +118,9 @@ class Gridsearch:
                 params[key] = choice
             elif type == "float":
                 params[key] = rng.uniform(space["lower"], space["upper"])
+            elif type == "log":
+                log_value = rng.uniform(space["lower"], space["upper"])
+                params[key] = 10**log_value
 
         return params
 
@@ -175,7 +180,7 @@ def plot_2d(
 
     plt.legend(loc="upper right")
     if loss is not None:
-        plt.title(f"Loss: {loss:.3e}, Accuracy: {accuracy:.1f}")
+        plt.title(f"Loss: {loss:.3e}, Accuracy: {accuracy:.2f}")
     if save_path is not None:
         plt.savefig(save_path + ".pdf")
     if show_plot:
