@@ -25,7 +25,7 @@ sequence_type: many-to-one # type of input sequences (many-to-one or many-to-man
 
 gridsearch:
   batch_size: { lower: 32, upper: 512, type: int }
-  lr: { lower: -6, upper: -5, type: log }
+  lr: { lower: -6, upper: -1, type: log }
   num_rnn_layers: { lower: 1, upper: 6, type: int }
   num_lin_layers: { lower: 1, upper: 6, type: int }
   hidden_size: { lower: 32, upper: 256, type: int }
