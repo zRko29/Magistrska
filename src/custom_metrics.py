@@ -7,7 +7,7 @@ class MSDLoss(_Loss):
     """
     Computes the mean squared distance between the input and target points.
 
-    Note: It is different from torch.nn.MSELoss in that it sums square differences along dim=1 before taking the mean.
+    Note: It is different from torch.nn.MSELoss in that it sums square differences along dim=-1 before taking the mean.
     It can be shown that MSDLoss(x) = 2 * MSELoss(x) for some tensor x.
     """
 
@@ -15,15 +15,15 @@ class MSDLoss(_Loss):
         super().__init__()
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        # input.shape = target.shape = (num paths, dimensionality=2, path length)
+        # input.shape = target.shape = (num paths, path length, dimensionality=2)
 
         # squared differences between coordinates in inputs and targets
         squared_diff = (input - target).pow(2)
-        # squared_diff.shape = (num paths, 2, path length)
+        # squared_diff.shape = (num paths, path length, 2)
 
         # sum squared differences to get squared distances between
         # points in input and target
-        squared_distances = squared_diff.sum(dim=1)
+        squared_distances = squared_diff.sum(dim=-1)
         # squared_distances.shape = (num paths, path length)
 
         # mean squared distance over all points
@@ -45,15 +45,15 @@ class PathAccuracy(_Loss):
         self.threshold = threshold
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        # input.shape = target.shape = (num paths, dimensionality=2, path length)
+        # input.shape = target.shape = (num paths, path length, dimensionality=2)
 
         # squared differences between coordinates in inputs and targets
         squared_diff = (input - target).pow(2)
-        # squared_diff.shape = (num paths, 2, path length)
+        # squared_diff.shape = (num paths, path length, 2)
 
         # sum squared differences to get squared distances between
         # points in input and target
-        squared_distances = squared_diff.sum(dim=1)
+        squared_distances = squared_diff.sum(dim=-1)
         # squared_distances.shape = (num paths, path length)
 
         # mean squared distance for each path
@@ -77,8 +77,8 @@ if __name__ == "__main__":
     msd = MSDLoss()
     accuracy = PathAccuracy(threshold=3e-1)
 
-    data1 = torch.rand(5, 2, 10)
-    data2 = torch.rand(5, 2, 10)
+    data1 = torch.rand(5, 10, 2)
+    data2 = torch.rand(5, 10, 2)
 
     mse_value = mse(data1, data2)
     msd_value = msd(data1, data2)

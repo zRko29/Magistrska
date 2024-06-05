@@ -41,10 +41,10 @@ class StandardMap:
             else:
                 K_list: List[float] = self.K
 
-        self.theta_values: np.ndarray = np.empty(
+        self.theta_values: np.ndarray = np.zeros(
             (self.steps, theta_i.shape[0] * len(K_list))
         )
-        self.p_values: np.ndarray = np.empty((self.steps, p_i.shape[0] * len(K_list)))
+        self.p_values: np.ndarray = np.zeros((self.steps, p_i.shape[0] * len(K_list)))
 
         self.theta_values[0] = np.tile(theta_i, len(K_list))
         self.p_values[0] = np.tile(p_i, len(K_list))
@@ -52,7 +52,7 @@ class StandardMap:
         for i, K in enumerate(K_list):
             theta = theta_i.copy()
             p = p_i.copy()
-            for step in range(1, self.steps - 1):
+            for step in range(1, self.steps):
                 theta = np.mod(theta + p, 1)
                 p = np.mod(p + K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
                 self.theta_values[

@@ -139,30 +139,30 @@ def plot_2d(
     plt.figure(figsize=(6, 4))
     plt.plot(
         targets[:, 0, 0],
-        targets[:, 1, 0],
+        targets[:, 0, 1],
         "o",
         color="blue",
-        markersize=3,
+        markersize=1,
         label="targets",
     )
     plt.plot(
         predicted[:, 0, 0],
-        predicted[:, 1, 0],
+        predicted[:, 0, 1],
         "o",
         color="green",
-        markersize=3,
+        markersize=1,
         label="predicted",
     )
     plt.plot(
-        targets[:, 0, 1:],
-        targets[:, 1, 1:],
+        targets[:, 1:, 0],
+        targets[:, 1:, 1],
         "o",
         color="blue",
         markersize=0.7,
     )
     plt.plot(
-        predicted[:, 0, 1:],
-        predicted[:, 1, 1:],
+        predicted[:, 1:, 0],
+        predicted[:, 1:, 1],
         "o",
         color="green",
         markersize=0.7,
@@ -170,12 +170,12 @@ def plot_2d(
 
     # connect points with lines
     if plot_lines:
-        for i in range(len(targets)):
+        for i in range(targets.shape[0]):
             plt.plot(
-                [targets[i, 0], predicted[i, 0]],
-                [targets[i, 1], predicted[i, 1]],
+                [targets[i, :, 0], predicted[i, :, 0]],
+                [targets[i, :, 1], predicted[i, :, 1]],
                 "r-",
-                lw=0.1,
+                lw=0.05,
             )
 
     plt.legend(loc="upper right")
@@ -212,13 +212,13 @@ def plot_heat_map(
     save_path: str = None,
     show_plot: bool = False,
 ) -> None:
-    predicted = predicted.detach().numpy().T
-    targets = targets.detach().numpy().T
+    predicted = predicted.detach().numpy()
+    targets = targets.detach().numpy()
 
-    distances = np.sum((predicted - targets) ** 2, axis=1)
-    distances = np.log10(distances)
+    distances = np.sum((predicted - targets) ** 2, axis=-1)
+    distances = np.log10(distances).T
 
-    avg_distance = np.mean(distances, axis=1)
+    avg_distance = np.mean(distances, axis=-1)
 
     _, bins = np.histogram(distances, bins=20)
     distributions = [np.histogram(timestep, bins=bins)[0] for timestep in distances]
@@ -227,12 +227,12 @@ def plot_heat_map(
         distributions,
         aspect="auto",
         origin="lower",
-        extent=(bins[0], bins[-1], -0.5, predicted.shape[0] - 0.5),
+        extent=(bins[0], bins[-1], -0.5, distances.shape[0] - 0.5),
     )
     plt.plot(avg_distance, range(len(avg_distance)), "tab:red", lw=2)
     plt.xlabel("mse")
     plt.ylabel("timestep")
-    plt.colorbar(label="log10 counts")
+    plt.colorbar(label="counts")
     plt.title("Squared errors")
     if save_path is not None:
         plt.savefig(save_path + ".pdf")
@@ -249,20 +249,20 @@ def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
     plt.figure(figsize=(6, 4))
     plt.plot(
         train_data[:, 0, 0],
-        train_data[:, 1, 0],
+        train_data[:, 0, 1],
         "bo",
         markersize=2,
         label="Training data",
     )
     plt.plot(
         val_data[:, 0, 0],
-        val_data[:, 1, 0],
+        val_data[:, 0, 1],
         "ro",
         markersize=2,
         label="Validation data",
     )
-    plt.plot(train_data[:, 0, 1:], train_data[:, 1, 1:], "bo", markersize=0.3)
-    plt.plot(val_data[:, 0, 1:], val_data[:, 1, 1:], "ro", markersize=0.3)
+    plt.plot(train_data[:, 1:, 0], train_data[:, 1:, 1], "bo", markersize=0.3)
+    plt.plot(val_data[:, 1:, 0], val_data[:, 1:, 1], "ro", markersize=0.3)
     plt.legend(loc="upper right")
     plt.show()
 
@@ -271,16 +271,15 @@ def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
     parser.add_argument(
-        "--experiment_path",
+        "--path",
         type=str,
-        default="logs/",
-        help="Path to the experiment directory. (default: %(default)s)",
+        help="Path to the experiment directory.",
     )
 
     if script_name == "Gridsearch step":
         parser.add_argument(
             "--default_params",
-            "-dflt",
+            "-default",
             action="store_true",
             help="Use default parameters for the gridsearch. (default: False)",
         )
@@ -340,6 +339,13 @@ def import_parsed_args(script_name: str) -> Namespace:
             type=int,
             default=1,
             help="Specify number of nodes to use. (default: 1)",
+        )
+        parser.add_argument(
+            "--ckpt_path",
+            "-ckpt",
+            type=str,
+            default=None,
+            help="Path to the checkpoint file. (default: None)",
         )
 
     elif script_name == "Parameter updater":

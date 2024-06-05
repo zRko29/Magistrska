@@ -1,5 +1,5 @@
-init_points: 60
-steps: 50 # ≤ 100
+init_points: 10
+steps: 10 # ≤ 100
 K: 0.1
 sampling: random
 
@@ -7,21 +7,22 @@ hidden_size: 128
 linear_size: 128 # used when num_lin_layers > 1
 num_rnn_layers: 2
 num_lin_layers: 2
-non_linearity: null
+nonlinearity_hidden: tanh # nonlinearity for hidden layers
+nonlinearity_lin: tanh # nonlinearity for linear layers
 dropout: 0.0
 
-batch_size: 256
-seq_length: 20
+batch_size: 16
+seq_length: 5 # must not be too small compard to steps
 loss: msd
 optimizer: adam
-lr: 0.00001
+lr: 0.000001
 precision: 32-true
 
 shuffle_trajectories: True # makes sense for linear sampling
-shuffle_batches: False # shuffle batches between epochs
-shuffle_sequences: False # shuffle sequences
+shuffle_within_batches: False # shuffle sequences within batches (can increase stability)
 
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
+rnn_type: vanilla # type of RNN (vanilla, stacked or hybrid)
 
 gridsearch:
   batch_size: { lower: 32, upper: 512, type: int }
