@@ -3,7 +3,7 @@
 #SBATCH --partition=gpu                 # partition
 #SBATCH --qos=valhala
 #SBATCH --nodes=1                       # number of nodes
-#SBATCH --ntasks-per-node=1             # number of cores
+#SBATCH --ntasks-per-node=2             # number of cores
 #SBATCH --mem=24G                       # memory per node
 #SBATCH --time=5-00:00                  # time (D-HH:MM)
 #SBATCH --output=slurm.%N.%j.out        # STDOUT
@@ -31,7 +31,7 @@ do
     python gridsearch.py --path $experiment
     
     echo "Running trainer."
-    srun python trainer.py --num_nodes 1 --devices 0 --train_size 1.0 --epochs 20000 --path $experiment
+    srun python trainer.py --num_nodes 1 --devices 0 1 --train_size 1.0 --epochs 50000 --path $experiment
     
     echo "Updating parameter intervals."
     python update.py --min_good_samples 4 --max_good_loss 1e-5 --check_every_n_steps 3 --current_step $i --path $experiment

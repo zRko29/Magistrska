@@ -10,7 +10,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data
+from src.data_helper import Data
 from src.utils import import_parsed_args, read_yaml, setup_logger
 
 from argparse import Namespace
@@ -37,12 +37,12 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             filename="model",
             save_on_train_epoch_end=True,
         ),
-        EarlyStopping(
-            monitor=args.monitor,
-            mode=args.mode,
-            min_delta=1e-8,
-            patience=500,
-        ),
+        # EarlyStopping(
+        #     monitor=args.monitor,
+        #     mode=args.mode,
+        #     min_delta=1e-8,
+        #     patience=1000,
+        # ),
     ]
 
 
@@ -60,11 +60,7 @@ def main(args: Namespace, params: dict) -> None:
         plot_data_split=False,
     )
 
-    model = Model(**params)
-
-    tb_logger = TensorBoardLogger(
-        save_dir="", name=args.experiment_path, default_hp_metric=False
-    )
+    tb_logger = TensorBoardLogger(save_dir="", name=args.path, default_hp_metric=False)
 
     save_path: str = os.path.join(tb_logger.name, f"version_{tb_logger.version}")
 
@@ -89,19 +85,31 @@ def main(args: Namespace, params: dict) -> None:
         logger.info(f"Running trainer.py (version_{tb_logger.version}).")
 
         print_args = args.__dict__.copy()
-        del print_args["experiment_path"]
+        del print_args["path"]
         logger.info(f"args = {print_args}")
+
+    if params.get("rnn_type") == "vanilla":
+        from src.VanillaRNN import Model
+    elif params.get("rnn_type") == "stacked":
+        from src.StackedRNN import Model
+    elif params.get("rnn_type") == "hybrid":
+        from src.HybridRNN import Model
+
+    if args.ckpt_path:
+        model = Model.load_from_checkpoint(args.ckpt_path, batch_size=256, lr=1.0e-5)
+    else:
+        model = Model(**params)
 
     trainer.fit(model, datamodule)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
-    args.experiment_path = os.path.abspath(args.experiment_path)
+    args.path = os.path.abspath(args.path)
 
-    logger = setup_logger(args.experiment_path, "rnn_autoregressor")
+    logger = setup_logger(args.path, "rnn_autoregressor")
 
-    params_path = os.path.join(args.experiment_path, "current_params.yaml")
+    params_path = os.path.join(args.path, "current_params.yaml")
     params = read_yaml(params_path)
 
     main(args, params)
