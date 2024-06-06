@@ -31,4 +31,4 @@ gridsearch:
   num_lin_layers: { lower: 1, upper: 6, type: int }
   hidden_size: { lower: 32, upper: 256, type: int }
   linear_size: { lower: 32, upper: 256, type: int }
-  non_linearity: { list: [tanh, elu, selu], type: choice }
+  nonlinearity_lin: { list: [tanh, elu, selu], type: choice }
