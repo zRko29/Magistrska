@@ -37,7 +37,7 @@ def get_loss_and_params(dir: str) -> pd.DataFrame:
 
 
 def main(args):
-    path = args.experiment_path
+    path = args.path
 
     results = get_loss_and_params(path)
 
@@ -54,7 +54,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--experiment_path")
+    parser.add_argument("--path")
     args = parser.parse_args()
 
     main(args)

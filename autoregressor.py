@@ -1,8 +1,9 @@
 import os
 import pytorch_lightning as pl
 from src.mapping_helper import StandardMap
-from src.helper import Model, Data
+from src.data_helper import Data
 from src.dmd import DMD
+from argparse import ArgumentParser, Namespace
 from src.utils import read_yaml, get_inference_folders, plot_2d, plot_heat_map
 from typing import Optional, List
 import warnings
@@ -17,13 +18,14 @@ logging.getLogger("pytorch_lightning").setLevel(0)
 pl.seed_everything(42, workers=True)
 
 
-def main():
-    version: Optional[int] = 11
-    directory_path: str = "../autoregressor_backup_1/overfitting_K=0.5"
+def main(args: Namespace):
+    version: Optional[int] = args.version or None
+    directory_path: str = "logs/K=0.1/overfitting/init_points"
 
     folders = get_inference_folders(directory_path, version)
 
     for log_path in folders:
+        print()
         print(f"log_path: {log_path}")
         params_path: str = os.path.join(log_path, "hparams.yaml")
         params: dict = read_yaml(params_path)
@@ -31,23 +33,26 @@ def main():
         maps: List[StandardMap] = [
             StandardMap(seed=42, params=params),
             StandardMap(seed=41, params=params),
+            StandardMap(seed=40, params=params),
         ]
-        input_suffixes: list[str] = ["standard", "random"]
+        input_suffixes: list[str] = ["standard", "random1", "random2"]
 
         for map, input_suffix in zip(maps, input_suffixes):
 
-            predictions, datamodule = inference(log_path, params, map)
+            predictions, _ = inference(log_path, params, map)
 
-            print(f"{input_suffix} loss: {predictions['loss'].item():.3e}")
-            print()
+            print(
+                f"{input_suffix} loss: {predictions['loss'].item():.3e}, accuracy: {predictions['accuracy'].item():.2f}"
+            )
 
             plot_2d(
                 predictions["predicted"],
                 predictions["targets"],
                 show_plot=False,
                 plot_lines=True,
-                # save_path=os.path.join(log_path, input_suffix),
-                title=predictions["loss"].item(),
+                save_path=os.path.join(log_path, input_suffix),
+                loss=predictions["loss"].item(),
+                accuracy=predictions["accuracy"].item(),
             )
 
             plot_heat_map(
@@ -63,6 +68,7 @@ def main():
             # dmd.plot_eigenvalues(titles=["Predicted", "Targets"])
             # dmd.plot_abs_values(titles=["Predicted", "Targets"])
 
+        print()
         print("-----------------------------")
 
 
@@ -75,20 +81,23 @@ def inference(
     if params_update is not None:
         params.update(params_update)
 
+    if params.get("rnn_type") == "vanilla":
+        from src.VanillaRNN import Model
+    elif params.get("rnn_type") == "stacked":
+        from src.StackedRNN import Model
+    elif params.get("rnn_type") == "hybrid":
+        from src.HybridRNN import Model
+
     model_path: str = os.path.join(log_path, f"model.ckpt")
     model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")
 
     # regression seed to take
     model.regression_seed = params.get("seq_length")
 
-    # how many steps to predict
-    temp_params: dict = params.copy()
-    temp_params.update({"seq_length": params.get("steps")})
-
     datamodule: Data = Data(
         map_object=map,
         train_size=1.0,
-        params=temp_params,
+        params=params,
     )
 
     trainer = pl.Trainer(
@@ -104,4 +113,8 @@ def inference(
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser()
+    parser.add_argument("--version", "-v", type=int, default=None)
+    args = parser.parse_args()
+
+    main(args)
