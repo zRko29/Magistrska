@@ -25,7 +25,7 @@ sequence_type: many-to-one # type of input sequences (many-to-one or many-to-man
 rnn_type: hybrid # type of RNN (vanilla, stacked or hybrid)
 
 gridsearch:
-  batch_size: { lower: 200, upper: 300, type: int }
+  batch_size: { lower: 100, upper: 300, type: int }
   lr: { lower: -5.5, upper: -4.5, type: log }
   num_rnn_layers: { lower: 1, upper: 3, type: int }
   num_lin_layers: { lower: 1, upper: 3, type: int }
