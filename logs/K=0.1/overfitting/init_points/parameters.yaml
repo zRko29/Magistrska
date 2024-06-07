@@ -19,7 +19,7 @@ lr: 1.0e-05
 precision: 32-true
 
 shuffle_trajectories: true # makes sense for linear sampling
-shuffle_within_batches: false # shuffle sequences within batches
+shuffle_within_batches: true # shuffle sequences within batches
 
 sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 rnn_type: hybrid # type of RNN (vanilla, stacked or hybrid)
