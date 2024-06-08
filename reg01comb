@@ -28,7 +28,7 @@ do
     echo
     
     echo "Making gridsearch step."
-    python gridsearch.py --path $experiment
+    python gridsearch.py --path $experiment -default
     
     echo "Running trainer."
     srun python trainer.py --num_nodes 1 --devices 0 1 --train_size 1.0 --epochs 70000 --path $experiment
