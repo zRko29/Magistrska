@@ -1,7 +1,7 @@
-init_points: 500
-steps: 20 # ≤ 100
+init_points: 529
+steps: 35 # ≤ 100
 K: 0.1
-sampling: random
+sampling: grid
 
 hidden_size: 256
 linear_size: 256 # used when num_lin_layers > 1
@@ -25,10 +25,10 @@ sequence_type: many-to-one # type of input sequences (many-to-one or many-to-man
 rnn_type: hybrid # type of RNN (vanilla, stacked or hybrid)
 
 gridsearch:
-  batch_size: { lower: 100, upper: 300, type: int }
-  lr: { lower: -5.5, upper: -4.5, type: log }
+  batch_size: { lower: 64, upper: 300, type: int }
+  lr: { lower: -6.5, upper: -4.5, type: log }
   num_rnn_layers: { lower: 1, upper: 3, type: int }
   num_lin_layers: { lower: 1, upper: 3, type: int }
-  hidden_size: { lower: 200, upper: 300, type: int }
-  linear_size: { lower: 200, upper: 300, type: int }
-  nonlinearity_lin: { list: [tanh, elu, selu], type: choice }
+  hidden_size: { lower: 200, upper: 400, type: int }
+  linear_size: { lower: 200, upper: 400, type: int }
+  nonlinearity_lin: { list: [tanh, elu, selu, relu], type: choice }

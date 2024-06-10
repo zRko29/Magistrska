@@ -1,5 +1,5 @@
 init_points: 50
-steps: 100 # ≤ 100
+steps: 200 # ≤ 100
 K: 0.1
 sampling: random
 
@@ -25,10 +25,10 @@ sequence_type: many-to-one # type of input sequences (many-to-one or many-to-man
 rnn_type: hybrid # type of RNN (vanilla, stacked or hybrid)
 
 gridsearch:
-  batch_size: { lower: 16, upper: 64, type: int }
-  lr: { lower: -6.1, upper: -4, type: log }
+  batch_size: { lower: 64, upper: 300, type: int }
+  lr: { lower: -6.5, upper: -4.5, type: log }
   num_rnn_layers: { lower: 1, upper: 3, type: int }
   num_lin_layers: { lower: 1, upper: 3, type: int }
-  hidden_size: { lower: 200, upper: 300, type: int }
-  linear_size: { lower: 200, upper: 300, type: int }
-  non_linearity: { list: [tanh, elu, selu], type: choice }
+  hidden_size: { lower: 200, upper: 400, type: int }
+  linear_size: { lower: 200, upper: 400, type: int }
+  nonlinearity_lin: { list: [tanh, elu, selu, relu], type: choice }
