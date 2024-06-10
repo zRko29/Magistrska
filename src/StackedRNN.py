@@ -5,42 +5,19 @@ from typing import List
 
 class Model(BaseRNN):
     def __init__(self, **params):
-        super(Model, self).__init__()
-        self.save_hyperparameters()
-
-        nonlin_hidden = params.get("nonlinearity_hidden")
-        self.nonlin_lin = self.configure_non_linearity(params.get("nonlinearity_lin"))
-
-        self.loss = self.configure_loss(params.get("loss"))
-        self.accuracy = self.configure_accuracy("path_accuracy", 1.0e-5)
-
-        self.num_rnn_layers: int = params.get("num_rnn_layers")
-        self.num_lin_layers: int = params.get("num_lin_layers")
-        self.sequence_type: str = params.get("sequence_type")
-        dropout: float = params.get("dropout")
-        self.lr: float = params.get("lr")
-        self.optimizer: str = params.get("optimizer")
-
-        # ----------------------
-        # NOTE: This logic is kept so that variable layer sizes can be reimplemented in the future
-        rnn_layer_size: int = params.get("hidden_size")
-        lin_layer_size: int = params.get("linear_size")
-
-        self.hidden_sizes: List[int] = [rnn_layer_size] * self.num_rnn_layers
-        self.linear_sizes: List[int] = [lin_layer_size] * (self.num_lin_layers - 1)
-        # ----------------------
+        super(Model, self).__init__(**params)
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
         self.rnns.append(
-            torch.nn.RNNCell(2, self.hidden_sizes[0], nonlinearity=nonlin_hidden)
+            torch.nn.RNNCell(2, self.hidden_sizes[0], nonlinearity=self.nonlin_hidden)
         )
         for layer in range(self.num_rnn_layers - 1):
             self.rnns.append(
                 torch.nn.RNNCell(
                     self.hidden_sizes[layer],
                     self.hidden_sizes[layer + 1],
-                    nonlinearity=nonlin_hidden,
+                    nonlinearity=self.nonlin_hidden,
                 )
             )
 
@@ -59,7 +36,7 @@ class Model(BaseRNN):
                     )
                 )
             self.lins.append(torch.nn.Linear(self.linear_sizes[-1], 2))
-        self.dropout = torch.nn.Dropout(p=dropout)
+        self.dropout = torch.nn.Dropout(p=self.dropout)
 
         # takes care of dtype
         self.to(torch.double)

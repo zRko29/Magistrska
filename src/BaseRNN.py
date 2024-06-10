@@ -2,12 +2,43 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.utilities import rank_zero_only
 
-from typing import Tuple
+from typing import Tuple, List
 
 from src.custom_metrics import MSDLoss, PathAccuracy
 
 
 class BaseRNN(pl.LightningModule):
+    def __init__(self, **params):
+        super(BaseRNN, self).__init__()
+        self.save_hyperparameters()
+
+        self.nonlin_hidden = params.get("nonlinearity_hidden")
+        self.nonlin_lin = self.configure_non_linearity(params.get("nonlinearity_lin"))
+
+        self.loss = self.configure_loss(params.get("loss"))
+        self.accuracy = self.configure_accuracy("path_accuracy", 1.0e-5)
+
+        self.num_rnn_layers: int = params.get("num_rnn_layers")
+        self.num_lin_layers: int = params.get("num_lin_layers")
+        self.sequence_type: str = params.get("sequence_type")
+        self.dropout: float = params.get("dropout")
+        self.lr: float = params.get("lr")
+        self.optimizer: str = params.get("optimizer")
+
+        # ------------------------------------------
+        # NOTE: This logic is for variable layer sizes
+        hidden_sizes: List[int] = params.get("hidden_sizes")
+        linear_sizes: List[int] = params.get("linear_sizes")
+
+        rnn_layer_size: int = params.get("hidden_size")
+        lin_layer_size: int = params.get("linear_size")
+
+        self.hidden_sizes: List[int] = (
+            hidden_sizes or [rnn_layer_size] * self.num_rnn_layers
+        )
+        self.linear_sizes: List[int] = linear_sizes or [lin_layer_size] * (
+            self.num_lin_layers - 1
+        )
 
     def _init_hidden(self, shape0: int, hidden_shapes: int) -> list[torch.Tensor]:
         return [
