@@ -158,14 +158,14 @@ def plot_2d(
         targets[:, 1:, 1],
         "o",
         color="blue",
-        markersize=0.7,
+        markersize=0.2,
     )
     plt.plot(
         predicted[:, 1:, 0],
         predicted[:, 1:, 1],
         "o",
         color="green",
-        markersize=0.7,
+        markersize=0.2,
     )
 
     # connect points with lines
@@ -179,6 +179,8 @@ def plot_2d(
             )
 
     plt.legend(loc="upper right")
+    plt.xlim(-0.05, 1.05)
+    plt.ylim(-0.05, 1.05)
     if loss is not None:
         plt.title(f"Loss: {loss:.3e}, Accuracy: {accuracy:.2f}")
     if save_path is not None:
@@ -230,7 +232,7 @@ def plot_heat_map(
         extent=(bins[0], bins[-1], -0.5, distances.shape[0] - 0.5),
     )
     plt.plot(avg_distance, range(len(avg_distance)), "tab:red", lw=2)
-    plt.xlabel("mse")
+    plt.xlabel("log10 mse")
     plt.ylabel("timestep")
     plt.colorbar(label="counts")
     plt.title("Squared errors")
@@ -242,6 +244,30 @@ def plot_heat_map(
         plt.close()
 
 
+def plot_spatial_errors(predictions, targets, num_bins=20, power=2.5 / 10):
+    x_true = predictions[:, :, 0].flatten()
+    y_true = predictions[:, :, 1].flatten()
+    x_pred = targets[:, :, 0].flatten()
+    y_pred = targets[:, :, 1].flatten()
+
+    x_bins = np.linspace(0, 1, num_bins + 1)
+    y_bins = np.linspace(0, 1, num_bins + 1)
+
+    errors = (x_true - x_pred) ** 2 + (y_true - y_pred) ** 2
+
+    error_sum, _, _ = np.histogram2d(
+        y_true, x_true, bins=[y_bins, x_bins], weights=errors
+    )
+
+    plt.figure(figsize=(10, 8))
+    plt.imshow(error_sum**power, origin="lower", extent=[0, 1, 0, 1])
+    plt.colorbar(label=r"$\sim$Squared Errors")
+    plt.xlabel(r"$\theta$")
+    plt.ylabel("p")
+    plt.title("Squared Errors")
+    plt.show()
+
+
 def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
     train_size = int(len(dataset) * train_ratio)
     train_data = dataset[:train_size]
@@ -251,18 +277,18 @@ def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
         train_data[:, 0, 0],
         train_data[:, 0, 1],
         "bo",
-        markersize=2,
+        markersize=1,
         label="Training data",
     )
     plt.plot(
         val_data[:, 0, 0],
         val_data[:, 0, 1],
         "ro",
-        markersize=2,
+        markersize=1,
         label="Validation data",
     )
-    plt.plot(train_data[:, 1:, 0], train_data[:, 1:, 1], "bo", markersize=0.3)
-    plt.plot(val_data[:, 1:, 0], val_data[:, 1:, 1], "ro", markersize=0.3)
+    plt.plot(train_data[:, 1:, 0], train_data[:, 1:, 1], "bo", markersize=0.1)
+    plt.plot(val_data[:, 1:, 0], val_data[:, 1:, 1], "ro", markersize=0.1)
     plt.legend(loc="upper right")
     plt.show()
 

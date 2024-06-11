@@ -21,6 +21,7 @@ class Data(pl.LightningDataModule):
         super(Data, self).__init__()
         self.seq_len: int = params.get("seq_length")
         self.batch_size: int = params.get("batch_size")
+        self.take_every_nth_step: int = params.get("take_every_nth_step")
         self.shuffle_trajectories: bool = params.get("shuffle_trajectories")
         self.shuffle_within_batches: bool = params.get("shuffle_within_batches")
         sequence_type: str = params.get("sequence_type")
@@ -37,6 +38,9 @@ class Data(pl.LightningDataModule):
 
         # data.shape = [init_points, steps, 2]
         self.data = np.stack([thetas.T, ps.T], axis=-1)
+
+        # take every n-th step
+        self.data = self.data[:, :: self.take_every_nth_step]
 
         # shuffle trajectories
         if self.shuffle_trajectories:
@@ -78,6 +82,8 @@ class Data(pl.LightningDataModule):
             sequences = sequences.reshape(
                 init_points * (steps - self.seq_len), self.seq_len + 1, features
             )
+        else:
+            raise ValueError(f"Invalid sequence type: {type}")
 
         return sequences
 

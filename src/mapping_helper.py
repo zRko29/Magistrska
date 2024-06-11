@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple, List
+import pyprind
 
 
 class StandardMap:
@@ -49,6 +50,12 @@ class StandardMap:
         self.theta_values[0] = np.tile(theta_i, len(K_list))
         self.p_values[0] = np.tile(p_i, len(K_list))
 
+        pbar = pyprind.ProgBar(
+            len(K_list) * self.steps,
+            bar_char="█",
+            title="Generating data for Standard Map",
+        )
+
         for i, K in enumerate(K_list):
             theta = theta_i.copy()
             p = p_i.copy()
@@ -59,6 +66,9 @@ class StandardMap:
                     step, i * theta_i.shape[0] : (i + 1) * theta_i.shape[0]
                 ] = theta
                 self.p_values[step, i * p_i.shape[0] : (i + 1) * p_i.shape[0]] = p
+
+                pbar.update()
+        print()
 
     def _get_initial_points(self) -> Tuple[np.ndarray, np.ndarray]:
         params: List = [0.01, 0.99, self.init_points]
@@ -116,6 +126,6 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    map = StandardMap(init_points=50, steps=100, sampling="random", K=[0.1], seed=42)
+    map = StandardMap(init_points=50 * 50, steps=100, sampling="grid", K=[5], seed=42)
     map.generate_data()
     map.plot_data()
