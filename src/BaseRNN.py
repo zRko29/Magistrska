@@ -41,7 +41,10 @@ class BaseRNN(pl.LightningModule):
         )
 
     def _init_hidden(self, shape0: int, hidden_shapes: int) -> list[torch.Tensor]:
-        return [torch.zeros(shape0, hidden_shape) for hidden_shape in hidden_shapes]
+        return [
+            torch.zeros(shape0, hidden_shape, device=self.device)
+            for hidden_shape in hidden_shapes
+        ]
 
     def configure_non_linearity(self, non_linearity: str) -> torch.nn.Module:
         if non_linearity is None:
