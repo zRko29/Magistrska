@@ -13,8 +13,8 @@ class Data(pl.LightningDataModule):
     def __init__(
         self,
         map_object: StandardMap,
-        train_size: float,
         params: dict,
+        train_size: float = 1.0,
         plot_data: bool = False,
         plot_data_split: bool = False,
     ) -> None:
@@ -110,7 +110,7 @@ class Data(pl.LightningDataModule):
         )
 
     def predict_dataloader(self) -> torch.Tensor:
-        return torch.tensor(self.data, dtype=torch.double).unsqueeze(0)
+        return torch.tensor(self.data).unsqueeze(0)
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -122,6 +122,6 @@ class Dataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor]:
         x, y = self.data[idx]
-        x = torch.tensor(x, dtype=torch.double)
-        y = torch.tensor(y, dtype=torch.double)
+        x = torch.tensor(x)
+        y = torch.tensor(y)
         return x, y

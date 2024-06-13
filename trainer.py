@@ -8,6 +8,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+import torch
 
 from src.mapping_helper import StandardMap
 from src.data_helper import Data
@@ -73,6 +74,8 @@ def main(args: Namespace, params: dict) -> None:
         logger=tb_logger,
         callbacks=get_callbacks(args, save_path),
         deterministic=True,
+        log_every_n_steps=5,
+        check_val_every_n_epoch=2,
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
         devices=args.devices,
@@ -96,9 +99,12 @@ def main(args: Namespace, params: dict) -> None:
         from src.HybridRNN import Model
 
     if args.ckpt_path:
-        model = Model.load_from_checkpoint(args.ckpt_path, batch_size=256, lr=1.0e-5)
+        model = Model.load_from_checkpoint(args.ckpt_path, map_location="cpu")
     else:
         model = Model(**params)
+
+    if args.compile:
+        model = torch.compile(model, mode="reduce-overhead", dynamic=True)
 
     trainer.fit(model, datamodule)
 

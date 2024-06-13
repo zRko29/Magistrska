@@ -244,7 +244,9 @@ def plot_heat_map(
         plt.close()
 
 
-def plot_spatial_errors(predictions, targets, num_bins=20, power=2.5 / 10):
+def plot_spatial_errors(
+    predictions, targets, num_bins=20, power=2.5 / 10, save_path=None, show_plot=False
+):
     x_true = predictions[:, :, 0].flatten()
     y_true = predictions[:, :, 1].flatten()
     x_pred = targets[:, :, 0].flatten()
@@ -265,7 +267,12 @@ def plot_spatial_errors(predictions, targets, num_bins=20, power=2.5 / 10):
     plt.xlabel(r"$\theta$")
     plt.ylabel("p")
     plt.title("Squared Errors")
-    plt.show()
+    if save_path is not None:
+        plt.savefig(save_path + ".pdf")
+    if show_plot:
+        plt.show()
+    else:
+        plt.close()
 
 
 def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
@@ -340,6 +347,11 @@ def import_parsed_args(script_name: str) -> Namespace:
             "-prog",
             action="store_true",
             help="Show progress bar during training. (default: False)",
+        )
+        parser.add_argument(
+            "--compile",
+            action="store_true",
+            help="Compile the model before training. (default: False)",
         )
         parser.add_argument(
             "--accelerator",

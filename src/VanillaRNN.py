@@ -19,25 +19,26 @@ class Model(BaseRNN):
 
         # Create the linear layers
         self.lins = torch.nn.ModuleList([])
+        self.bn_lins = torch.nn.ModuleList([])
+
         if self.num_lin_layers == 1:
             self.lins.append(torch.nn.Linear(self.hidden_sizes[-1], 2))
         elif self.num_lin_layers > 1:
             self.lins.append(
                 torch.nn.Linear(self.hidden_sizes[-1], self.linear_sizes[0])
             )
+            self.bn_lins.append(torch.nn.BatchNorm1d(self.linear_sizes[0]))
             for layer in range(self.num_lin_layers - 2):
                 self.lins.append(
                     torch.nn.Linear(
                         self.linear_sizes[layer], self.linear_sizes[layer + 1]
                     )
                 )
+                self.bn_lins.append(torch.nn.BatchNorm1d(self.linear_sizes[layer + 1]))
             self.lins.append(torch.nn.Linear(self.linear_sizes[-1], 2))
-        self.dropout = torch.nn.Dropout(p=self.dropout)
-
-        # takes care of dtype
-        self.to(torch.double)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.to(self.dtype)
         x = x.transpose(0, 1)
         seq_len, batch_size, _ = x.size()
 
@@ -49,15 +50,20 @@ class Model(BaseRNN):
         for t in range(seq_len):
             for layer in range(self.num_rnn_layers):
                 h_ts[layer] = self.rnns[layer](x[t], h_ts[layer])
-                h_ts[layer] = self.dropout(h_ts[layer])
             outputs.append(h_ts[-1])
 
         outputs = torch.stack(outputs)
         outputs = outputs.transpose(0, 1)
 
         # linear layers
-        for layer in range(self.num_lin_layers):
+        for layer in range(self.num_lin_layers - 1):
             outputs = self.lins[layer](outputs)
+            outputs = outputs.transpose(1, 2)
+            outputs = self.bn_lins[layer](outputs)
+            outputs = outputs.transpose(1, 2)
             outputs = self.nonlin_lin(outputs)
+
+        outputs = self.lins[-1](outputs)
+        outputs = self.nonlin_lin(outputs)
 
         return outputs

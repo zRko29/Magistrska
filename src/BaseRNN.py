@@ -3,6 +3,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.utilities import rank_zero_only
 
 from typing import Tuple, List
+import pyprind
 
 from src.custom_metrics import MSDLoss, PathAccuracy
 
@@ -21,7 +22,6 @@ class BaseRNN(pl.LightningModule):
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
         self.sequence_type: str = params.get("sequence_type")
-        self.dropout: float = params.get("dropout")
         self.lr: float = params.get("lr")
         self.optimizer: str = params.get("optimizer")
 
@@ -41,40 +41,35 @@ class BaseRNN(pl.LightningModule):
         )
 
     def _init_hidden(self, shape0: int, hidden_shapes: int) -> list[torch.Tensor]:
-        return [
-            torch.zeros(shape0, hidden_shape, dtype=torch.double, device=self.device)
-            for hidden_shape in hidden_shapes
-        ]
+        return [torch.zeros(shape0, hidden_shape) for hidden_shape in hidden_shapes]
 
-    def configure_non_linearity(self, non_linearity: str) -> torch.torch.nn.Module:
+    def configure_non_linearity(self, non_linearity: str) -> torch.nn.Module:
         if non_linearity is None:
-            return torch.torch.nn.Identity()
+            return torch.nn.Identity()
         elif non_linearity.lower() == "relu":
-            return torch.torch.nn.ReLU()
+            return torch.nn.ReLU()
         elif non_linearity.lower() == "leaky_relu":
-            return torch.torch.nn.LeakyReLU()
+            return torch.nn.LeakyReLU()
         elif non_linearity.lower() == "tanh":
-            return torch.torch.nn.Tanh()
+            return torch.nn.Tanh()
         elif non_linearity.lower() == "elu":
-            return torch.torch.nn.ELU()
+            return torch.nn.ELU()
         elif non_linearity.lower() == "selu":
-            return torch.torch.nn.SELU()
+            return torch.nn.SELU()
 
-    def configure_accuracy(
-        self, accuracy: str, threshold: float
-    ) -> torch.torch.nn.Module:
+    def configure_accuracy(self, accuracy: str, threshold: float) -> torch.nn.Module:
         if accuracy == "path_accuracy":
             return PathAccuracy(threshold=threshold)
 
-    def configure_loss(self, loss: str) -> torch.torch.nn.Module:
+    def configure_loss(self, loss: str) -> torch.nn.Module:
         if loss in [None, "mse"]:
-            return torch.torch.nn.MSELoss()
+            return torch.nn.MSELoss()
         elif loss == "msd":
             return MSDLoss()
         elif loss == "rmse":
-            return torch.torch.nn.L1Loss()
+            return torch.nn.L1Loss()
         elif loss == "hubber":
-            return torch.torch.nn.SmoothL1Loss()
+            return torch.nn.SmoothL1Loss()
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         if self.optimizer == "adam":
@@ -130,11 +125,19 @@ class BaseRNN(pl.LightningModule):
         predicted: torch.Tensor = batch[:, : self.regression_seed]
         targets: torch.Tensor = batch[:, self.regression_seed :]
 
+        pbar = pyprind.ProgBar(
+            iterations=batch.shape[1] - self.regression_seed,
+            bar_char="█",
+            title="Predicting",
+        )
+
         for i in range(batch.shape[1] - self.regression_seed):
             predicted_value = self(predicted[:, i:])
             # even with many-to-many training
             predicted_value = predicted_value[:, -1:]
             predicted = torch.cat([predicted, predicted_value], axis=1)
+
+            pbar.update()
 
         predicted = predicted[:, self.regression_seed :]
 
