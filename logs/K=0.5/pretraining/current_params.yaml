@@ -1,0 +1,26 @@
+# standard map
+K: 0.5
+init_points: 40000
+precision: 16-mixed
+sampling: grid
+steps: 60
+take_every_nth_step: 1
+
+# static
+batch_size: 256
+dropout: 0.0
+hidden_size: 256
+linear_size: 256
+loss: msd
+lr: 2.0e-05
+nonlinearity_hidden: tanh
+nonlinearity_lin: tanh
+num_lin_layers: 3
+num_rnn_layers: 3
+optimizer: adam
+rnn_type: hybrid
+seq_length: 20
+sequence_type: many-to-one
+shuffle_trajectories: true
+shuffle_within_batches: false
+drop_last: true
