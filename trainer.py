@@ -58,7 +58,6 @@ def main(args: Namespace, params: dict) -> None:
         train_size=args.train_size,
         params=params,
         plot_data=False,
-        plot_data_split=False,
     )
 
     tb_logger = TensorBoardLogger(save_dir="", name=args.path, default_hp_metric=False)

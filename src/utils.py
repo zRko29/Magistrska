@@ -275,31 +275,6 @@ def plot_spatial_errors(
         plt.close()
 
 
-def plot_split(dataset: torch.Tensor, train_ratio: float) -> None:
-    train_size = int(len(dataset) * train_ratio)
-    train_data = dataset[:train_size]
-    val_data = dataset[train_size:]
-    plt.figure(figsize=(6, 4))
-    plt.plot(
-        train_data[:, 0, 0],
-        train_data[:, 0, 1],
-        "bo",
-        markersize=1,
-        label="Training data",
-    )
-    plt.plot(
-        val_data[:, 0, 0],
-        val_data[:, 0, 1],
-        "ro",
-        markersize=1,
-        label="Validation data",
-    )
-    plt.plot(train_data[:, 1:, 0], train_data[:, 1:, 1], "bo", markersize=0.1)
-    plt.plot(val_data[:, 1:, 0], val_data[:, 1:, 1], "ro", markersize=0.1)
-    plt.legend(loc="upper right")
-    plt.show()
-
-
 def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
@@ -361,6 +336,7 @@ def import_parsed_args(script_name: str) -> Namespace:
         )
         parser.add_argument(
             "--accelerator",
+            "-acc",
             type=str,
             default="auto",
             choices=["auto", "cpu", "gpu"],

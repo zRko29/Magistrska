@@ -94,7 +94,7 @@ class StandardMap:
 
     def plot_data(self) -> None:
         plt.figure(figsize=(7, 4))
-        plt.plot(self.theta_values, self.p_values, "bo", markersize=0.2)
+        plt.plot(self.theta_values, self.p_values, "bo", markersize=0.3)
         plt.xlabel(r"$\theta$")
         plt.ylabel("p")
         plt.xlim(-0.05, 1.05)
@@ -112,7 +112,7 @@ class StandardMap:
                     self.theta_values[:, ind * pts : (ind + 1) * pts],
                     self.p_values[:, ind * pts : (ind + 1) * pts],
                     "bo",
-                    markersize=0.2,
+                    markersize=0.3,
                 )
                 ax[i, j].set_title(f"K = {self.K[ind]}")
                 if j == 0:
@@ -126,6 +126,8 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    map = StandardMap(init_points=50 * 50, steps=100, sampling="grid", K=[5], seed=42)
+    map = StandardMap(
+        init_points=100 * 100, steps=10, sampling="grid", K=[0.1], seed=42
+    )
     map.generate_data()
     map.plot_data()

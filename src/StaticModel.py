@@ -27,7 +27,6 @@ class Model(pl.LightningModule):
     lr: 2.0e-05
 
     loss: msd
-    sequence_type: many-to-one
     """
 
     def __init__(self, **params):
@@ -35,35 +34,32 @@ class Model(pl.LightningModule):
         self.save_hyperparameters()
 
         self.loss = MSDLoss()
-        self.accuracy = PathAccuracy(threshold=1.0e-5)
+        self.accuracy = PathAccuracy(threshold=1.0e-4)
 
         # Create the RNN layers
-        # self.rnn1 = nn.RNNCell(2, 256)
-        # self.rnn2 = HybridRNNCell()
-        # self.rnn3 = HybridRNNCell()
-        self.rnn1 = torch.compile(nn.RNNCell(2, 256), dynamic=False)
-        self.rnn2 = torch.compile(HybridRNNCell(), dynamic=False)
-        self.rnn3 = torch.compile(HybridRNNCell(), dynamic=False)
+        self.rnn1 = torch.compile(nn.RNNCell(2, 256), dynamic=True)
+        self.rnn2 = torch.compile(HybridRNNCell(), dynamic=True)
+        self.rnn3 = torch.compile(HybridRNNCell(), dynamic=True)
 
         # Create the linear layers
-        # self.lins1 = nn.Linear(256, 256)
-        # self.bn_lins1 = nn.BatchNorm1d(256)
-        # self.lins2 = nn.Linear(256, 256)
-        # self.bn_lins2 = nn.BatchNorm1d(256)
-        # self.lins3 = nn.Linear(256, 2)
-        self.lins1 = torch.compile(nn.Linear(256, 256), dynamic=False)
-        self.bn_lins1 = torch.compile(nn.BatchNorm1d(256), dynamic=False)
-        self.lins2 = torch.compile(nn.Linear(256, 256), dynamic=False)
-        self.bn_lins2 = torch.compile(nn.BatchNorm1d(256), dynamic=False)
-        self.lins3 = torch.compile(nn.Linear(256, 2), dynamic=False)
+        self.lins1 = torch.compile(nn.Linear(256, 256), dynamic=True)
+        self.bn_lins1 = torch.compile(nn.BatchNorm1d(256), dynamic=True)
+        self.lins2 = torch.compile(nn.Linear(256, 256), dynamic=True)
+        self.bn_lins2 = torch.compile(nn.BatchNorm1d(256), dynamic=True)
+        self.lins3 = torch.compile(nn.Linear(256, 2), dynamic=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)
         x = x.transpose(0, 1)
 
-        h_ts1 = torch.zeros(256, 256, device=self.device)
-        h_ts2 = torch.zeros(256, 256, device=self.device)
-        h_ts3 = torch.zeros(256, 256, device=self.device)
+        # different during inference
+        # x.shape = (sequence length, batch size, features)
+        # print(x.shape)
+        batch_size = 100
+
+        h_ts1 = torch.zeros(batch_size, 256, device=self.device)
+        h_ts2 = torch.zeros(batch_size, 256, device=self.device)
+        h_ts3 = torch.zeros(batch_size, 256, device=self.device)
 
         outputs = []
         # rnn layers
@@ -100,21 +96,19 @@ class Model(pl.LightningModule):
         predicted = predicted[:, -1:]
 
         loss = self.loss(predicted, targets)
-        accuracy = self.accuracy(predicted, targets)
 
-        self.log_dict(
-            {"loss/train": loss, "acc/train": accuracy},
-            on_epoch=True,
-            prog_bar=True,
-            on_step=False,
-        )
+        self.log_dict({"loss/train": loss}, on_epoch=True, prog_bar=True, on_step=False)
         return loss
 
     def validation_step(self, batch, _) -> torch.Tensor:
         inputs, targets = batch
 
-        predicted = self(inputs)
-        predicted = predicted[:, -1:]
+        for i in range(10):
+            predicted_value = self(inputs[:, i:])
+            predicted_value = predicted_value[:, -1:]
+            inputs = torch.cat([inputs, predicted_value], axis=1)
+
+        predicted = inputs[:, 20:]
 
         loss = self.loss(predicted, targets)
         accuracy = self.accuracy(predicted, targets)
