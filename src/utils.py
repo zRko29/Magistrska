@@ -354,6 +354,12 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Compile the model before training. (default: False)",
         )
         parser.add_argument(
+            "--static_model",
+            "-static",
+            action="store_true",
+            help="Use the static model. (default: False)",
+        )
+        parser.add_argument(
             "--accelerator",
             type=str,
             default="auto",

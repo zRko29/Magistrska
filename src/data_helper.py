@@ -24,6 +24,7 @@ class Data(pl.LightningDataModule):
         self.take_every_nth_step: int = params.get("take_every_nth_step")
         self.shuffle_trajectories: bool = params.get("shuffle_trajectories")
         self.shuffle_within_batches: bool = params.get("shuffle_within_batches")
+        self.drop_last: bool = params.get("drop_last")
         sequence_type: str = params.get("sequence_type")
         self.rng: np.random.Generator = np.random.default_rng(seed=42)
 
@@ -100,13 +101,15 @@ class Data(pl.LightningDataModule):
             Dataset(self.input_output_pairs[: self.t]),
             batch_size=self.batch_size,
             shuffle=self.shuffle_within_batches,
+            drop_last=self.drop_last,
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
             Dataset(self.input_output_pairs[self.t :]),
-            batch_size=2 * self.batch_size,
+            batch_size=self.batch_size,
             shuffle=False,
+            drop_last=self.drop_last,
         )
 
     def predict_dataloader(self) -> torch.Tensor:

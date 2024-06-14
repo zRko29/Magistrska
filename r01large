@@ -19,4 +19,4 @@ conda activate rnn_env
 
 experiment=logs/K=0.1/pretraining
 
-srun python trainer.py --num_nodes 1 --devices 0 --train_size 0.95 --monitor loss/val --epochs 100_000 --compile --path $experiment
+srun python trainer.py --num_nodes 1 --devices 0 --train_size 0.95 --monitor loss/val --epochs 100_000 --static_model --path $experiment

@@ -91,7 +91,9 @@ def main(args: Namespace, params: dict) -> None:
         del print_args["path"]
         logger.info(f"args = {print_args}")
 
-    if params.get("rnn_type") == "vanilla":
+    if args.static_model:
+        from src.StaticModel import Model
+    elif params.get("rnn_type") == "vanilla":
         from src.VanillaRNN import Model
     elif params.get("rnn_type") == "stacked":
         from src.StackedRNN import Model
@@ -102,9 +104,6 @@ def main(args: Namespace, params: dict) -> None:
         model = Model.load_from_checkpoint(args.ckpt_path, map_location="cpu")
     else:
         model = Model(**params)
-
-    if args.compile:
-        model = torch.compile(model, mode="reduce-overhead", dynamic=True)
 
     trainer.fit(model, datamodule)
 
