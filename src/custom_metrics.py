@@ -40,7 +40,7 @@ class PathAccuracy(_Loss):
     Note: Since some paths might be harder to predict, measuring mean squared distance for each path separately is sensible.
     """
 
-    def __init__(self, threshold: float = 1e-5) -> None:
+    def __init__(self, threshold: float) -> None:
         super().__init__()
         self.threshold = threshold
 

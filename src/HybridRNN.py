@@ -23,7 +23,7 @@ class Model(BaseRNN):
 
         # Create the linear layers
         self.lins = torch.nn.ModuleList([])
-        self.bn_lins = torch.nn.ModuleList([])
+        self.bn = torch.nn.ModuleList([])
 
         if self.num_lin_layers == 1:
             self.lins.append(torch.nn.Linear(self.hidden_sizes[-1], 2))
@@ -31,14 +31,14 @@ class Model(BaseRNN):
             self.lins.append(
                 torch.nn.Linear(self.hidden_sizes[-1], self.linear_sizes[0])
             )
-            self.bn_lins.append(torch.nn.BatchNorm1d(self.linear_sizes[0]))
+            self.bn.append(torch.nn.BatchNorm1d(self.linear_sizes[0]))
             for layer in range(self.num_lin_layers - 2):
                 self.lins.append(
                     torch.nn.Linear(
                         self.linear_sizes[layer], self.linear_sizes[layer + 1]
                     )
                 )
-                self.bn_lins.append(torch.nn.BatchNorm1d(self.linear_sizes[layer + 1]))
+                self.bn.append(torch.nn.BatchNorm1d(self.linear_sizes[layer + 1]))
             self.lins.append(torch.nn.Linear(self.linear_sizes[-1], 2))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -64,7 +64,7 @@ class Model(BaseRNN):
         for layer in range(self.num_lin_layers - 1):
             outputs = self.lins[layer](outputs)
             outputs = outputs.transpose(1, 2)
-            outputs = self.bn_lins[layer](outputs)
+            outputs = self.bn[layer](outputs)
             outputs = outputs.transpose(1, 2)
             outputs = self.nonlin_lin(outputs)
         outputs = self.lins[-1](outputs)

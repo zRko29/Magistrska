@@ -296,26 +296,37 @@ def import_parsed_args(script_name: str) -> Namespace:
         parser.add_argument(
             "--epochs",
             type=int,
-            default=1000,
-            help="Number of epochs to train the model for. (default: %(default)s)",
+            help="Number of epochs to train the model for.",
         )
         parser.add_argument(
-            "--monitor",
+            "--monitor_checkpoint",
             type=str,
             default="loss/train",
-            help="Metric to monitor for early stopping and checkpointing. (default: %(default)s)",
+            help="Monitor value for checkpointing. (default: loss/train)",
         )
         parser.add_argument(
-            "--mode",
+            "--mode_checkpoint",
             type=str,
             default="min",
-            help="Mode (min/max) for early stopping and checkpointing. (default: %(default)s)",
+            help="Mode for checkpointing. (default: min)",
+        )
+        parser.add_argument(
+            "--monitor_stopping",
+            type=str,
+            default="loss/train",
+            help="Monitor value for stopping. (default: loss/train)",
+        )
+        parser.add_argument(
+            "--mode_stopping",
+            type=str,
+            default="min",
+            help="Mode for stopping. (default: min)",
         )
         parser.add_argument(
             "--train_size",
             type=float,
-            default=0.8,
-            help="Fraction of data to use for training. (default: %(default)s)",
+            default=1.0,
+            help="Fraction of data to use for training. (default: 1.0)",
         )
         parser.add_argument(
             "--progress_bar",
@@ -324,35 +335,16 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Show progress bar during training. (default: False)",
         )
         parser.add_argument(
-            "--compile",
-            action="store_true",
-            help="Compile the model before training. (default: False)",
-        )
-        parser.add_argument(
             "--static_model",
             "-static",
             action="store_true",
             help="Use the static model. (default: False)",
         )
         parser.add_argument(
-            "--accelerator",
-            "-acc",
-            type=str,
-            default="auto",
-            choices=["auto", "cpu", "gpu"],
-            help="Specify the accelerator to use. (default: %(default)s)",
-        )
-        parser.add_argument(
             "--devices",
-            nargs="*",
             type=int,
-            help="List of devices to use. (default: %(default)s)",
-        )
-        parser.add_argument(
-            "--strategy",
-            type=str,
-            default="auto",
-            help="Specify the training strategy. (default: %(default)s)",
+            default=1,
+            help="Specify the number of devices to use. (default: 1)",
         )
         parser.add_argument(
             "--num_nodes",
@@ -361,7 +353,7 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Specify number of nodes to use. (default: 1)",
         )
         parser.add_argument(
-            "--ckpt_path",
+            "--checkpoint_path",
             "-ckpt",
             type=str,
             default=None,
@@ -372,26 +364,26 @@ def import_parsed_args(script_name: str) -> Namespace:
         parser.add_argument(
             "--max_good_loss",
             type=float,
-            default=5e-6,
-            help="Maximum loss value considered acceptable for selecting parameters. (default: %(default)s)",
+            default=1e-5,
+            help="Maximum loss value considered acceptable for selecting parameters. (default: 1e-5)",
         )
         parser.add_argument(
             "--min_good_samples",
             type=int,
-            default=3,
-            help="Minimum number of good samples required to start updating parameters. (default: %(default)s)",
+            default=4,
+            help="Minimum number of good samples required to start updating parameters. (default: 4)",
         )
         parser.add_argument(
             "--check_every_n_steps",
             type=int,
-            default=1,
-            help="Check for new good samples every n steps. Its suggested that check_every_n_steps < min_good_samples, so that results are less likely to converge to a local optimium. (default: %(default)s)",
+            default=3,
+            help="Check for new good samples every n steps. Its suggested that check_every_n_steps < min_good_samples, so that results are less likely to converge to a local optimium. (default: 3)",
         )
         parser.add_argument(
             "--current_step",
             type=int,
             default=1,
-            help="Current step of the training. (default: None)",
+            help="Current step of the training. (default: 1)",
         )
 
     return parser.parse_args()
