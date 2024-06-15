@@ -1,10 +1,10 @@
 # configurable
-init_points: 17
-steps: 40
+init_points: 40_000
+steps: 50
 K: 0.1
-sampling: random
+sampling: grid
 every_n_step: 1
-val_reg_preds: 2
+val_reg_preds: 10
 precision: 16-mixed
 shuffle_trajectories: True
 shuffle_within_batches: False

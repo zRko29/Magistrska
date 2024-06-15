@@ -37,12 +37,12 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             filename="model",
             save_on_train_epoch_end=True,
         ),
-        EarlyStopping(
-            monitor=args.monitor_stopping,
-            mode=args.mode_stopping,
-            min_delta=1e-7,
-            patience=1000,
-        ),
+        # EarlyStopping(
+        #     monitor=args.monitor_stopping,
+        #     mode=args.mode_stopping,
+        #     min_delta=1e-8,
+        #     patience=1000,
+        # ),
     ]
 
 

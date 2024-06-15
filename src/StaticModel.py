@@ -166,11 +166,14 @@ class Model(pl.LightningModule):
 
     @rank_zero_only
     def on_train_start(self):
-        self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": 1})
+        self._trainer.logger.log_hyperparams(self.hparams, {"best_acc": 0})
+        # self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": 1})
 
     def on_train_epoch_end(self):
-        best_loss = self._trainer.callbacks[-1].best_model_score or 1
-        self.log("best_loss", best_loss, sync_dist=True)
+        best_loss = self._trainer.callbacks[-1].best_model_score or 0
+        self.log("best_acc", best_loss, sync_dist=True)
+        # best_loss = self._trainer.callbacks[-1].best_model_score or 1
+        # self.log("best_loss", best_loss, sync_dist=True)
 
 
 class HybridRNNCell(nn.Module):
