@@ -3,7 +3,7 @@ init_points: 14_400
 steps: 200
 K: 0.1
 sampling: grid
-every_n_step: 1
+every_n_step: 2
 val_reg_preds: 50
 precision: 16-mixed
 shuffle_trajectories: True
