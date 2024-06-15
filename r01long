@@ -4,7 +4,7 @@
 #SBATCH --qos=valhala
 #SBATCH --nodes=1                       # number of nodes
 #SBATCH --ntasks-per-node=1             # number of cores
-#SBATCH --mem=24G                       # memory per node
+#SBATCH --mem=5G                        # memory per node
 #SBATCH --time=5-00:00                  # time (D-HH:MM)
 #SBATCH --output=slurm.%N.%j.out        # STDOUT
 #SBATCH --error=slurm.%N.%j.err         # STDERR
@@ -14,9 +14,8 @@ export NCCL_P2P_DISABLE=1
 # export NCCL_DEBUG=INFO
 
 source ~/.bashrc
-
 conda activate rnn_env
 
-experiment=logs/K=0.1/pretraining
+experiment=logs/cluster/K01/long_term/
 
-srun python trainer.py --num_nodes 1 --devices 0 --train_size 0.95 --monitor loss/val --epochs 100_000 --static_model --path $experiment
+srun python trainer.py --num_nodes 1 --devices 1 --train_size 0.95 --monitor_checkpoint acc/val --mode_checkpoint max --epochs 100_000 --static_model --path $experiment

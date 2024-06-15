@@ -12,7 +12,8 @@ nonlinearity_lin: tanh # nonlinearity for linear layers
 
 batch_size: 16
 seq_length: 5 # must not be too small compared to steps
-take_every_nth_step: 1 # useful for a lot of steps?
+every_n_step: 1 # useful for a lot of steps?
+val_reg_preds: 5
 loss: msd
 optimizer: adam
 lr: 1.0e-5
@@ -20,8 +21,8 @@ precision: 16-mixed
 
 shuffle_trajectories: True # makes sense for linear sampling
 shuffle_within_batches: False # shuffle sequences within batches (can increase stability)
+drop_last: true
 
-sequence_type: many-to-one # type of input sequences (many-to-one or many-to-many)
 rnn_type: vanilla # type of RNN (vanilla, stacked or hybrid)
 
 gridsearch:

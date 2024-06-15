@@ -1,0 +1,26 @@
+init_points: 5
+steps: 40
+K: 0.1
+sampling: random
+
+hidden_size: 128
+linear_size: 128
+num_rnn_layers: 2
+num_lin_layers: 2
+nonlinearity_hidden: tanh
+nonlinearity_lin: tanh
+
+batch_size: 32
+seq_length: 20
+every_n_step: 1
+val_reg_preds: 5
+loss: msd
+optimizer: adam
+lr: 1.0e-5
+precision: 16-mixed
+
+shuffle_trajectories: True
+shuffle_within_batches: False
+drop_last: true
+
+rnn_type: hybrid

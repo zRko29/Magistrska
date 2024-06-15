@@ -2,10 +2,14 @@ import torch
 import torch.nn as nn
 import pytorch_lightning as pl
 from pytorch_lightning.utilities import rank_zero_only
+from pytorch_lightning.utilities.model_summary import ModelSummary
 
 import pyprind
 
-from src.custom_metrics import MSDLoss, PathAccuracy
+try:
+    from src.custom_metrics import MSDLoss, PathAccuracy
+except ModuleNotFoundError:
+    from custom_metrics import MSDLoss, PathAccuracy
 
 
 class Model(pl.LightningModule):
@@ -27,15 +31,16 @@ class Model(pl.LightningModule):
     lr: 2.0e-05
 
     loss: msd
-    sequence_type: many-to-one
     """
 
     def __init__(self, **params):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
+        self.example_input_array: torch.Tensor = torch.randn(256, 20, 2)
+
         self.loss = MSDLoss()
-        self.accuracy = PathAccuracy(threshold=1.0e-5)
+        self.accuracy = PathAccuracy(threshold=1.0e-4)
 
         # Create the RNN layers
         # self.rnn1 = nn.RNNCell(2, 256)
@@ -46,31 +51,36 @@ class Model(pl.LightningModule):
         self.rnn3 = torch.compile(HybridRNNCell(), dynamic=False)
 
         # Create the linear layers
-        # self.lins1 = nn.Linear(256, 256)
-        # self.bn_lins1 = nn.BatchNorm1d(256)
-        # self.lins2 = nn.Linear(256, 256)
-        # self.bn_lins2 = nn.BatchNorm1d(256)
-        # self.lins3 = nn.Linear(256, 2)
-        self.lins1 = torch.compile(nn.Linear(256, 256), dynamic=False)
-        self.bn_lins1 = torch.compile(nn.BatchNorm1d(256), dynamic=False)
-        self.lins2 = torch.compile(nn.Linear(256, 256), dynamic=False)
-        self.bn_lins2 = torch.compile(nn.BatchNorm1d(256), dynamic=False)
-        self.lins3 = torch.compile(nn.Linear(256, 2), dynamic=False)
+        # self.lin1 = nn.Linear(256, 256)
+        # self.bn1 = nn.BatchNorm1d(256)
+        # self.lin2 = nn.Linear(256, 256)
+        # self.bn2 = nn.BatchNorm1d(256)
+        # self.lin3 = nn.Linear(256, 2)
+        self.lin1 = torch.compile(nn.Linear(256, 256), dynamic=False)
+        self.bn1 = torch.compile(nn.BatchNorm1d(256), dynamic=False)
+        self.lin2 = torch.compile(nn.Linear(256, 256), dynamic=False)
+        self.bn2 = torch.compile(nn.BatchNorm1d(256), dynamic=False)
+        self.lin3 = torch.compile(nn.Linear(256, 2), dynamic=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)
         x = x.transpose(0, 1)
 
-        h_ts1 = torch.zeros(256, 256, device=self.device)
-        h_ts2 = torch.zeros(256, 256, device=self.device)
-        h_ts3 = torch.zeros(256, 256, device=self.device)
+        # different during inference
+        # x.shape = (sequence length, batch size, features)
+        # print(x.shape)
+        batch_size = 256
+
+        h_ts1 = torch.zeros(batch_size, 256, device=self.device)
+        h_ts2 = torch.zeros(batch_size, 256, device=self.device)
+        h_ts3 = torch.zeros(batch_size, 256, device=self.device)
 
         outputs = []
         # rnn layers
         for t in range(20):
             h_ts1 = self.rnn1(x[t], h_ts1)
             h_ts2 = self.rnn2(x[t], h_ts2, h_ts1)
-            h_ts3 = self.rnn2(x[t], h_ts3, h_ts2)
+            h_ts3 = self.rnn3(x[t], h_ts3, h_ts2)
             outputs.append(h_ts3)
 
         outputs = torch.stack(outputs)
@@ -78,20 +88,20 @@ class Model(pl.LightningModule):
 
         # linear layers
         # 1
-        outputs = self.lins1(outputs).transpose(1, 2)
-        outputs = self.bn_lins1(outputs).transpose(1, 2)
+        outputs = self.lin1(outputs).transpose(1, 2)
+        outputs = self.bn1(outputs).transpose(1, 2)
         outputs = torch.tanh(outputs)
         # 2
-        outputs = self.lins2(outputs).transpose(1, 2)
-        outputs = self.bn_lins2(outputs).transpose(1, 2)
+        outputs = self.lin2(outputs).transpose(1, 2)
+        outputs = self.bn2(outputs).transpose(1, 2)
         outputs = torch.tanh(outputs)
         # 3
-        outputs = self.lins3(outputs)
+        outputs = self.lin3(outputs)
 
         return outputs
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
-        return torch.optim.Adam(self.parameters(), lr=2.0e-5, amsgrad=True)
+        return torch.optim.Adam(self.parameters(), lr=1.0e-5, amsgrad=True)
 
     def training_step(self, batch, _) -> torch.Tensor:
         inputs, targets = batch
@@ -100,21 +110,19 @@ class Model(pl.LightningModule):
         predicted = predicted[:, -1:]
 
         loss = self.loss(predicted, targets)
-        accuracy = self.accuracy(predicted, targets)
 
-        self.log_dict(
-            {"loss/train": loss, "acc/train": accuracy},
-            on_epoch=True,
-            prog_bar=True,
-            on_step=False,
-        )
+        self.log_dict({"loss/train": loss}, on_epoch=True, prog_bar=True, on_step=False)
         return loss
 
     def validation_step(self, batch, _) -> torch.Tensor:
         inputs, targets = batch
 
-        predicted = self(inputs)
-        predicted = predicted[:, -1:]
+        for i in range(10):
+            predicted_value = self(inputs[:, i:])
+            predicted_value = predicted_value[:, -1:]
+            inputs = torch.cat([inputs, predicted_value], axis=1)
+
+        predicted = inputs[:, 20:]
 
         loss = self.loss(predicted, targets)
         accuracy = self.accuracy(predicted, targets)
@@ -158,11 +166,14 @@ class Model(pl.LightningModule):
 
     @rank_zero_only
     def on_train_start(self):
-        self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": 1})
+        self._trainer.logger.log_hyperparams(self.hparams, {"best_acc": 0})
+        # self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": 1})
 
     def on_train_epoch_end(self):
-        best_loss = self._trainer.callbacks[-1].best_model_score or 1
-        self.log("best_loss", best_loss, sync_dist=True)
+        best_loss = self._trainer.callbacks[-1].best_model_score or 0
+        self.log("best_acc", best_loss, sync_dist=True)
+        # best_loss = self._trainer.callbacks[-1].best_model_score or 1
+        # self.log("best_loss", best_loss, sync_dist=True)
 
 
 class HybridRNNCell(nn.Module):
@@ -202,8 +213,6 @@ class HybridRNNCell(nn.Module):
 
 
 if __name__ == "__main__":
-    from custom_metrics import MSDLoss, PathAccuracy
-
     model = Model()
-    compiled_model = torch.compile(model)
-    print(compiled_model(torch.randn(256, 20, 2)))
+    summary = ModelSummary(model, max_depth=-1)
+    print(summary)

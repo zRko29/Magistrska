@@ -1,0 +1,25 @@
+# configurable
+init_points: 14_400
+steps: 200
+K: 0.1
+sampling: grid
+every_n_step: 1
+val_reg_preds: 50
+precision: 16-mixed
+shuffle_trajectories: True
+shuffle_within_batches: False
+
+# static
+hidden_size: 256
+linear_size: 256
+num_rnn_layers: 3
+num_lin_layers: 3
+nonlinearity_hidden: tanh
+nonlinearity_lin: tanh
+batch_size: 256
+seq_length: 20
+loss: msd
+optimizer: adam
+lr: 1.0e-5
+drop_last: true
+rnn_type: hybrid

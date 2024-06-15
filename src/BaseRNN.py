@@ -2,7 +2,8 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.utilities import rank_zero_only
 
-from typing import Tuple, List
+
+from typing import List
 import pyprind
 
 from src.custom_metrics import MSDLoss, PathAccuracy
@@ -17,11 +18,10 @@ class BaseRNN(pl.LightningModule):
         self.nonlin_lin = self.configure_non_linearity(params.get("nonlinearity_lin"))
 
         self.loss = self.configure_loss(params.get("loss"))
-        self.accuracy = self.configure_accuracy("path_accuracy", 1.0e-5)
+        self.accuracy = self.configure_accuracy("path_accuracy", 1.0e-4)
 
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
-        self.sequence_type: str = params.get("sequence_type")
         self.lr: float = params.get("lr")
         self.optimizer: str = params.get("optimizer")
 
@@ -90,31 +90,29 @@ class BaseRNN(pl.LightningModule):
         inputs, targets = batch
 
         predicted = self(inputs)
+        predicted = predicted[:, -1:]
 
-        if self.sequence_type == "many-to-one":
-            predicted = predicted[:, -1:]
+        loss = loss = self.loss(predicted, targets)
 
-        loss, accuracy = self.compute_scores(predicted, targets)
-
-        self.log_dict(
-            {"loss/train": loss, "acc/train": accuracy},
-            on_epoch=True,
-            prog_bar=True,
-            on_step=False,
-        )
+        self.log_dict({"loss/train": loss}, on_epoch=True, prog_bar=True, on_step=False)
         return loss
 
     def validation_step(self, batch, _) -> torch.Tensor:
         inputs: torch.Tensor
         targets: torch.Tensor
         inputs, targets = batch
+        autoregression_seed = inputs.shape[1]
+        autoregression_steps = targets.shape[1]
 
-        predicted = self(inputs)
+        for i in range(autoregression_steps):
+            predicted_value = self(inputs[:, i:])
+            predicted_value = predicted_value[:, -1:]
+            inputs = torch.cat([inputs, predicted_value], axis=1)
 
-        if self.sequence_type == "many-to-one":
-            predicted = predicted[:, -1:]
+        predicted = inputs[:, autoregression_seed:]
 
-        loss, accuracy = self.compute_scores(predicted, targets)
+        loss = self.loss(predicted, targets)
+        accuracy = self.accuracy(predicted, targets)
 
         self.log_dict(
             {"loss/val": loss, "acc/val": accuracy},
@@ -136,7 +134,6 @@ class BaseRNN(pl.LightningModule):
 
         for i in range(batch.shape[1] - self.regression_seed):
             predicted_value = self(predicted[:, i:])
-            # even with many-to-many training
             predicted_value = predicted_value[:, -1:]
             predicted = torch.cat([predicted, predicted_value], axis=1)
 
@@ -144,7 +141,8 @@ class BaseRNN(pl.LightningModule):
 
         predicted = predicted[:, self.regression_seed :]
 
-        loss, accuracy = self.compute_scores(predicted, targets)
+        loss = self.loss(predicted, targets)
+        accuracy = self.accuracy(predicted, targets)
 
         return {
             "predicted": predicted,
@@ -152,13 +150,6 @@ class BaseRNN(pl.LightningModule):
             "loss": loss,
             "accuracy": accuracy,
         }
-
-    def compute_scores(
-        self, predicted: torch.Tensor, targets: torch.Tensor
-    ) -> Tuple[torch.Tensor]:
-        loss = self.loss(predicted, targets)
-        accuracy = self.accuracy(predicted, targets)
-        return loss, accuracy
 
     @rank_zero_only
     def on_train_start(self):
