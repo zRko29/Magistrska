@@ -62,20 +62,33 @@ class Data(pl.LightningDataModule):
         else:
             self.validation_pairs = np.array([])
 
-        if (
-            len(self.train_pairs) < self.batch_size
-            or len(self.validation_pairs) < self.batch_size
-        ):
-            warnings.warn(
-                "Batch size is larger than the number of training or validation pairs. Is drop_last set to True?"
-            )
+        self.print_info(train_size)
 
-        print(
-            f"{len(self.train_pairs)} training pairs of shape ({self.train_pairs[0][0].shape[0]}, {self.train_pairs[0][1].shape[0]})."
-        )
-        print(
-            f"{len(self.validation_pairs)} validation pairs of shape ({self.validation_pairs[0][0].shape[0]}, {self.validation_pairs[0][1].shape[0]})."
-        )
+    def print_info(self, train_size: float) -> None:
+        if train_size < 1.0:
+            if (
+                len(self.train_pairs) < self.batch_size
+                or len(self.validation_pairs) < self.batch_size
+            ):
+                warnings.warn(
+                    "Batch size is larger than the number of training or validation pairs. Is drop_last set to True?"
+                )
+
+            print(
+                f"{len(self.train_pairs)} training pairs of shape ({self.train_pairs[0][0].shape[0]}, {self.train_pairs[0][1].shape[0]})."
+            )
+            print(
+                f"{len(self.validation_pairs)} validation pairs of shape ({self.validation_pairs[0][0].shape[0]}, {self.validation_pairs[0][1].shape[0]})."
+            )
+        else:
+            if len(self.train_pairs) < self.batch_size:
+                warnings.warn(
+                    "Batch size is larger than the number of training pairs. Is drop_last set to True?"
+                )
+
+            print(
+                f"{len(self.train_pairs)} training pairs of shape ({self.train_pairs[0][0].shape[0]}, {self.train_pairs[0][1].shape[0]})."
+            )
 
     def _make_sequences(self, data: np.ndarray, val_reg_preds: int) -> np.ndarray:
         init_points: int
