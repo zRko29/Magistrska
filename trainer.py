@@ -7,7 +7,11 @@ if TYPE_CHECKING:
 from pytorch_lightning import Trainer
 from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.callbacks import (
+    EarlyStopping,
+    ModelCheckpoint,
+    DeviceStatsMonitor,
+)
 
 from src.mapping_helper import StandardMap
 from src.data_helper import Data
@@ -37,6 +41,7 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             filename="model",
             save_on_train_epoch_end=True,
         ),
+        DeviceStatsMonitor(),
         # EarlyStopping(
         #     monitor=args.monitor_stopping,
         #     mode=args.mode_stopping,
@@ -74,6 +79,7 @@ def main(args: Namespace, params: dict) -> None:
         enable_progress_bar=args.progress_bar,
         devices=args.devices,
         num_nodes=args.num_nodes,
+        profiler="simple",
     )
 
     if trainer.is_global_zero:

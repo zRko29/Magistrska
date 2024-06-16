@@ -1,5 +1,6 @@
 # configurable
-init_points: 62500
+# init_points: 62500
+init_points: 10000
 steps: 200
 K: 0.1
 sampling: grid
