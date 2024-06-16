@@ -8,11 +8,14 @@ class Model(BaseRNN):
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
-        for layer in range(self.num_rnn_layers):
+        self.rnns.append(
+            torch.nn.RNNCell(2, self.hidden_sizes[0], nonlinearity=self.nonlin_hidden)
+        )
+        for layer in range(self.num_rnn_layers - 1):
             self.rnns.append(
                 torch.nn.RNNCell(
-                    2,
                     self.hidden_sizes[layer],
+                    self.hidden_sizes[layer + 1],
                     nonlinearity=self.nonlin_hidden,
                 )
             )
@@ -48,8 +51,9 @@ class Model(BaseRNN):
         outputs = []
         # rnn layers
         for t in range(seq_len):
-            for layer in range(self.num_rnn_layers):
-                h_ts[layer] = self.rnns[layer](x[t], h_ts[layer])
+            h_ts[0] = self.rnns[0](x[t], h_ts[0])
+            for layer in range(1, self.num_rnn_layers):
+                h_ts[layer] = self.rnns[layer](h_ts[layer - 1], h_ts[layer])
             outputs.append(h_ts[-1])
 
         outputs = torch.stack(outputs)
