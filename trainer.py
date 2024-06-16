@@ -10,7 +10,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import (
     EarlyStopping,
     ModelCheckpoint,
-    DeviceStatsMonitor,
 )
 
 from src.mapping_helper import StandardMap
@@ -41,7 +40,6 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             filename="model",
             save_on_train_epoch_end=True,
         ),
-        DeviceStatsMonitor(),
         # EarlyStopping(
         #     monitor=args.monitor_stopping,
         #     mode=args.mode_stopping,
