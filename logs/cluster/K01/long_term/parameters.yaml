@@ -1,10 +1,9 @@
 # configurable
-init_points: 14_400
+init_points: 62500
 steps: 200
 K: 0.1
 sampling: grid
-every_n_step: 2
-val_reg_preds: 50
+every_n_step: 1
 precision: 16-mixed
 shuffle_trajectories: True
 shuffle_within_batches: False
@@ -16,8 +15,9 @@ num_rnn_layers: 3
 num_lin_layers: 3
 nonlinearity_hidden: tanh
 nonlinearity_lin: tanh
+val_reg_preds: 80
 batch_size: 256
-seq_length: 20
+seq_length: 100
 loss: msd
 optimizer: adam
 lr: 1.0e-5
