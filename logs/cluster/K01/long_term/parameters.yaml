@@ -22,4 +22,4 @@ loss: msd
 optimizer: adam
 lr: 1.0e-5
 drop_last: true
-rnn_type: hybrid
+rnn_type: MGU

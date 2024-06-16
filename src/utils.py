@@ -338,7 +338,13 @@ def import_parsed_args(script_name: str) -> Namespace:
             "--static_model",
             "-static",
             action="store_true",
-            help="Use the static model. (default: False)",
+            help="Use the hybrid static model. (default: False)",
+        )
+        parser.add_argument(
+            "--static_model2",
+            "-static2",
+            action="store_true",
+            help="Use the MGU static model. (default: False)",
         )
         parser.add_argument(
             "--devices",

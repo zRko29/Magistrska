@@ -92,6 +92,8 @@ def main(args: Namespace, params: dict) -> None:
 def get_model(args: Namespace, params: Dict) -> None:
     if args.static_model:
         from src.StaticModel import Model
+    elif args.static_model2:
+        from src.StaticModel2 import Model
     elif params.get("rnn_type") == "vanilla":
         from src.VanillaRNN import Model
     elif params.get("rnn_type") == "hybrid":

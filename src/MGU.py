@@ -72,8 +72,6 @@ class Model(BaseRNN):
 class MinimalGatedCell(nn.Module):
     def __init__(self, input_size, hidden_size):
         super(MinimalGatedCell, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
 
         # Parameters for forget gate
         self.weight_fx = nn.Parameter(torch.Tensor(hidden_size, input_size))
@@ -96,19 +94,19 @@ class MinimalGatedCell(nn.Module):
         nn.init.kaiming_uniform_(self.weight_hf)
         nn.init.zeros_(self.bias_h)
 
-    def forward(self, x, h_prev):
+    def forward(self, h1, h2):
         # Compute forget gate
         f_t = torch.sigmoid(
-            F.linear(x, self.weight_fx, self.bias_f) + F.linear(h_prev, self.weight_fh)
+            F.linear(h1, self.weight_fx, self.bias_f) + F.linear(h2, self.weight_fh)
         )
 
         # Compute candidate activation
         h_hat_t = torch.tanh(
-            F.linear(x, self.weight_hx, self.bias_h)
-            + F.linear(f_t * h_prev, self.weight_hf)
+            F.linear(h1, self.weight_hx, self.bias_h)
+            + F.linear(f_t * h2, self.weight_hf)
         )
 
         # Compute output
-        h_t = (1 - f_t) * h_prev + f_t * h_hat_t
+        h_t = (1 - f_t) * h2 + f_t * h_hat_t
 
         return h_t
