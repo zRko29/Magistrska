@@ -14,23 +14,7 @@ except ModuleNotFoundError:
 
 class Model(pl.LightningModule):
     """
-    The goal is to make model fully compilable. This model uses specifically these hyperparameters:
-
-    hidden_size: 256
-    linear_size: 256
-    nonlinearity_hidden: tanh
-    nonlinearity_lin: tanh
-    num_lin_layers: 3
-    num_rnn_layers: 3
-    rnn_type: hybrid
-
-    batch_size: 256
-    seq_length: 20
-
-    optimizer: adam
-    lr: 2.0e-05
-
-    loss: msd
+    The goal is to make model fully compilable.
     """
 
     def __init__(self, **params):
@@ -69,7 +53,7 @@ class Model(pl.LightningModule):
         # different during inference
         # x.shape = (sequence length, batch size, features)
         # print(x.shape)
-        batch_size = 256
+        batch_size = 300
 
         h_ts1 = torch.zeros(batch_size, 256, device=self.device)
         h_ts2 = torch.zeros(batch_size, 256, device=self.device)
@@ -117,7 +101,7 @@ class Model(pl.LightningModule):
     def validation_step(self, batch, _) -> torch.Tensor:
         inputs, targets = batch
 
-        for i in range(10):
+        for i in range(50):
             predicted_value = self(inputs[:, i:])
             predicted_value = predicted_value[:, -1:]
             inputs = torch.cat([inputs, predicted_value], axis=1)

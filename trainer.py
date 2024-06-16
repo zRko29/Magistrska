@@ -94,10 +94,10 @@ def get_model(args: Namespace, params: Dict) -> None:
         from src.StaticModel import Model
     elif params.get("rnn_type") == "vanilla":
         from src.VanillaRNN import Model
-    elif params.get("rnn_type") == "stacked":
-        from src.StackedRNN import Model
     elif params.get("rnn_type") == "hybrid":
         from src.HybridRNN import Model
+    elif params.get("rnn_type") == "MGU":
+        from src.MGU import Model
 
     if args.checkpoint_path:
         model = Model.load_from_checkpoint(args.checkpoint_path, map_location="cpu")

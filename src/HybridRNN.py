@@ -1,4 +1,6 @@
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from src.BaseRNN import BaseRNN
 
 
@@ -72,43 +74,42 @@ class Model(BaseRNN):
         return outputs
 
 
-class HybridRNNCell(torch.nn.Module):
+class HybridRNNCell(nn.Module):
     def __init__(self, input_size, hidden_size1, hidden_size2, nonlinearity="relu"):
         super(HybridRNNCell, self).__init__()
 
-        self.weight_ih = torch.nn.Parameter(torch.Tensor(hidden_size1, input_size))
-        self.bias_ih = torch.nn.Parameter(torch.Tensor(hidden_size1))
+        self.weight_ih = nn.Parameter(torch.Tensor(hidden_size1, input_size))
+        self.bias_ih = nn.Parameter(torch.Tensor(hidden_size1))
 
         # hidden state at time t-1
-        self.weight_hh1 = torch.nn.Parameter(torch.Tensor(hidden_size1, hidden_size1))
-        self.bias_hh1 = torch.nn.Parameter(torch.Tensor(hidden_size1))
+        self.weight_hh1 = nn.Parameter(torch.Tensor(hidden_size1, hidden_size1))
+        self.bias_hh1 = nn.Parameter(torch.Tensor(hidden_size1))
 
         # hidden state at previous layer
-        self.weight_hh2 = torch.nn.Parameter(torch.Tensor(hidden_size1, hidden_size2))
-        self.bias_hh2 = torch.nn.Parameter(torch.Tensor(hidden_size1))
+        self.weight_hh2 = nn.Parameter(torch.Tensor(hidden_size1, hidden_size2))
+        self.bias_hh2 = nn.Parameter(torch.Tensor(hidden_size1))
 
         if nonlinearity == "tanh":
             self.nonlinearity = torch.tanh
         elif nonlinearity == "relu":
-            self.nonlinearity = torch.nn.functional.relu
+            self.nonlinearity = F.relu
 
         self.reset_parameters()
 
     def reset_parameters(self):
-        torch.nn.init.kaiming_uniform_(self.weight_ih)
-        torch.nn.init.zeros_(self.bias_ih)
+        nn.init.kaiming_uniform_(self.weight_ih)
+        nn.init.zeros_(self.bias_ih)
 
-        torch.nn.init.kaiming_uniform_(self.weight_hh1)
-        torch.nn.init.zeros_(self.bias_hh1)
+        nn.init.kaiming_uniform_(self.weight_hh1)
+        nn.init.zeros_(self.bias_hh1)
 
-        torch.nn.init.kaiming_uniform_(self.weight_hh2)
-        torch.nn.init.zeros_(self.bias_hh2)
+        nn.init.kaiming_uniform_(self.weight_hh2)
+        nn.init.zeros_(self.bias_hh2)
 
-    # @torch.jit.script
     def forward(self, input, hidden1, hidden2):
         h_t = self.nonlinearity(
-            torch.nn.functional.linear(input, self.weight_ih, self.bias_ih)
-            + torch.nn.functional.linear(hidden1, self.weight_hh1, self.bias_hh1)
-            + torch.nn.functional.linear(hidden2, self.weight_hh2, self.bias_hh2)
+            F.linear(input, self.weight_ih, self.bias_ih)
+            + F.linear(hidden1, self.weight_hh1, self.bias_hh1)
+            + F.linear(hidden2, self.weight_hh2, self.bias_hh2)
         )
         return h_t

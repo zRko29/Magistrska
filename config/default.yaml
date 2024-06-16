@@ -23,7 +23,7 @@ shuffle_trajectories: True # makes sense for linear sampling
 shuffle_within_batches: False # shuffle sequences within batches (can increase stability)
 drop_last: true
 
-rnn_type: vanilla # type of RNN (vanilla, stacked or hybrid)
+rnn_type: vanilla # type of RNN (vanilla, hybrid or MGU)
 
 gridsearch:
   batch_size: { lower: 32, upper: 512, type: int }
