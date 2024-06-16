@@ -1,7 +1,6 @@
 # configurable
-# init_points: 62500
-init_points: 8000
-steps: 120
+init_points: 48400
+steps: 200
 K: 0.1
 sampling: grid
 every_n_step: 1
@@ -16,11 +15,10 @@ num_rnn_layers: 3
 num_lin_layers: 3
 nonlinearity_hidden: tanh
 nonlinearity_lin: tanh
-val_reg_preds: 2
-batch_size: 256
+val_reg_preds: 80
+batch_size: 512
 seq_length: 100
 loss: msd
 optimizer: adam
 lr: 1.0e-5
 drop_last: true
-rnn_type: MGU

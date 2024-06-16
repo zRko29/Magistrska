@@ -22,7 +22,7 @@ class Model(pl.LightningModule):
         self.save_hyperparameters()
 
         self.seq_length = 100
-        self.batch_size = 256
+        self.batch_size = 512
         self.hidden_size = 256
         self.linear_size = 256
         self.val_reg_preds = 80
