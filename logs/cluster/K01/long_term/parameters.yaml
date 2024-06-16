@@ -1,7 +1,7 @@
 # configurable
 # init_points: 62500
-init_points: 10000
-steps: 200
+init_points: 8000
+steps: 120
 K: 0.1
 sampling: grid
 every_n_step: 1
@@ -16,7 +16,7 @@ num_rnn_layers: 3
 num_lin_layers: 3
 nonlinearity_hidden: tanh
 nonlinearity_lin: tanh
-val_reg_preds: 80
+val_reg_preds: 2
 batch_size: 256
 seq_length: 100
 loss: msd
