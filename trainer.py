@@ -72,7 +72,7 @@ def main(args: Namespace, params: dict) -> None:
 
     trainer = Trainer(
         max_epochs=args.epochs,
-        precision="16-mixed",
+        precision=params.get("precision"),
         logger=tb_logger,
         callbacks=get_callbacks(args, save_path),
         deterministic=True,
