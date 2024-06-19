@@ -22,7 +22,7 @@ class Model(pl.LightningModule):
         self.save_hyperparameters()
 
         self.seq_length = 100
-        self.batch_size = 512
+        self.batch_size = 200
         self.hidden_size = 256
         self.linear_size = 256
         self.val_reg_preds = 80
@@ -48,11 +48,9 @@ class Model(pl.LightningModule):
         self.lin1 = torch.compile(
             nn.Linear(self.hidden_size, self.linear_size), dynamic=False
         )
-        self.bn1 = torch.compile(nn.BatchNorm1d(self.linear_size), dynamic=False)
         self.lin2 = torch.compile(
             nn.Linear(self.linear_size, self.linear_size), dynamic=False
         )
-        self.bn2 = torch.compile(nn.BatchNorm1d(self.linear_size), dynamic=False)
         self.lin3 = torch.compile(nn.Linear(self.linear_size, 2), dynamic=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -75,16 +73,12 @@ class Model(pl.LightningModule):
         outputs = outputs.transpose(0, 1)
 
         # linear layers
-        # 1
-        outputs = self.lin1(outputs).transpose(1, 2)
-        outputs = self.bn1(outputs).transpose(1, 2)
-        outputs = torch.tanh(outputs)
-        # 2
-        outputs = self.lin2(outputs).transpose(1, 2)
-        outputs = self.bn2(outputs).transpose(1, 2)
-        outputs = torch.tanh(outputs)
-        # 3
+        outputs = self.lin1(outputs)
+        outputs = F.tanh(outputs)
+        outputs = self.lin2(outputs)
+        outputs = F.tanh(outputs)
         outputs = self.lin3(outputs)
+        outputs = F.tanh(outputs)
 
         return outputs
 
@@ -187,12 +181,16 @@ class MinimalGatedCell(nn.Module):
         nn.init.zeros_(self.bias_h)
 
     def forward(self, h1, h2):
-        f_t = torch.sigmoid(
-            F.linear(h1, self.weight_fx, self.bias_f) + F.linear(h2, self.weight_fh)
+        f_t = F.linear(h1, self.weight_fx, self.bias_f) + F.linear(h2, self.weight_fh)
+
+        f_t = F.sigmoid(f_t)
+
+        h_hat_t = F.linear(h1, self.weight_hx, self.bias_h) + F.linear(
+            f_t * h2, self.weight_hf
         )
-        h_hat_t = torch.tanh(
-            F.linear(h1, self.weight_hx, self.bias_h)
-            + F.linear(f_t * h2, self.weight_hf)
-        )
+
+        h_hat_t = F.tanh(h_hat_t)
+
         h_t = (1 - f_t) * h2 + f_t * h_hat_t
+
         return h_t

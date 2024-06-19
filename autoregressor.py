@@ -26,7 +26,8 @@ pl.seed_everything(42, workers=True)
 
 def main(args: Namespace):
     version: Optional[int] = args.version or None
-    directory_path: str = "logs/cluster/K01/short_term"
+    directory_path: str = "logs/cluster/K01/long_term"
+    # directory_path: str = "logs/cluster/K01/short_term"
     # directory_path: str = "logs/tests"
 
     folders = get_inference_folders(directory_path, version)
@@ -38,8 +39,8 @@ def main(args: Namespace):
         params: dict = read_yaml(params_path)
 
         params.update({"sampling": "random"})
-        params.update({"steps": 30})
-        params.update({"init_points": 300})
+        params.update({"steps": 180})
+        params.update({"init_points": 200})
 
         maps: List[StandardMap] = [
             StandardMap(seed=42, params=params),
@@ -103,12 +104,14 @@ def inference(
         from src.StaticModel import Model
     elif args.static_model2:
         from src.StaticModel2 import Model
-    elif params.get("rnn_type") == "vanilla":
-        from src.VanillaRNN import Model
-    elif params.get("rnn_type") == "hybrid":
-        from src.HybridRNN import Model
-    elif params.get("rnn_type") == "MGU":
-        from src.MGU import Model
+    elif params.get("rnn_type") == "vanillarnn":
+        from src.VanillaRNN import Vanilla as Model
+    elif params.get("rnn_type") == "hybridrnn":
+        from src.HybridRNN import Hybrid as Model
+    elif params.get("rnn_type") == "mgu":
+        from src.MGU import MGU as Model
+    elif params.get("rnn_type") == "resrnn":
+        from src.ResRNN import ResRNN as Model
 
     model_path: str = os.path.join(log_path, f"model.ckpt")
     model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")

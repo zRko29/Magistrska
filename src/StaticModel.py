@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import pytorch_lightning as pl
 from pytorch_lightning.utilities import rank_zero_only
 from pytorch_lightning.utilities.model_summary import ModelSummary
@@ -17,16 +18,24 @@ class Model(pl.LightningModule):
     The goal is to make model fully compilable.
     """
 
-    def __init__(self, **params):
+    def __init__(
+        self,
+        seq_length: int = 100,
+        batch_size: int = 200,
+        hidden_size: int = 256,
+        linear_size: int = 256,
+        val_reg_preds: int = 80,
+        lr: float = 1.0e-5,
+    ):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
-        self.seq_length = 100
-        self.batch_size = 512
-        self.hidden_size = 256
-        self.linear_size = 256
-        self.val_reg_preds = 80
-        self.lr = 1.0e-5
+        self.seq_length = seq_length
+        self.batch_size = batch_size
+        self.hidden_size = hidden_size
+        self.linear_size = linear_size
+        self.val_reg_preds = val_reg_preds
+        self.lr = lr
 
         self.example_input_array: torch.Tensor = torch.randn(
             self.batch_size, self.seq_length, 2
@@ -45,18 +54,14 @@ class Model(pl.LightningModule):
 
         # Create the linear layers
         # self.lin1 = nn.Linear(self.hidden_size, self.linear_size)
-        # self.bn1 = nn.BatchNorm1d(self.linear_size)
         # self.lin2 = nn.Linear(self.linear_size, self.linear_size)
-        # self.bn2 = nn.BatchNorm1d(self.linear_size)
         # self.lin3 = nn.Linear(self.linear_size, 2)
         self.lin1 = torch.compile(
             nn.Linear(self.hidden_size, self.linear_size), dynamic=False
         )
-        self.bn1 = torch.compile(nn.BatchNorm1d(self.linear_size), dynamic=False)
         self.lin2 = torch.compile(
             nn.Linear(self.linear_size, self.linear_size), dynamic=False
         )
-        self.bn2 = torch.compile(nn.BatchNorm1d(self.linear_size), dynamic=False)
         self.lin3 = torch.compile(nn.Linear(self.linear_size, 2), dynamic=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -79,16 +84,12 @@ class Model(pl.LightningModule):
         outputs = outputs.transpose(0, 1)
 
         # linear layers
-        # 1
-        outputs = self.lin1(outputs).transpose(1, 2)
-        outputs = self.bn1(outputs).transpose(1, 2)
-        outputs = torch.tanh(outputs)
-        # 2
-        outputs = self.lin2(outputs).transpose(1, 2)
-        outputs = self.bn2(outputs).transpose(1, 2)
-        outputs = torch.tanh(outputs)
-        # 3
+        outputs = self.lin1(outputs)
+        outputs = F.tanh(outputs)
+        outputs = self.lin2(outputs)
+        outputs = F.tanh(outputs)
         outputs = self.lin3(outputs)
+        outputs = F.tanh(outputs)
 
         return outputs
 
@@ -196,11 +197,12 @@ class HybridRNNCell(nn.Module):
         nn.init.zeros_(self.bias_hh2)
 
     def forward(self, input, hidden1, hidden2):
-        h_t = torch.tanh(
+        h_t = (
             nn.functional.linear(input, self.weight_ih, self.bias_ih)
             + nn.functional.linear(hidden1, self.weight_hh1, self.bias_hh1)
             + nn.functional.linear(hidden2, self.weight_hh2, self.bias_hh2)
         )
+        h_t = F.tanh(h_t)
         return h_t
 
 

@@ -1,17 +1,16 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from src.BaseRNN import BaseRNN
+from src.BaseRNN import BaseRNN, HybridRNNCell
 
 
-class Model(BaseRNN):
+class Hybrid(BaseRNN):
     def __init__(self, **params):
-        super(Model, self).__init__(**params)
+        super(Hybrid, self).__init__(**params)
 
-        # Create the RNN layers
-        self.rnns = torch.nn.ModuleList([])
+        # Create the rnn layers
+        self.rnns = nn.ModuleList([])
         self.rnns.append(
-            torch.nn.RNNCell(2, self.hidden_sizes[0], nonlinearity=self.nonlin_hidden)
+            nn.RNNCell(2, self.hidden_sizes[0], nonlinearity=self.nonlin_hidden)
         )
         for layer in range(1, self.num_rnn_layers):
             self.rnns.append(
@@ -23,25 +22,7 @@ class Model(BaseRNN):
                 )
             )
 
-        # Create the linear layers
-        self.lins = torch.nn.ModuleList([])
-        self.bn = torch.nn.ModuleList([])
-
-        if self.num_lin_layers == 1:
-            self.lins.append(torch.nn.Linear(self.hidden_sizes[-1], 2))
-        elif self.num_lin_layers > 1:
-            self.lins.append(
-                torch.nn.Linear(self.hidden_sizes[-1], self.linear_sizes[0])
-            )
-            self.bn.append(torch.nn.BatchNorm1d(self.linear_sizes[0]))
-            for layer in range(self.num_lin_layers - 2):
-                self.lins.append(
-                    torch.nn.Linear(
-                        self.linear_sizes[layer], self.linear_sizes[layer + 1]
-                    )
-                )
-                self.bn.append(torch.nn.BatchNorm1d(self.linear_sizes[layer + 1]))
-            self.lins.append(torch.nn.Linear(self.linear_sizes[-1], 2))
+        self.create_linear_layers()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)
@@ -63,53 +44,8 @@ class Model(BaseRNN):
         outputs = outputs.transpose(0, 1)
 
         # linear layers
-        for layer in range(self.num_lin_layers - 1):
+        for layer in range(self.num_lin_layers):
             outputs = self.lins[layer](outputs)
-            outputs = outputs.transpose(1, 2)
-            outputs = self.bn[layer](outputs)
-            outputs = outputs.transpose(1, 2)
             outputs = self.nonlin_lin(outputs)
-        outputs = self.lins[-1](outputs)
 
         return outputs
-
-
-class HybridRNNCell(nn.Module):
-    def __init__(self, input_size, hidden_size1, hidden_size2, nonlinearity="relu"):
-        super(HybridRNNCell, self).__init__()
-
-        self.weight_ih = nn.Parameter(torch.Tensor(hidden_size1, input_size))
-        self.bias_ih = nn.Parameter(torch.Tensor(hidden_size1))
-
-        # hidden state at time t-1
-        self.weight_hh1 = nn.Parameter(torch.Tensor(hidden_size1, hidden_size1))
-        self.bias_hh1 = nn.Parameter(torch.Tensor(hidden_size1))
-
-        # hidden state at previous layer
-        self.weight_hh2 = nn.Parameter(torch.Tensor(hidden_size1, hidden_size2))
-        self.bias_hh2 = nn.Parameter(torch.Tensor(hidden_size1))
-
-        if nonlinearity == "tanh":
-            self.nonlinearity = torch.tanh
-        elif nonlinearity == "relu":
-            self.nonlinearity = F.relu
-
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        nn.init.kaiming_uniform_(self.weight_ih)
-        nn.init.zeros_(self.bias_ih)
-
-        nn.init.kaiming_uniform_(self.weight_hh1)
-        nn.init.zeros_(self.bias_hh1)
-
-        nn.init.kaiming_uniform_(self.weight_hh2)
-        nn.init.zeros_(self.bias_hh2)
-
-    def forward(self, input, hidden1, hidden2):
-        h_t = self.nonlinearity(
-            F.linear(input, self.weight_ih, self.bias_ih)
-            + F.linear(hidden1, self.weight_hh1, self.bias_hh1)
-            + F.linear(hidden2, self.weight_hh2, self.bias_hh2)
-        )
-        return h_t

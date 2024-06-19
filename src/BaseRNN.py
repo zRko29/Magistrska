@@ -1,4 +1,6 @@
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import pytorch_lightning as pl
 from pytorch_lightning.utilities import rank_zero_only
 
@@ -25,7 +27,6 @@ class BaseRNN(pl.LightningModule):
         self.lr: float = params.get("lr")
         self.optimizer: str = params.get("optimizer")
 
-        # ------------------------------------------
         # NOTE: This logic is for variable layer sizes
         hidden_sizes: List[int] = params.get("hidden_sizes")
         linear_sizes: List[int] = params.get("linear_sizes")
@@ -40,39 +41,50 @@ class BaseRNN(pl.LightningModule):
             self.num_lin_layers - 1
         )
 
+    def create_linear_layers(self):
+        self.lins = nn.ModuleList([])
+
+        if self.num_lin_layers == 1:
+            self.lins.append(nn.Linear(self.hidden_sizes[-1], 2))
+        elif self.num_lin_layers > 1:
+            self.lins.append(nn.Linear(self.hidden_sizes[-1], self.linear_sizes[0]))
+            for layer in range(self.num_lin_layers - 2):
+                self.lins.append(
+                    nn.Linear(self.linear_sizes[layer], self.linear_sizes[layer + 1])
+                )
+            self.lins.append(nn.Linear(self.linear_sizes[-1], 2))
+
     def _init_hidden(self, shape0: int, hidden_shapes: int) -> list[torch.Tensor]:
         return [
             torch.zeros(shape0, hidden_shape, device=self.device)
             for hidden_shape in hidden_shapes
         ]
 
-    def configure_non_linearity(self, non_linearity: str) -> torch.nn.Module:
-        if non_linearity is None:
-            return torch.nn.Identity()
-        elif non_linearity.lower() == "relu":
-            return torch.nn.ReLU()
-        elif non_linearity.lower() == "leaky_relu":
-            return torch.nn.LeakyReLU()
-        elif non_linearity.lower() == "tanh":
-            return torch.nn.Tanh()
-        elif non_linearity.lower() == "elu":
-            return torch.nn.ELU()
-        elif non_linearity.lower() == "selu":
-            return torch.nn.SELU()
+    def configure_non_linearity(self, non_linearity: str) -> nn.Module:
+        if non_linearity == "relu":
+            return F.relu
+        elif non_linearity == "leaky_relu":
+            return F.leaky_relu
+        elif non_linearity == "tanh":
+            return F.tanh
+        elif non_linearity == "elu":
+            return F.elu
+        elif non_linearity == "selu":
+            return F.selu
 
-    def configure_accuracy(self, accuracy: str, threshold: float) -> torch.nn.Module:
+    def configure_accuracy(self, accuracy: str, threshold: float) -> nn.Module:
         if accuracy == "path_accuracy":
             return PathAccuracy(threshold=threshold)
 
-    def configure_loss(self, loss: str) -> torch.nn.Module:
-        if loss in [None, "mse"]:
-            return torch.nn.MSELoss()
+    def configure_loss(self, loss: str) -> nn.Module:
+        if loss == "mse":
+            return nn.MSELoss()
         elif loss == "msd":
             return MSDLoss()
         elif loss == "rmse":
-            return torch.nn.L1Loss()
+            return nn.L1Loss()
         elif loss == "hubber":
-            return torch.nn.SmoothL1Loss()
+            return nn.SmoothL1Loss()
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         if self.optimizer == "adam":
@@ -92,6 +104,7 @@ class BaseRNN(pl.LightningModule):
         predicted = self(inputs)
         predicted = predicted[:, -1:]
 
+        targets = targets.to(self.dtype)
         loss = loss = self.loss(predicted, targets)
 
         self.log_dict({"loss/train": loss}, on_epoch=True, prog_bar=True, on_step=False)
@@ -111,6 +124,7 @@ class BaseRNN(pl.LightningModule):
 
         predicted = inputs[:, autoregression_seed:]
 
+        targets = targets.to(self.dtype)
         loss = self.loss(predicted, targets)
         accuracy = self.accuracy(predicted, targets)
 
@@ -164,3 +178,110 @@ class BaseRNN(pl.LightningModule):
         """
         best_loss = self._trainer.callbacks[-1].best_model_score or 1
         self.log("best_loss", best_loss, sync_dist=True)
+
+
+class ResidualRNNCell(nn.Module):
+    def __init__(self, input_size, hidden_size, nonlinearity):
+        super(ResidualRNNCell, self).__init__()
+
+        # Create the rnn cell
+        self.rnn_cell = nn.RNNCell(input_size, hidden_size, nonlinearity=nonlinearity)
+
+        # Create the linear layer
+        self.linear = nn.Linear(input_size, hidden_size)
+
+    def forward(self, input, hidden):
+        candidate_hidden = self.rnn_cell(input, hidden)
+        residual = self.linear(input)
+        new_hidden = candidate_hidden + residual
+        return new_hidden
+
+
+class MinimalGatedCell(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super(MinimalGatedCell, self).__init__()
+
+        # Parameters for forget gate
+        self.weight_fx = nn.Parameter(torch.Tensor(hidden_size, input_size))
+        self.weight_fh = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.bias_f = nn.Parameter(torch.Tensor(hidden_size))
+
+        # Parameters for candidate activation
+        self.weight_hx = nn.Parameter(torch.Tensor(hidden_size, input_size))
+        self.weight_hf = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.bias_h = nn.Parameter(torch.Tensor(hidden_size))
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.kaiming_uniform_(self.weight_fx)
+        nn.init.kaiming_uniform_(self.weight_fh)
+        nn.init.zeros_(self.bias_f)
+
+        nn.init.kaiming_uniform_(self.weight_hx)
+        nn.init.kaiming_uniform_(self.weight_hf)
+        nn.init.zeros_(self.bias_h)
+
+    def forward(self, h1, h2):
+        # Compute forget gate
+        f_t = F.linear(h1, self.weight_fx, self.bias_f) + F.linear(h2, self.weight_fh)
+        f_t = F.sigmoid(f_t)
+
+        # Compute candidate activation
+        h_hat_t = F.linear(h1, self.weight_hx, self.bias_h) + F.linear(
+            f_t * h2, self.weight_hf
+        )
+        h_hat_t = F.tanh(h_hat_t)
+
+        # Compute output
+        h_t = (1 - f_t) * h2 + f_t * h_hat_t
+
+        return h_t
+
+
+class HybridRNNCell(nn.Module):
+    def __init__(self, hidden_size1, hidden_size2, hidden_size3, nonlinearity):
+        super(HybridRNNCell, self).__init__()
+
+        # hidden state at layer - 2
+        self.weight_hh1 = nn.Parameter(torch.Tensor(hidden_size2, hidden_size1))
+        self.bias_hh1 = nn.Parameter(torch.Tensor(hidden_size2))
+
+        # hidden state at time t-1
+        self.weight_hh2 = nn.Parameter(torch.Tensor(hidden_size2, hidden_size2))
+        self.bias_hh2 = nn.Parameter(torch.Tensor(hidden_size2))
+
+        # hidden state at layer - 1
+        self.weight_hh3 = nn.Parameter(torch.Tensor(hidden_size2, hidden_size3))
+        self.bias_hh3 = nn.Parameter(torch.Tensor(hidden_size2))
+
+        if nonlinearity == "tanh":
+            self.nonlinearity = F.tanh
+        elif nonlinearity == "relu":
+            self.nonlinearity = F.relu
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.kaiming_uniform_(self.weight_hh1)
+        nn.init.zeros_(self.bias_hh1)
+
+        nn.init.kaiming_uniform_(self.weight_hh2)
+        nn.init.zeros_(self.bias_hh2)
+
+        nn.init.kaiming_uniform_(self.weight_hh3)
+        nn.init.zeros_(self.bias_hh3)
+
+    def forward(self, input, hidden1, hidden2):
+
+        # hidden state at time t
+        h_t = (
+            F.linear(input, self.weight_hh1, self.bias_hh1)
+            + F.linear(hidden1, self.weight_hh2, self.bias_hh2)
+            + F.linear(hidden2, self.weight_hh3, self.bias_hh3)
+        )
+
+        # nonlinearity
+        h_t = self.nonlinearity(h_t)
+
+        return h_t

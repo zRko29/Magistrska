@@ -347,6 +347,12 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Use the MGU static model. (default: False)",
         )
         parser.add_argument(
+            "--profiler",
+            "-p",
+            action="store_true",
+            help="Enable profiler. (default: False)",
+        )
+        parser.add_argument(
             "--devices",
             type=int,
             default=1,

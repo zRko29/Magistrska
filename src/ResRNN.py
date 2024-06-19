@@ -1,38 +1,27 @@
 import torch
 import torch.nn as nn
-from src.BaseRNN import BaseRNN
+from src.BaseRNN import BaseRNN, ResidualRNNCell
 
 
-class Vanilla(BaseRNN):
+class ResRNN(BaseRNN):
     def __init__(self, **params):
-        super(Vanilla, self).__init__(**params)
+        super(ResRNN, self).__init__(**params)
 
         # Create the rnn layers
         self.rnns = nn.ModuleList([])
         self.rnns.append(
-            nn.RNNCell(2, self.hidden_sizes[0], nonlinearity=self.nonlin_hidden)
+            ResidualRNNCell(2, self.hidden_sizes[0], nonlinearity=self.nonlin_hidden)
         )
-        for layer in range(self.num_rnn_layers - 1):
+        for layer in range(1, self.num_rnn_layers):
             self.rnns.append(
-                nn.RNNCell(
+                ResidualRNNCell(
+                    self.hidden_sizes[layer - 1],
                     self.hidden_sizes[layer],
-                    self.hidden_sizes[layer + 1],
                     nonlinearity=self.nonlin_hidden,
                 )
             )
 
-        # self.create_linear_layers()
-        self.lins = nn.ModuleList([])
-
-        if self.num_lin_layers == 1:
-            self.lins.append(nn.Linear(self.hidden_sizes[-1], 2))
-        elif self.num_lin_layers > 1:
-            self.lins.append(nn.Linear(self.hidden_sizes[-1], self.linear_sizes[0]))
-            for layer in range(self.num_lin_layers - 2):
-                self.lins.append(
-                    nn.Linear(self.linear_sizes[layer], self.linear_sizes[layer + 1])
-                )
-            self.lins.append(nn.Linear(self.linear_sizes[-1], 2))
+        self.create_linear_layers()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)

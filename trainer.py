@@ -66,18 +66,21 @@ def main(args: Namespace, params: dict) -> None:
 
     save_path: str = os.path.join(tb_logger.name, f"version_{tb_logger.version}")
 
+    profiler = None
+    if args.profiler:
+        profiler = "simple"
+
     trainer = Trainer(
         max_epochs=args.epochs,
-        precision=params.get("precision"),
+        precision="16-mixed",
         logger=tb_logger,
         callbacks=get_callbacks(args, save_path),
         deterministic=True,
-        log_every_n_steps=5,
-        check_val_every_n_epoch=2,
+        check_val_every_n_epoch=10,
         enable_progress_bar=args.progress_bar,
         devices=args.devices,
         num_nodes=args.num_nodes,
-        profiler="simple",
+        profiler=profiler,
     )
 
     if trainer.is_global_zero:
@@ -98,12 +101,14 @@ def get_model(args: Namespace, params: Dict) -> None:
         from src.StaticModel import Model
     elif args.static_model2:
         from src.StaticModel2 import Model
-    elif params.get("rnn_type") == "vanilla":
-        from src.VanillaRNN import Model
-    elif params.get("rnn_type") == "hybrid":
-        from src.HybridRNN import Model
-    elif params.get("rnn_type") == "MGU":
-        from src.MGU import Model
+    elif params.get("rnn_type") == "vanillarnn":
+        from src.VanillaRNN import Vanilla as Model
+    elif params.get("rnn_type") == "hybridrnn":
+        from src.HybridRNN import Hybrid as Model
+    elif params.get("rnn_type") == "mgu":
+        from src.MGU import MGU as Model
+    elif params.get("rnn_type") == "resrnn":
+        from src.ResRNN import ResRNN as Model
 
     if args.checkpoint_path:
         model = Model.load_from_checkpoint(args.checkpoint_path, map_location="cpu")

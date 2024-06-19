@@ -3,52 +3,73 @@ from torch import Tensor
 from torch.nn.modules.loss import _Loss
 
 
+# class MSDLoss(_Loss):
+#     """
+#     Computes the mean squared distance (MSD) between the input and target points.
+
+#     Note: It is different from torch.nn.MSELoss in that it sums square differences along dim=-1 before taking the mean.
+#     It can be shown that MSDLoss(x) = 2 * MSELoss(x) for some tensor x.
+#     """
+
+#     def __init__(self) -> None:
+#         super().__init__()
+#         self.squared_difference = torch.nn.MSELoss(reduction="none")
+
+#     def forward(self, input: Tensor, target: Tensor) -> Tensor:
+#         # input.shape = target.shape = (num paths, path length, dimensionality=2)
+
+#         # squared differences between coordinates in inputs and targets
+#         # squared_diff = (input - target).pow(2)
+#         squared_diff = self.squared_difference(input, target)
+#         # squared_diff.shape = (num paths, path length, 2)
+
+#         # sum squared differences to get squared distances between
+#         # points in input and target
+#         squared_distances = squared_diff.sum(dim=-1)
+#         # squared_distances.shape = (num paths, path length)
+
+#         # MSD over all points
+#         MSD = squared_distances.mean()
+#         # MSD.shape = (1,)
+
+#         return MSD
+
+
 class MSDLoss(_Loss):
     """
-    Computes the mean squared distance between the input and target points.
+    Computes the mean squared distance (MSD) between the input and target points.
 
-    Note: It is different from torch.nn.MSELoss in that it sums square differences along dim=-1 before taking the mean.
-    It can be shown that MSDLoss(x) = 2 * MSELoss(x) for some tensor x.
+    Note: Is more efficient than previous implementation.
     """
 
     def __init__(self) -> None:
         super().__init__()
+        self.half_msd = torch.nn.MSELoss(reduction="mean")
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        # input.shape = target.shape = (num paths, path length, dimensionality=2)
-
-        # squared differences between coordinates in inputs and targets
-        squared_diff = (input - target).pow(2)
-        # squared_diff.shape = (num paths, path length, 2)
-
-        # sum squared differences to get squared distances between
-        # points in input and target
-        squared_distances = squared_diff.sum(dim=-1)
-        # squared_distances.shape = (num paths, path length)
-
-        # mean squared distance over all points
-        mean_squared_distance = squared_distances.mean()
-        # mean_squared_distance.shape = (1,)
-
-        return mean_squared_distance
+        half_msd = self.half_msd(input, target)
+        msd = torch.mul(half_msd, 2)
+        return msd
 
 
 class PathAccuracy(_Loss):
     """
-    Computes the accuracy of prediction by considering the mean squared distances along each path separately.
+    Computes the accuracy of prediction by considering the MSD along each path separately.
 
-    Note: Since some paths might be harder to predict, measuring mean squared distance for each path separately is sensible.
+    Note: Since some paths might be harder to predict, measuring MSD for each path separately is sensible.
     """
 
     def __init__(self, threshold: float) -> None:
         super().__init__()
+        self.squared_difference = torch.nn.MSELoss(reduction="none")
         self.threshold = threshold
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
         # input.shape = target.shape = (num paths, path length, dimensionality=2)
 
         # squared differences between coordinates in inputs and targets
-        squared_diff = (input - target).pow(2)
+        # squared_diff = (input - target).pow(2)
+        squared_diff = self.squared_difference(input, target)
         # squared_diff.shape = (num paths, path length, 2)
 
         # sum squared differences to get squared distances between
@@ -56,12 +77,13 @@ class PathAccuracy(_Loss):
         squared_distances = squared_diff.sum(dim=-1)
         # squared_distances.shape = (num paths, path length)
 
-        # mean squared distance for each path
-        mean_squared_distance_per_path = squared_distances.mean(dim=1)
-        # mean_squared_distance_per_path.shape = (num paths,)
+        # MSD for each path
+        MSD_per_path = squared_distances.mean(dim=1)
+        # MSD_per_path.shape = (num paths,)
 
-        # label paths as correct if mean squared distance is below threshold
-        labels = (mean_squared_distance_per_path < self.threshold).float()
+        # label paths as correct if MSD is below threshold
+        # labels = (MSD_per_path < self.threshold).float()
+        labels = torch.where(MSD_per_path < self.threshold, 1.0, 0.0)
         # labels.shape = (num paths,)
 
         # accuracy is the mean of the labels
@@ -72,7 +94,6 @@ class PathAccuracy(_Loss):
 
 
 if __name__ == "__main__":
-
     mse = torch.nn.MSELoss(reduction="mean")
     msd = MSDLoss()
     accuracy = PathAccuracy(threshold=3e-1)
@@ -83,5 +104,3 @@ if __name__ == "__main__":
     mse_value = mse(data1, data2)
     msd_value = msd(data1, data2)
     accuracy_value = accuracy(data1, data2)
-
-    print(f"MSE: {mse_value:.3f}, MSD: {msd_value:.3f}, Accuracy: {accuracy_value:.3f}")
