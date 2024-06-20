@@ -59,7 +59,7 @@ class BaseRNN(pl.LightningModule):
 
         if compile:
             for layer in range(self.num_lin_layers):
-                self.lins[layer] = torch.compile(self.lins[layer], dynamic=False)
+                self.lins[layer] = torch.compile(self.lins[layer], dynamic=True)
 
     def _init_hidden(self, shape0: int, hidden_shapes: int) -> list[torch.Tensor]:
         return [

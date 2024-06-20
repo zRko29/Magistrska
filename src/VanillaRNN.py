@@ -26,11 +26,11 @@ class Vanilla(BaseRNN):
 
         if Vanilla.compile_model:
             for layer in range(self.num_rnn_layers):
-                self.rnns[layer] = torch.compile(self.rnns[layer], dynamic=False)
+                self.rnns[layer] = torch.compile(self.rnns[layer], dynamic=True)
 
         self.create_linear_layers(Vanilla.compile_model)
 
-    @conditional_torch_compile(compile_model, dynamic=False)
+    @conditional_torch_compile(compile_model, dynamic=True)
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)
         x = x.transpose(0, 1)
