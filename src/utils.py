@@ -361,9 +361,9 @@ def import_parsed_args(script_name: str) -> Namespace:
         )
         parser.add_argument(
             "--devices",
+            nargs="*",
             type=int,
-            default=1,
-            help="Specify the number of devices to use. (default: 1)",
+            help="List of devices to use.",
         )
         parser.add_argument(
             "--num_nodes",
