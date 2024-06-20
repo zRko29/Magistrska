@@ -1,24 +1,22 @@
-# configurable
 init_points: 48400
-steps: 200
+steps: 180
 K: 0.1
-sampling: grid
-every_n_step: 1
-precision: 16-mixed
-shuffle_trajectories: True
-shuffle_within_batches: False
-
-# static
+sampling: random
 hidden_size: 256
 linear_size: 256
 num_rnn_layers: 3
 num_lin_layers: 3
 nonlinearity_hidden: tanh
 nonlinearity_lin: tanh
-val_reg_preds: 80
-batch_size: 512
+batch_size: 300
 seq_length: 100
+every_n_step: 1
+val_reg_preds: 50
 loss: msd
 optimizer: adam
 lr: 1.0e-5
+precision: 16-mixed
+shuffle_trajectories: true
+shuffle_within_batches: false
 drop_last: true
+rnn_type: resrnn # type of RNN (vanillarnn, resrnn or mgu)

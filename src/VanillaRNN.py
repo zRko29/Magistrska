@@ -1,9 +1,12 @@
 import torch
 import torch.nn as nn
 from src.BaseRNN import BaseRNN
+from src.utils import conditional_torch_compile
 
 
 class Vanilla(BaseRNN):
+    compile_model = False
+
     def __init__(self, **params):
         super(Vanilla, self).__init__(**params)
 
@@ -21,19 +24,13 @@ class Vanilla(BaseRNN):
                 )
             )
 
-        # self.create_linear_layers()
-        self.lins = nn.ModuleList([])
+        if Vanilla.compile_model:
+            for layer in range(self.num_rnn_layers):
+                self.rnns[layer] = torch.compile(self.rnns[layer], dynamic=False)
 
-        if self.num_lin_layers == 1:
-            self.lins.append(nn.Linear(self.hidden_sizes[-1], 2))
-        elif self.num_lin_layers > 1:
-            self.lins.append(nn.Linear(self.hidden_sizes[-1], self.linear_sizes[0]))
-            for layer in range(self.num_lin_layers - 2):
-                self.lins.append(
-                    nn.Linear(self.linear_sizes[layer], self.linear_sizes[layer + 1])
-                )
-            self.lins.append(nn.Linear(self.linear_sizes[-1], 2))
+        self.create_linear_layers(Vanilla.compile_model)
 
+    @conditional_torch_compile(compile_model, dynamic=False)
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)
         x = x.transpose(0, 1)

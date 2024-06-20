@@ -71,7 +71,7 @@ class Data(pl.LightningDataModule):
                 or len(self.validation_pairs) < self.batch_size
             ):
                 warnings.warn(
-                    "Batch size is larger than the number of training or validation pairs. Is drop_last set to True?"
+                    f"Batch size ({self.batch_size}) is larger than the number of training or validation pairs. Is drop_last set to True?"
                 )
 
             print(
@@ -127,7 +127,7 @@ class Data(pl.LightningDataModule):
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
             Dataset(self.validation_pairs),
-            batch_size=self.batch_size,
+            batch_size=self.batch_size * 5,
             drop_last=self.drop_last,
         )
 

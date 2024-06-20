@@ -6,7 +6,7 @@ import os
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 import torch
 import matplotlib.pyplot as plt
-
+import functools
 import logging
 
 
@@ -275,6 +275,26 @@ def plot_spatial_errors(
         plt.close()
 
 
+def conditional_torch_compile(compile, *args, **kwargs):
+    def decorator(func):
+        if compile:
+            compiled_func = torch.compile(func, *args, **kwargs)
+
+            @functools.wraps(func)
+            def wrapped(*args, **kwargs):
+                return compiled_func(*args, **kwargs)
+
+        else:
+
+            @functools.wraps(func)
+            def wrapped(*args, **kwargs):
+                return func(*args, **kwargs)
+
+        return wrapped
+
+    return decorator
+
+
 def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
@@ -335,22 +355,9 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Show progress bar during training. (default: False)",
         )
         parser.add_argument(
-            "--static_model",
-            "-static",
+            "--compile",
             action="store_true",
-            help="Use the hybrid static model. (default: False)",
-        )
-        parser.add_argument(
-            "--static_model2",
-            "-static2",
-            action="store_true",
-            help="Use the MGU static model. (default: False)",
-        )
-        parser.add_argument(
-            "--profiler",
-            "-p",
-            action="store_true",
-            help="Enable profiler. (default: False)",
+            help="Compile the model. (default: False)",
         )
         parser.add_argument(
             "--devices",

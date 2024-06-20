@@ -1,9 +1,12 @@
 import torch
 import torch.nn as nn
+from src.utils import conditional_torch_compile
 from src.BaseRNN import BaseRNN, ResidualRNNCell
 
 
 class ResRNN(BaseRNN):
+    compile_model = False
+
     def __init__(self, **params):
         super(ResRNN, self).__init__(**params)
 
@@ -21,8 +24,13 @@ class ResRNN(BaseRNN):
                 )
             )
 
-        self.create_linear_layers()
+        if ResRNN.compile_model:
+            for layer in range(self.num_rnn_layers):
+                self.rnns[layer] = torch.compile(self.rnns[layer], dynamic=False)
 
+        self.create_linear_layers(ResRNN.compile_model)
+
+    @conditional_torch_compile(compile_model, dynamic=False)
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)
         x = x.transpose(0, 1)

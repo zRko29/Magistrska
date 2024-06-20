@@ -1,9 +1,12 @@
 import torch
 import torch.nn as nn
+from src.utils import conditional_torch_compile
 from src.BaseRNN import BaseRNN, MinimalGatedCell
 
 
 class MGU(BaseRNN):
+    compile_model = False
+
     def __init__(self, **params):
         super(MGU, self).__init__(**params)
 
@@ -15,8 +18,13 @@ class MGU(BaseRNN):
                 MinimalGatedCell(self.hidden_sizes[layer], self.hidden_sizes[layer + 1])
             )
 
-        self.reset_parameters()
+        if MGU.compile_model:
+            for layer in range(self.num_rnn_layers):
+                self.rnns[layer] = torch.compile(self.rnns[layer], dynamic=False)
 
+        self.create_linear_layers(MGU.compile_model)
+
+    @conditional_torch_compile(compile_model, dynamic=False)
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)
         x = x.transpose(0, 1)

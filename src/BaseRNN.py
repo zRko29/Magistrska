@@ -8,7 +8,10 @@ from pytorch_lightning.utilities import rank_zero_only
 from typing import List
 import pyprind
 
-from src.custom_metrics import MSDLoss, PathAccuracy
+try:
+    from src.custom_metrics import MSDLoss, PathAccuracy
+except ModuleNotFoundError:
+    from custom_metrics import MSDLoss, PathAccuracy
 
 
 class BaseRNN(pl.LightningModule):
@@ -41,7 +44,7 @@ class BaseRNN(pl.LightningModule):
             self.num_lin_layers - 1
         )
 
-    def create_linear_layers(self):
+    def create_linear_layers(self, compile: bool):
         self.lins = nn.ModuleList([])
 
         if self.num_lin_layers == 1:
@@ -53,6 +56,10 @@ class BaseRNN(pl.LightningModule):
                     nn.Linear(self.linear_sizes[layer], self.linear_sizes[layer + 1])
                 )
             self.lins.append(nn.Linear(self.linear_sizes[-1], 2))
+
+        if compile:
+            for layer in range(self.num_lin_layers):
+                self.lins[layer] = torch.compile(self.lins[layer], dynamic=False)
 
     def _init_hidden(self, shape0: int, hidden_shapes: int) -> list[torch.Tensor]:
         return [
@@ -141,12 +148,12 @@ class BaseRNN(pl.LightningModule):
         targets: torch.Tensor = batch[:, self.regression_seed :]
 
         pbar = pyprind.ProgBar(
-            iterations=batch.shape[1] - self.regression_seed,
+            iterations=batch.shape[1] - predicted.shape[1],
             bar_char="█",
             title="Predicting",
         )
 
-        for i in range(batch.shape[1] - self.regression_seed):
+        for i in range(batch.shape[1] - predicted.shape[1]):
             predicted_value = self(predicted[:, i:])
             predicted_value = predicted_value[:, -1:]
             predicted = torch.cat([predicted, predicted_value], axis=1)
@@ -235,53 +242,5 @@ class MinimalGatedCell(nn.Module):
 
         # Compute output
         h_t = (1 - f_t) * h2 + f_t * h_hat_t
-
-        return h_t
-
-
-class HybridRNNCell(nn.Module):
-    def __init__(self, hidden_size1, hidden_size2, hidden_size3, nonlinearity):
-        super(HybridRNNCell, self).__init__()
-
-        # hidden state at layer - 2
-        self.weight_hh1 = nn.Parameter(torch.Tensor(hidden_size2, hidden_size1))
-        self.bias_hh1 = nn.Parameter(torch.Tensor(hidden_size2))
-
-        # hidden state at time t-1
-        self.weight_hh2 = nn.Parameter(torch.Tensor(hidden_size2, hidden_size2))
-        self.bias_hh2 = nn.Parameter(torch.Tensor(hidden_size2))
-
-        # hidden state at layer - 1
-        self.weight_hh3 = nn.Parameter(torch.Tensor(hidden_size2, hidden_size3))
-        self.bias_hh3 = nn.Parameter(torch.Tensor(hidden_size2))
-
-        if nonlinearity == "tanh":
-            self.nonlinearity = F.tanh
-        elif nonlinearity == "relu":
-            self.nonlinearity = F.relu
-
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        nn.init.kaiming_uniform_(self.weight_hh1)
-        nn.init.zeros_(self.bias_hh1)
-
-        nn.init.kaiming_uniform_(self.weight_hh2)
-        nn.init.zeros_(self.bias_hh2)
-
-        nn.init.kaiming_uniform_(self.weight_hh3)
-        nn.init.zeros_(self.bias_hh3)
-
-    def forward(self, input, hidden1, hidden2):
-
-        # hidden state at time t
-        h_t = (
-            F.linear(input, self.weight_hh1, self.bias_hh1)
-            + F.linear(hidden1, self.weight_hh2, self.bias_hh2)
-            + F.linear(hidden2, self.weight_hh3, self.bias_hh3)
-        )
-
-        # nonlinearity
-        h_t = self.nonlinearity(h_t)
 
         return h_t
