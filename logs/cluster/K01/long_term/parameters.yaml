@@ -8,14 +8,14 @@ num_rnn_layers: 3
 num_lin_layers: 3
 nonlinearity_hidden: tanh
 nonlinearity_lin: tanh
-batch_size: 300
+batch_size: 400
 seq_length: 100
 every_n_step: 1
-val_reg_preds: 50
+val_reg_preds: 60
 loss: msd
 optimizer: adam
 lr: 1.0e-5
-precision: 16-mixed
+precision: bf16-mixed
 shuffle_trajectories: true
 shuffle_within_batches: false
 drop_last: true

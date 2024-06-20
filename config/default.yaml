@@ -17,7 +17,7 @@ val_reg_preds: 5
 loss: msd
 optimizer: adam
 lr: 1.0e-5
-precision: 16-mixed
+precision: bf16-mixed
 
 shuffle_trajectories: true # makes sense for linear sampling
 shuffle_within_batches: false # shuffle sequences within batches (can increase stability)

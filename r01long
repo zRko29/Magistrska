@@ -10,7 +10,7 @@
 #SBATCH --error=slurm.%N.%j.err         # STDERR
 
 # won't work without this
-# export NCCL_P2P_DISABLE=1
+export NCCL_P2P_DISABLE=1
 # export NCCL_DEBUG=INFO
 
 source ~/.bashrc
@@ -18,4 +18,4 @@ conda activate rnn_env
 
 experiment=logs/cluster/K01/long_term/
 
-srun python trainer.py --num_nodes 1 --devices 1 --train_size 0.95 --monitor_checkpoint acc/val --mode_checkpoint max --epochs 100_000 --static_model --path $experiment
+srun python trainer.py --num_nodes 1 --devices 1 --train_size 0.95 --monitor_checkpoint acc/val --mode_checkpoint max --epochs 10_000 --path $experiment

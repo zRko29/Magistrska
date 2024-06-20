@@ -122,6 +122,9 @@ class Data(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=self.shuffle_within_batches,
             drop_last=self.drop_last,
+            pin_memory=True,
+            num_workers=8,
+            persistent_workers=True,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -129,6 +132,9 @@ class Data(pl.LightningDataModule):
             Dataset(self.validation_pairs),
             batch_size=self.batch_size * 5,
             drop_last=self.drop_last,
+            pin_memory=True,
+            num_workers=8,
+            persistent_workers=True,
         )
 
     def predict_dataloader(self) -> torch.Tensor:
