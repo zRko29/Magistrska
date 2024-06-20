@@ -26,11 +26,11 @@ class ResRNN(BaseRNN):
 
         if ResRNN.compile_model:
             for layer in range(self.num_rnn_layers):
-                self.rnns[layer] = torch.compile(self.rnns[layer], dynamic=True)
+                self.rnns[layer] = torch.compile(self.rnns[layer], dynamic=False)
 
         self.create_linear_layers(ResRNN.compile_model)
 
-    @conditional_torch_compile(compile_model, dynamic=True)
+    @conditional_torch_compile(compile_model, dynamic=False)
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.dtype)
         x = x.transpose(0, 1)
