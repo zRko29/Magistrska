@@ -1,7 +1,7 @@
 init_points: 48400
 steps: 180
 K: 0.1
-sampling: random
+sampling: grid
 hidden_size: 256
 linear_size: 256
 num_rnn_layers: 3
@@ -15,7 +15,7 @@ val_reg_preds: 60
 loss: msd
 optimizer: adam
 acc_threshold: 1.0e-4
-lr: 1.0e-5
+lr: 9.0e-6
 precision: bf16-mixed
 shuffle_trajectories: true
 shuffle_within_batches: false
