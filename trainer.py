@@ -73,7 +73,7 @@ def main(args: Namespace, params: dict) -> None:
         callbacks=get_callbacks(args, save_path),
         deterministic=False,
         benchmark=True,
-        check_val_every_n_epoch=10,
+        check_val_every_n_epoch=8,
         log_every_n_steps=100,
         enable_progress_bar=args.progress_bar,
         devices=args.devices,

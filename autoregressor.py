@@ -41,14 +41,14 @@ def main(args: Namespace):
         params_update = {}
         params_update.update({"sampling": "random"})
         params_update.update({"steps": 160})
-        params_update.update({"init_points": 200})
+        params_update.update({"init_points": 50})
 
         params.update(params_update)
         maps: List[StandardMap] = [
             StandardMap(seed=42, params=params),
-            StandardMap(seed=41, params=params),
+            # StandardMap(seed=41, params=params),
         ]
-        input_suffixes: list[str] = ["standard", "random1"]
+        input_suffixes: list[str] = ["standard"]  # , "random1"]
 
         for map, input_suffix in zip(maps, input_suffixes):
 
@@ -127,7 +127,7 @@ def inference(
         precision=params["precision"],
         enable_progress_bar=False,
         logger=False,
-        deterministic=False,
+        deterministic=True,
     )
 
     predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
