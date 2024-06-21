@@ -177,10 +177,10 @@ class BaseRNN(pl.LightningModule):
     @rank_zero_only
     def on_train_start(self):
         """
-        Required to add best_score to hparams in logger.
+        Required to add best_score to hparams in logger. Used for gridsearch.
         """
         self._trainer.logger.log_hyperparams(self.hparams, {"best_acc": 0})
-        # self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": float("inf")})
+        self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": float("inf")})
 
     def on_train_epoch_end(self):
         """
