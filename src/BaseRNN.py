@@ -23,7 +23,9 @@ class BaseRNN(pl.LightningModule):
         self.nonlin_lin = self.configure_non_linearity(params.get("nonlinearity_lin"))
 
         self.loss = self.configure_loss(params.get("loss"))
-        self.accuracy = self.configure_accuracy("path_accuracy", 1.0e-4)
+        self.accuracy = self.configure_accuracy(
+            "path_accuracy", params.get("acc_threshold")
+        )
 
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
@@ -177,14 +179,14 @@ class BaseRNN(pl.LightningModule):
         """
         Required to add best_score to hparams in logger.
         """
-        self._trainer.logger.log_hyperparams(self.hparams, {"best_acc": 1})
+        self._trainer.logger.log_hyperparams(self.hparams, {"best_acc": 0})
         # self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": float("inf")})
 
     def on_train_epoch_end(self):
         """
         Required to log best_score at the end of the epoch. sync_dist=True is required to average the best_score over all devices.
         """
-        best_score = self._trainer.callbacks[-1].best_model_score or 1
+        best_score = self._trainer.callbacks[-1].best_model_score or 0
         self.log("best_acc", best_score, sync_dist=True)
         # best_score = self._trainer.callbacks[-1].best_model_score or float("inf")
         # self.log("best_loss", best_score, sync_dist=True)
