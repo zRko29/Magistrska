@@ -38,10 +38,12 @@ def main(args: Namespace):
         params_path: str = os.path.join(log_path, "hparams.yaml")
         params: dict = read_yaml(params_path)
 
-        params.update({"sampling": "random"})
-        params.update({"steps": 180})
-        params.update({"init_points": 200})
+        params_update = {}
+        params_update.update({"sampling": "random"})
+        params_update.update({"steps": 160})
+        params_update.update({"init_points": 200})
 
+        params.update(params_update)
         maps: List[StandardMap] = [
             StandardMap(seed=42, params=params),
             StandardMap(seed=41, params=params),
@@ -50,10 +52,10 @@ def main(args: Namespace):
 
         for map, input_suffix in zip(maps, input_suffixes):
 
-            predictions, _ = inference(args, log_path, params, map)
+            predictions, _ = inference(args, log_path, params, map, params_update)
 
             print(
-                f"{input_suffix} loss: {predictions['loss'].item():.3e}, accuracy: {predictions['accuracy'].item():.2f}"
+                f"{input_suffix} loss: {predictions['loss'].item():.3e}, accuracy: {predictions['accuracy'].item():.5f}"
             )
 
             plot_2d(
@@ -95,26 +97,22 @@ def inference(
     log_path: str,
     params: dict,
     map: StandardMap,
-    params_update: dict = None,
+    params_update: dict,
 ) -> tuple[dict, Data]:
-    if params_update is not None:
-        params.update(params_update)
 
-    if args.static_model:
-        from src.StaticModel import Model
-    elif args.static_model2:
-        from src.StaticModel2 import Model
-    elif params.get("rnn_type") == "vanillarnn":
+    if params.get("rnn_type") == "vanillarnn":
         from src.VanillaRNN import Vanilla as Model
-    elif params.get("rnn_type") == "hybridrnn":
-        from src.HybridRNN import Hybrid as Model
     elif params.get("rnn_type") == "mgu":
         from src.MGU import MGU as Model
     elif params.get("rnn_type") == "resrnn":
         from src.ResRNN import ResRNN as Model
 
+    Model.compile_model = args.compile
+
     model_path: str = os.path.join(log_path, f"model.ckpt")
-    model = Model(**params).load_from_checkpoint(model_path, map_location="cpu")
+    model = Model(**params).load_from_checkpoint(
+        model_path, map_location="cpu", **params_update
+    )
     model.eval()
 
     # regression seed to take
@@ -129,7 +127,7 @@ def inference(
         precision=params["precision"],
         enable_progress_bar=False,
         logger=False,
-        deterministic=True,
+        deterministic=False,
     )
 
     predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
@@ -140,8 +138,7 @@ def inference(
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--version", "-v", type=int, default=None)
-    parser.add_argument("--static_model", action="store_true")
-    parser.add_argument("--static_model2", action="store_true")
+    parser.add_argument("--compile", action="store_true")
     args = parser.parse_args()
 
     main(args)
