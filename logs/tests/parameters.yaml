@@ -16,6 +16,7 @@ every_n_step: 1
 val_reg_preds: 5
 loss: msd
 optimizer: adam
+acc_threshold: 1.0e-4
 lr: 1.0e-5
 precision: 16-mixed
 
