@@ -192,20 +192,32 @@ class BaseRNN(pl.LightningModule):
 
 
 class ResidualRNNCell(nn.Module):
-    def __init__(self, input_size, hidden_size, nonlinearity):
+    def __init__(self, input_size, hidden_size):
         super(ResidualRNNCell, self).__init__()
 
-        # Create the rnn cell
-        self.rnn_cell = nn.RNNCell(input_size, hidden_size, nonlinearity=nonlinearity)
+        self.weight_1 = nn.Parameter(torch.Tensor(hidden_size, input_size))
+        self.weight_2 = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.weight_3 = nn.Parameter(torch.Tensor(hidden_size, hidden_size))
+        self.bias = nn.Parameter(torch.Tensor(hidden_size))
 
-        # Create the linear layer
-        self.linear = nn.Linear(input_size, hidden_size)
+        self.reset_parameters()
 
-    def forward(self, input, hidden):
-        candidate_hidden = self.rnn_cell(input, hidden)
-        residual = self.linear(input)
-        new_hidden = candidate_hidden + residual
-        return new_hidden
+    def reset_parameters(self):
+        nn.init.kaiming_uniform_(self.weight_1)
+        nn.init.kaiming_uniform_(self.weight_2)
+        nn.init.kaiming_uniform_(self.weight_3)
+        nn.init.zeros_(self.bias)
+
+    def forward(self, input1, input2, delayed_input=None):
+        output = F.linear(input1, self.weight_1, self.bias)
+        output += F.linear(input2, self.weight_2)
+
+        if delayed_input is not None:
+            output += F.linear(delayed_input, self.weight_3)
+
+        output = F.tanh(output)
+
+        return output
 
 
 class MinimalGatedCell(nn.Module):
@@ -233,18 +245,18 @@ class MinimalGatedCell(nn.Module):
         nn.init.kaiming_uniform_(self.weight_hf)
         nn.init.zeros_(self.bias_h)
 
-    def forward(self, h1, h2):
+    def forward(self, input1, input2):
         # Compute forget gate
-        f_t = F.linear(h1, self.weight_fx, self.bias_f) + F.linear(h2, self.weight_fh)
+        f_t = F.linear(input1, self.weight_fx, self.bias_f)
+        f_t += F.linear(input2, self.weight_fh)
         f_t = F.sigmoid(f_t)
 
         # Compute candidate activation
-        h_hat_t = F.linear(h1, self.weight_hx, self.bias_h) + F.linear(
-            f_t * h2, self.weight_hf
-        )
+        h_hat_t = F.linear(input1, self.weight_hx, self.bias_h)
+        h_hat_t += F.linear(f_t * input2, self.weight_hf)
         h_hat_t = F.tanh(h_hat_t)
 
         # Compute output
-        h_t = (1 - f_t) * h2 + f_t * h_hat_t
+        h_t = (1 - f_t) * input2 + f_t * h_hat_t
 
         return h_t

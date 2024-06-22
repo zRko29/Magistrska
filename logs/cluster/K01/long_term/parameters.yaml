@@ -20,4 +20,5 @@ precision: bf16-mixed
 shuffle_trajectories: true
 shuffle_within_batches: false
 drop_last: true
-rnn_type: vanillarnn # type of RNN (vanillarnn, resrnn or mgu)
+rnn_type: mgu # type of RNN (vanillarnn, resrnn or mgu)
+bypass_n_steps: 2
