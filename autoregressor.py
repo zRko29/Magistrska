@@ -27,7 +27,6 @@ pl.seed_everything(42, workers=True)
 def main(args: Namespace):
     version: Optional[int] = args.version or None
     directory_path: str = "logs/cluster/K01/long_term"
-    # directory_path: str = "logs/cluster/K01/short_term"
     # directory_path: str = "logs/tests"
 
     folders = get_inference_folders(directory_path, version)
@@ -42,13 +41,14 @@ def main(args: Namespace):
         params_update.update({"sampling": "random"})
         params_update.update({"steps": 160})
         params_update.update({"init_points": 50})
+        # params_update.update({"acc_threshold": 1.0e-4})
 
         params.update(params_update)
         maps: List[StandardMap] = [
             StandardMap(seed=42, params=params),
-            # StandardMap(seed=41, params=params),
+            StandardMap(seed=41, params=params),
         ]
-        input_suffixes: list[str] = ["standard"]  # , "random1"]
+        input_suffixes: list[str] = ["standard", "random1"]
 
         for map, input_suffix in zip(maps, input_suffixes):
 
@@ -137,7 +137,7 @@ def inference(
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--version", "-v", type=int, default=None)
+    parser.add_argument("--version", "-v", nargs="*", type=int, default=None)
     parser.add_argument("--compile", action="store_true")
     args = parser.parse_args()
 
