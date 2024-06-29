@@ -21,16 +21,16 @@ def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
 
 
 def get_inference_folders(directory_path: str, version: List[int] | int) -> List[str]:
-    if version is None:
+    if isinstance(version, int):
+        folders = [os.path.join(directory_path, f"version_{version}")]
+    elif isinstance(version, list):
+        folders = [os.path.join(directory_path, f"version_{v}") for v in version]
+    else:
         folders = [
             os.path.join(directory_path, folder)
             for folder in os.listdir(directory_path)
             if os.path.isdir(os.path.join(directory_path, folder))
         ]
-    elif isinstance(version, int):
-        folders = [os.path.join(directory_path, f"version_{version}")]
-    elif isinstance(version, list):
-        folders = [os.path.join(directory_path, f"version_{v}") for v in version]
 
     folders.sort()
     return folders
