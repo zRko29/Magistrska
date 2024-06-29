@@ -16,6 +16,14 @@ export NCCL_P2P_DISABLE=1
 source ~/.bashrc
 conda activate rnn_env
 
-experiment=logs/cluster/K01/long_term/
+experiment=logs/cluster/K01/ResRNN/
+optimization_steps=50
 
-srun python trainer.py --num_nodes 1 --devices 1 --train_size 0.95 --monitor_checkpoint acc/val --mode_checkpoint max --epochs 10_000 --path $experiment
+for i in $(seq $optimization_steps)
+do
+    echo "Making gridsearch step."
+    srun python gridsearch.py --path $experiment
+
+    echo "Running trainer."
+    srun python trainer.py --num_nodes 1 --devices 1 --train_size 0.95 --monitor_checkpoint acc/val --mode_checkpoint max --epochs 20 --path $experiment
+done

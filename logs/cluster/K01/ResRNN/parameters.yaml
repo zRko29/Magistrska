@@ -1,0 +1,34 @@
+init_points: 52900
+steps: 190
+K: 0.1
+sampling: grid
+hidden_size: 256
+linear_size: 256
+num_rnn_layers: 3
+num_lin_layers: 3
+nonlinearity_hidden: tanh
+nonlinearity_lin: tanh
+batch_size: 400
+seq_length: 100
+every_n_step: 1
+val_reg_preds: 80
+loss: msd
+optimizer: adam
+acc_threshold: 1.0e-4
+lr: 9.0e-6
+precision: bf16-mixed
+shuffle_trajectories: true
+shuffle_within_batches: false
+drop_last: true
+rnn_type: resRNN # type of RNN (vanillarnn, resrnn or mgu)
+bypass_n_steps: 5
+
+gridsearch:
+  batch_size: { lower: 32, upper: 512, type: int }
+  lr: { lower: -6.2, upper: -3.5, type: log }
+  num_rnn_layers: { lower: 2, upper: 4, type: int }
+  num_lin_layers: { lower: 2, upper: 4, type: int }
+  hidden_size: { lower: 150, upper: 350, type: int }
+  linear_size: { lower: 150, upper: 350, type: int }
+  nonlinearity_lin: { list: [leaky_relu, tanh, elu, selu], type: choice }
+  bypass_n_steps: { list: [5, 10, 15, 20, 30, 40, 50], type: choice }

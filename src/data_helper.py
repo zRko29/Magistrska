@@ -40,9 +40,9 @@ class Data(pl.LightningDataModule):
         self.data = np.stack([thetas.T, ps.T], axis=-1)
 
         # take every n-th step
-        assert (self.data.shape[1] // self.every_n_step) >= (
-            self.seq_len + val_reg_preds
-        ), f"take steps >= {(self.seq_len + val_reg_preds)*self.every_n_step}"
+        # assert (self.data.shape[1] // self.every_n_step) >= (
+        # self.seq_len + val_reg_preds
+        # ), f"take steps >= {(self.seq_len + val_reg_preds)*self.every_n_step}"
         self.data = self.data[:, :: self.every_n_step]
 
         # shuffle trajectories
@@ -51,8 +51,9 @@ class Data(pl.LightningDataModule):
 
         t = int(len(self.data) * train_size)
 
-        train_sequences = self._make_sequences(self.data[:t], 1)
-        self.train_pairs = self._make_input_output_pairs(train_sequences, 1)
+        if train_size > 0.0:
+            train_sequences = self._make_sequences(self.data[:t], 1)
+            self.train_pairs = self._make_input_output_pairs(train_sequences, 1)
 
         if train_size < 1.0:
             validation_sequences = self._make_sequences(self.data[t:], val_reg_preds)
@@ -65,7 +66,7 @@ class Data(pl.LightningDataModule):
         self.print_info(train_size)
 
     def print_info(self, train_size: float) -> None:
-        if train_size < 1.0:
+        if 0.0 < train_size < 1.0:
             if (
                 len(self.train_pairs) < self.batch_size
                 or len(self.validation_pairs) < self.batch_size
@@ -77,6 +78,14 @@ class Data(pl.LightningDataModule):
             print(
                 f"{len(self.train_pairs)} training pairs of shape ({self.train_pairs[0][0].shape[0]}, {self.train_pairs[0][1].shape[0]})."
             )
+            print(
+                f"{len(self.validation_pairs)} validation pairs of shape ({self.validation_pairs[0][0].shape[0]}, {self.validation_pairs[0][1].shape[0]})."
+            )
+        elif train_size == 0.0:
+            if len(self.validation_pairs) < self.batch_size:
+                warnings.warn(
+                    f"Batch size ({self.batch_size}) is larger than the number of training or validation pairs. Is drop_last set to True?"
+                )
             print(
                 f"{len(self.validation_pairs)} validation pairs of shape ({self.validation_pairs[0][0].shape[0]}, {self.validation_pairs[0][1].shape[0]})."
             )

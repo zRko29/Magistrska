@@ -53,11 +53,28 @@ def main(args: Namespace, params: dict) -> None:
 
     logger = logging.getLogger("rnn_autoregressor")
 
-    map_object = StandardMap(seed=42, params=params)
+    map_object_train = StandardMap(seed=42, params=params)
 
-    datamodule = Data(
-        map_object=map_object,
+    val_params = params.copy()
+    val_params.update(
+        {
+            "sampling": "random",
+            "steps": 180,
+            "init_points": 50,
+        }
+    )
+    map_object_val = StandardMap(seed=42, params=val_params)
+
+    datamodule_train = Data(
+        map_object=map_object_train,
         train_size=args.train_size,
+        params=params,
+        plot_data=False,
+    )
+
+    datamodule_val = Data(
+        map_object=map_object_val,
+        train_size=0.0,
         params=params,
         plot_data=False,
     )
@@ -89,7 +106,11 @@ def main(args: Namespace, params: dict) -> None:
 
     model = get_model(args, params)
 
-    trainer.fit(model, datamodule)
+    trainer.fit(
+        model,
+        train_dataloaders=datamodule_train.train_dataloader(),
+        val_dataloaders=datamodule_val.val_dataloader(),
+    )
 
 
 def get_model(args: Namespace, params: Dict) -> None:
@@ -103,6 +124,8 @@ def get_model(args: Namespace, params: Dict) -> None:
         raise ValueError(f"Invalid rnn_type: {params.get('rnn_type')}")
 
     Model.compile_model = args.compile
+
+    # updates = {"lr": 8.0e-5, "batch_size": 150}
 
     if args.checkpoint_path:
         model = Model.load_from_checkpoint(args.checkpoint_path, map_location="cpu")
@@ -118,7 +141,7 @@ if __name__ == "__main__":
 
     logger = setup_logger(args.path, "rnn_autoregressor")
 
-    params_path = os.path.join(args.path, "parameters.yaml")
+    params_path = os.path.join(args.path, "current_params.yaml")
     params = read_yaml(params_path)
 
     main(args, params)
