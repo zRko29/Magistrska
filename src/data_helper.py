@@ -140,10 +140,10 @@ class Data(pl.LightningDataModule):
         return DataLoader(
             Dataset(self.validation_pairs),
             batch_size=self.batch_size * 5,
-            drop_last=self.drop_last,
-            pin_memory=True,
-            num_workers=8,
-            persistent_workers=True,
+            drop_last=False,
+            # pin_memory=True,
+            # num_workers=8,
+            # persistent_workers=True,
         )
 
     def predict_dataloader(self) -> torch.Tensor:

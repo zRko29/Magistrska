@@ -25,5 +25,5 @@ do
     srun python gridsearch.py --path $experiment
 
     echo "Running trainer."
-    srun python trainer.py --num_nodes 1 --devices 1 --train_size 0.95 --monitor_checkpoint acc/val --mode_checkpoint max --epochs 20 --path $experiment
+    srun python trainer.py --num_nodes 1 --devices 1 --train_size 1.0 --monitor_checkpoint acc/val --mode_checkpoint max --epochs 20 --path $experiment
 done

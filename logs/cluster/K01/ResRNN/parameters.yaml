@@ -24,11 +24,11 @@ rnn_type: resrnn # type of RNN (vanillarnn, resrnn or mgu)
 bypass_n_steps: 5
 
 gridsearch:
-  batch_size: { lower: 32, upper: 512, type: int }
-  lr: { lower: -6.2, upper: -3.5, type: log }
+  batch_size: { lower: 128, upper: 512, type: int }
+  lr: { lower: -6, upper: -3.5, type: log }
   num_rnn_layers: { lower: 2, upper: 4, type: int }
   num_lin_layers: { lower: 2, upper: 4, type: int }
-  hidden_size: { lower: 150, upper: 350, type: int }
-  linear_size: { lower: 150, upper: 350, type: int }
+  hidden_size: { lower: 200, upper: 300, type: int }
+  linear_size: { lower: 200, upper: 300, type: int }
   nonlinearity_lin: { list: [leaky_relu, tanh, elu, selu], type: choice }
-  bypass_n_steps: { list: [5, 10, 15, 20, 30, 40, 50], type: choice }
+  bypass_n_steps: { list: [10, 15, 20, 30, 40, 50], type: choice }
