@@ -39,6 +39,7 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             dirpath=save_path,
             filename="model",
             save_on_train_epoch_end=True,
+            save_last=True,
         ),
         # EarlyStopping(
         #     monitor=args.monitor_stopping,
@@ -59,8 +60,8 @@ def main(args: Namespace, params: dict) -> None:
     val_params.update(
         {
             "sampling": "random",
-            "steps": 180,
-            "init_points": 50,
+            "steps": 170,
+            "init_points": 80,
         }
     )
     map_object_val = StandardMap(seed=42, params=val_params)
@@ -90,6 +91,7 @@ def main(args: Namespace, params: dict) -> None:
         callbacks=get_callbacks(args, save_path),
         deterministic=False,
         benchmark=True,
+        check_val_every_n_epoch=5,
         enable_progress_bar=args.progress_bar,
         devices=args.devices,
         num_nodes=args.num_nodes,
@@ -113,6 +115,12 @@ def main(args: Namespace, params: dict) -> None:
 
 
 def get_model(args: Namespace, params: Dict) -> None:
+    params_path = os.path.join(
+        "/".join(args.checkpoint_path.split("/")[:-1]), "hparams.yaml"
+    )
+    rnn_type = read_yaml(params_path).get("rnn_type")
+    params.update({"rnn_type": rnn_type})
+
     if params.get("rnn_type") == "vanillarnn":
         from src.VanillaRNN import Vanilla as Model
     elif params.get("rnn_type") == "mgu":
@@ -123,8 +131,6 @@ def get_model(args: Namespace, params: Dict) -> None:
         raise ValueError(f"Invalid rnn_type: {params.get('rnn_type')}")
 
     Model.compile_model = args.compile
-
-    # updates = {"lr": 8.0e-5, "batch_size": 150}
 
     if args.checkpoint_path:
         model = Model.load_from_checkpoint(args.checkpoint_path, map_location="cpu")

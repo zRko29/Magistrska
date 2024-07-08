@@ -1,5 +1,5 @@
-init_points: 52900
-steps: 190
+init_points: 48400
+steps: 180
 K: 0.1
 sampling: grid
 hidden_size: 256
@@ -11,7 +11,7 @@ nonlinearity_lin: tanh
 batch_size: 400
 seq_length: 100
 every_n_step: 1
-val_reg_preds: 80
+val_reg_preds: 70
 loss: msd
 optimizer: adam
 acc_threshold: 1.0e-4
@@ -31,4 +31,4 @@ gridsearch:
   hidden_size: { lower: 200, upper: 300, type: int }
   linear_size: { lower: 200, upper: 300, type: int }
   nonlinearity_lin: { list: [leaky_relu, tanh, elu, selu], type: choice }
-  bypass_n_steps: { list: [10, 15, 20, 30, 40, 50], type: choice }
+  bypass_n_steps: { list: [10, 15, 20, 30, 40], type: choice }
