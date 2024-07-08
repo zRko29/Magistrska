@@ -60,7 +60,7 @@ def main(args: Namespace, params: dict) -> None:
     val_params.update(
         {
             "sampling": "random",
-            "steps": 170,
+            "steps": 180,
             "init_points": 80,
         }
     )
@@ -68,7 +68,7 @@ def main(args: Namespace, params: dict) -> None:
 
     datamodule_train = Data(
         map_object=map_object_train,
-        train_size=args.train_size,
+        train_size=1.0,
         params=params,
         plot_data=False,
     )
@@ -76,7 +76,7 @@ def main(args: Namespace, params: dict) -> None:
     datamodule_val = Data(
         map_object=map_object_val,
         train_size=0.0,
-        params=params,
+        params=val_params,
         plot_data=False,
     )
 
@@ -115,11 +115,12 @@ def main(args: Namespace, params: dict) -> None:
 
 
 def get_model(args: Namespace, params: Dict) -> None:
-    params_path = os.path.join(
-        "/".join(args.checkpoint_path.split("/")[:-1]), "hparams.yaml"
-    )
-    rnn_type = read_yaml(params_path).get("rnn_type")
-    params.update({"rnn_type": rnn_type})
+    if args.checkpoint_path is not None:
+        params_path = os.path.join(
+            "/".join(args.checkpoint_path.split("/")[:-1]), "hparams.yaml"
+        )
+        rnn_type = read_yaml(params_path).get("rnn_type")
+        params.update({"rnn_type": rnn_type})
 
     if params.get("rnn_type") == "vanillarnn":
         from src.VanillaRNN import Vanilla as Model
