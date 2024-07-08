@@ -27,7 +27,6 @@ pl.seed_everything(42, workers=True)
 def main(args: Namespace):
     version: Optional[int] = args.version or None
     directory_path: str = "logs/cluster/K01/long_term"
-    # directory_path: str = "logs/cluster/K01/short_term"
     # directory_path: str = "logs/tests"
 
     folders = get_inference_folders(directory_path, version)
@@ -41,7 +40,8 @@ def main(args: Namespace):
         params_update = {}
         params_update.update({"sampling": "random"})
         params_update.update({"steps": 160})
-        params_update.update({"init_points": 200})
+        params_update.update({"init_points": 50})
+        # params_update.update({"acc_threshold": 1.0e-4})
 
         params.update(params_update)
         maps: List[StandardMap] = [
@@ -127,7 +127,7 @@ def inference(
         precision=params["precision"],
         enable_progress_bar=False,
         logger=False,
-        deterministic=False,
+        deterministic=True,
     )
 
     predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
@@ -137,7 +137,7 @@ def inference(
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--version", "-v", type=int, default=None)
+    parser.add_argument("--version", "-v", nargs="*", type=int, default=None)
     parser.add_argument("--compile", action="store_true")
     args = parser.parse_args()
 

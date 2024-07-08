@@ -39,6 +39,7 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             dirpath=save_path,
             filename="model",
             save_on_train_epoch_end=True,
+            save_last=True,
         ),
         # EarlyStopping(
         #     monitor=args.monitor_stopping,
@@ -53,11 +54,28 @@ def main(args: Namespace, params: dict) -> None:
 
     logger = logging.getLogger("rnn_autoregressor")
 
-    map_object = StandardMap(seed=42, params=params)
+    map_object_train = StandardMap(seed=42, params=params)
 
-    datamodule = Data(
-        map_object=map_object,
+    val_params = params.copy()
+    val_params.update(
+        {
+            "sampling": "random",
+            "steps": 170,
+            "init_points": 80,
+        }
+    )
+    map_object_val = StandardMap(seed=42, params=val_params)
+
+    datamodule_train = Data(
+        map_object=map_object_train,
         train_size=args.train_size,
+        params=params,
+        plot_data=False,
+    )
+
+    datamodule_val = Data(
+        map_object=map_object_val,
+        train_size=0.0,
         params=params,
         plot_data=False,
     )
@@ -73,8 +91,7 @@ def main(args: Namespace, params: dict) -> None:
         callbacks=get_callbacks(args, save_path),
         deterministic=False,
         benchmark=True,
-        check_val_every_n_epoch=10,
-        log_every_n_steps=100,
+        check_val_every_n_epoch=5,
         enable_progress_bar=args.progress_bar,
         devices=args.devices,
         num_nodes=args.num_nodes,
@@ -90,10 +107,20 @@ def main(args: Namespace, params: dict) -> None:
 
     model = get_model(args, params)
 
-    trainer.fit(model, datamodule)
+    trainer.fit(
+        model,
+        train_dataloaders=datamodule_train.train_dataloader(),
+        val_dataloaders=datamodule_val.val_dataloader(),
+    )
 
 
 def get_model(args: Namespace, params: Dict) -> None:
+    params_path = os.path.join(
+        "/".join(args.checkpoint_path.split("/")[:-1]), "hparams.yaml"
+    )
+    rnn_type = read_yaml(params_path).get("rnn_type")
+    params.update({"rnn_type": rnn_type})
+
     if params.get("rnn_type") == "vanillarnn":
         from src.VanillaRNN import Vanilla as Model
     elif params.get("rnn_type") == "mgu":
@@ -119,7 +146,7 @@ if __name__ == "__main__":
 
     logger = setup_logger(args.path, "rnn_autoregressor")
 
-    params_path = os.path.join(args.path, "parameters.yaml")
+    params_path = os.path.join(args.path, "current_params.yaml")
     params = read_yaml(params_path)
 
     main(args, params)

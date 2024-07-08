@@ -16,6 +16,7 @@ every_n_step: 1 # useful for a lot of steps?
 val_reg_preds: 5
 loss: msd
 optimizer: adam
+bypass_n_steps: 2 # used in residual rnn
 acc_threshold: 1.0e-4
 lr: 1.0e-5
 precision: bf16-mixed
