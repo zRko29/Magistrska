@@ -130,8 +130,8 @@ class StandardMap:
             edge_theta_init = np.concatenate((edge_theta_init, hor_edge_theta))
             edge_p_init = np.concatenate((edge_p_init, hor_edge_p))
 
-        theta_init = np.concatenate((theta_init, edge_theta_init))
-        p_init = np.concatenate((p_init, edge_p_init))
+            theta_init = np.concatenate((theta_init, edge_theta_init))
+            p_init = np.concatenate((p_init, edge_p_init))
 
         return theta_init, p_init
 
