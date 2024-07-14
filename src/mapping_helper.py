@@ -15,6 +15,8 @@ class StandardMap:
         steps: int = None,
         K: float = None,
         sampling: str = None,
+        vertical_band_points: int = 0,
+        horizontal_band_points: int = 0,
         seed: bool = None,
         params: dict = None,
     ) -> None:
@@ -22,6 +24,8 @@ class StandardMap:
         self.steps: int = steps or params.get("steps")
         self.K: float | List[float] = K or params.get("K")
         self.sampling: str = sampling or params.get("sampling")
+        self.vertical_band_points: int = vertical_band_points
+        self.horizontal_band_points: int = horizontal_band_points
 
         self.rng: np.random.Generator = np.random.default_rng(seed=seed)
         self.spectrum: np.ndarray = np.array([])
@@ -71,7 +75,7 @@ class StandardMap:
         print()
 
     def _get_initial_points(self) -> Tuple[np.ndarray, np.ndarray]:
-        params: List = [0.01, 0.99, self.init_points]
+        params: List = [0.0, 1.0, self.init_points]
 
         if self.sampling == "random":
             theta_init = self.rng.uniform(*params)
@@ -82,13 +86,52 @@ class StandardMap:
             p_init = np.linspace(*params)
 
         elif self.sampling == "grid":
-            params = [0.01, 0.99, int(np.sqrt(self.init_points))]
+            params = [0.0, 1.0, int(np.sqrt(self.init_points))]
             theta_init, p_init = np.meshgrid(np.linspace(*params), np.linspace(*params))
             theta_init = theta_init.flatten()
             p_init = p_init.flatten()
 
         else:
             raise ValueError("Invalid sampling method")
+
+        thickness = 0.1
+        edge_theta_init = np.array([])
+        edge_p_init = np.array([])
+
+        if self.vertical_band_points > 0:
+            vert_edge_theta = np.concatenate(
+                [
+                    self.rng.uniform(0.0, thickness, self.vertical_band_points),
+                    self.rng.uniform(1.0 - thickness, 1.0, self.vertical_band_points),
+                ]
+            )
+            vert_edge_p = np.concatenate(
+                [
+                    self.rng.uniform(0.0, 1.0, self.vertical_band_points),
+                    self.rng.uniform(0.0, 1.0, self.vertical_band_points),
+                ]
+            )
+            edge_theta_init = np.concatenate((edge_theta_init, vert_edge_theta))
+            edge_p_init = np.concatenate((edge_p_init, vert_edge_p))
+
+        if self.horizontal_band_points > 0:
+            hor_edge_theta = np.concatenate(
+                [
+                    self.rng.uniform(0.0, 1.0, self.horizontal_band_points),
+                    self.rng.uniform(0.0, 1.0, self.horizontal_band_points),
+                ]
+            )
+            hor_edge_p = np.concatenate(
+                [
+                    self.rng.uniform(0.0, thickness, self.horizontal_band_points),
+                    self.rng.uniform(1.0 - thickness, 1.0, self.horizontal_band_points),
+                ]
+            )
+            edge_theta_init = np.concatenate((edge_theta_init, hor_edge_theta))
+            edge_p_init = np.concatenate((edge_p_init, hor_edge_p))
+
+        theta_init = np.concatenate((theta_init, edge_theta_init))
+        p_init = np.concatenate((p_init, edge_p_init))
 
         return theta_init, p_init
 
@@ -127,7 +170,13 @@ class StandardMap:
 
 if __name__ == "__main__":
     map = StandardMap(
-        init_points=100 * 100, steps=10, sampling="grid", K=[0.1], seed=42
+        init_points=120 * 120,
+        steps=1,
+        vertical_band_points=5000,
+        horizontal_band_points=0,
+        sampling="grid",
+        K=[0.1],
+        seed=42,
     )
     map.generate_data()
     map.plot_data()
