@@ -14,9 +14,10 @@ batch_size: 16
 seq_length: 5 # must not be too small compared to steps
 every_n_step: 1 # useful for a lot of steps?
 val_reg_preds: 5
-loss: msd
+loss: mmsd
 optimizer: adam
 bypass_n_steps: 2 # used in residual rnn
+accuracy: mod_path_accuracy
 acc_threshold: 1.0e-4
 lr: 1.0e-5
 precision: bf16-mixed

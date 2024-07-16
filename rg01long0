@@ -16,7 +16,7 @@ export NCCL_P2P_DISABLE=1
 source ~/.bashrc
 conda activate rnn_env
 
-experiment=logs/cluster/K01/ResRNN/
+experiment=logs/cluster/K01/mod/
 optimization_steps=50
 
 for i in $(seq $optimization_steps)

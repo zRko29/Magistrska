@@ -9,8 +9,10 @@ import pyprind
 
 try:
     from src.custom_metrics import MSDLoss, PathAccuracy
+    from src.custom_metrics import MMSDLoss, ModPathAccuracy
 except ModuleNotFoundError:
     from custom_metrics import MSDLoss, PathAccuracy
+    from custom_metrics import MMSDLoss, ModPathAccuracy
 
 
 class BaseRNN(pl.LightningModule):
@@ -23,7 +25,7 @@ class BaseRNN(pl.LightningModule):
 
         self.loss = self.configure_loss(params.get("loss"))
         self.accuracy = self.configure_accuracy(
-            "path_accuracy", params.get("acc_threshold")
+            params.get("accuracy"), params.get("acc_threshold")
         )
 
         self.num_rnn_layers: int = params.get("num_rnn_layers")
@@ -83,12 +85,16 @@ class BaseRNN(pl.LightningModule):
     def configure_accuracy(self, accuracy: str, threshold: float) -> nn.Module:
         if accuracy == "path_accuracy":
             return PathAccuracy(threshold=threshold)
+        elif accuracy == "mod_path_accuracy":
+            return ModPathAccuracy(threshold=threshold)
 
     def configure_loss(self, loss: str) -> nn.Module:
         if loss == "mse":
             return nn.MSELoss()
         elif loss == "msd":
             return MSDLoss()
+        elif loss == "mmsd":
+            return MMSDLoss()
         elif loss == "rmse":
             return nn.L1Loss()
         elif loss == "hubber":
@@ -111,9 +117,10 @@ class BaseRNN(pl.LightningModule):
 
         predicted = self(inputs)
         predicted = predicted[:, -1:]
+        predicted = torch.remainder(predicted, 1.0)
 
         targets = targets.to(self.dtype)
-        loss = loss = self.loss(predicted, targets)
+        loss = self.loss(predicted, targets)
 
         self.log_dict({"loss/train": loss}, on_epoch=True, prog_bar=True, on_step=False)
         return loss
@@ -128,6 +135,7 @@ class BaseRNN(pl.LightningModule):
         for i in range(autoregression_steps):
             predicted_value = self(inputs[:, i:])
             predicted_value = predicted_value[:, -1:]
+            predicted_value = torch.remainder(predicted_value, 1.0)
             inputs = torch.cat([inputs, predicted_value], axis=1)
 
         predicted = inputs[:, autoregression_seed:]
@@ -157,6 +165,7 @@ class BaseRNN(pl.LightningModule):
         for i in range(batch.shape[1] - predicted.shape[1]):
             predicted_value = self(predicted[:, i:])
             predicted_value = predicted_value[:, -1:]
+            predicted_value = torch.remainder(predicted_value, 1.0)
             predicted = torch.cat([predicted, predicted_value], axis=1)
 
             pbar.update()
@@ -185,10 +194,10 @@ class BaseRNN(pl.LightningModule):
         """
         Required to log best_score at the end of the epoch. sync_dist=True is required to average the best_score over all devices.
         """
-        best_score = self._trainer.callbacks[-1].best_model_score or 0
-        self.log("best_acc", best_score, sync_dist=True)
-        # best_score = self._trainer.callbacks[-1].best_model_score or float("inf")
-        # self.log("best_loss", best_score, sync_dist=True)
+        # best_score = self._trainer.callbacks[-1].best_model_score or 0
+        # self.log("best_acc", best_score, sync_dist=True)
+        best_score = self._trainer.callbacks[-1].best_model_score or float("inf")
+        self.log("best_loss", best_score, sync_dist=True)
 
 
 class ResidualRNNCell(nn.Module):
