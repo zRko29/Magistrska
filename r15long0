@@ -16,6 +16,6 @@ export NCCL_P2P_DISABLE=1
 source ~/.bashrc
 conda activate rnn_env
 
-experiment=logs/cluster/K01/mod/
+experiment=logs/cluster/K15/mod/
 
 srun python trainer.py --num_nodes 1 --devices 0 --train_size 1.0 --monitor_checkpoint loss/val --mode_checkpoint min --epochs 10_000 --path $experiment
