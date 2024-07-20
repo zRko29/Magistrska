@@ -1,0 +1,39 @@
+init_points: 32400
+steps: 210
+K: 2.0
+sampling: grid
+
+hidden_size: 128
+linear_size: 128
+num_rnn_layers: 2
+num_lin_layers: 2
+nonlinearity_hidden: tanh
+nonlinearity_lin: tanh
+
+batch_size: 16
+seq_length: 100
+every_n_step: 1 
+val_reg_preds: 70
+loss: mmsd
+optimizer: adam
+bypass_n_steps: 2 
+accuracy: mod_path_accuracy
+acc_threshold: 1.0e-4
+lr: 1.0e-5
+precision: 32-true
+
+shuffle_trajectories: true 
+shuffle_within_batches: false
+drop_last: true
+
+rnn_type: resrnn
+
+gridsearch:
+  batch_size: { lower: 200, upper: 500, type: int }
+  lr: { lower: -6, upper: -3, type: log }
+  num_rnn_layers: { lower: 2, upper: 5, type: int }
+  num_lin_layers: { lower: 2, upper: 5, type: int }
+  hidden_size: { lower: 200, upper: 300, type: int }
+  linear_size: { lower: 200, upper: 300, type: int }
+  nonlinearity_lin: { list: [elu, selu, leaky_relu], type: choice }
+  bypass_n_steps: { list: [10, 20, 30, 40], type: choice }
