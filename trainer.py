@@ -60,8 +60,8 @@ def main(args: Namespace, params: dict) -> None:
     val_params.update(
         {
             "sampling": "random",
-            "steps": 180,
-            "init_points": 80,
+            "steps": 70,
+            "init_points": 30,
         }
     )
     map_object_val = StandardMap(seed=42, params=val_params)
@@ -75,7 +75,7 @@ def main(args: Namespace, params: dict) -> None:
 
     datamodule_val = Data(
         map_object=map_object_val,
-        train_size=0.0,
+        train_size=1.0,
         params=val_params,
         plot_data=False,
     )
@@ -91,7 +91,7 @@ def main(args: Namespace, params: dict) -> None:
         callbacks=get_callbacks(args, save_path),
         deterministic=False,
         benchmark=True,
-        check_val_every_n_epoch=5,
+        check_val_every_n_epoch=10,
         enable_progress_bar=args.progress_bar,
         devices=args.devices,
         num_nodes=args.num_nodes,

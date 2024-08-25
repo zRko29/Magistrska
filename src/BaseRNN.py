@@ -153,16 +153,17 @@ class BaseRNN(pl.LightningModule):
         return loss
 
     def predict_step(self, batch, _) -> dict[str, torch.Tensor]:
-        predicted: torch.Tensor = batch[:, : self.regression_seed]
-        targets: torch.Tensor = batch[:, self.regression_seed :]
+        data, spectrum = batch
+        predicted: torch.Tensor = data[:, : self.regression_seed]
+        targets: torch.Tensor = data[:, self.regression_seed :]
 
         pbar = pyprind.ProgBar(
-            iterations=batch.shape[1] - predicted.shape[1],
+            iterations=data.shape[1] - predicted.shape[1],
             bar_char="█",
             title="Predicting",
         )
 
-        for i in range(batch.shape[1] - predicted.shape[1]):
+        for i in range(data.shape[1] - predicted.shape[1]):
             predicted_value = self(predicted[:, i:])
             predicted_value = predicted_value[:, -1:]
             predicted_value = torch.remainder(predicted_value, 1.0)
@@ -178,6 +179,7 @@ class BaseRNN(pl.LightningModule):
         return {
             "predicted": predicted,
             "targets": targets,
+            "spectrum": spectrum,
             "loss": loss,
             "accuracy": accuracy,
         }

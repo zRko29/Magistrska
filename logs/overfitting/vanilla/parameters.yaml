@@ -1,0 +1,35 @@
+init_points: 30
+steps: 35 # ≤ 100
+K: 0.1
+sampling: random
+
+hidden_size: 256
+linear_size: 256 # used when num_lin_layers > 1
+num_rnn_layers: 3
+num_lin_layers: 3
+nonlinearity_hidden: tanh # nonlinearity for hidden layers
+nonlinearity_lin: tanh # nonlinearity for linear layers
+
+batch_size: 16
+seq_length: 15 # must not be too small compared to steps
+every_n_step: 1 # useful for a lot of steps?
+val_reg_preds: 5
+loss: mmsd
+optimizer: adam
+bypass_n_steps: 2 # used in residual rnn
+accuracy: mod_path_accuracy
+acc_threshold: 1.0e-4
+lr: 1.0e-5
+precision: 32-true
+
+shuffle_trajectories: true # makes sense for linear sampling
+shuffle_within_batches: false # shuffle sequences within batches (can increase stability)
+drop_last: false
+
+rnn_type: vanillarnn # type of RNN (vanillarnn, resrnn or mgu)
+
+gridsearch:
+  batch_size: { lower: 16, upper: 256, type: int }
+  lr: { lower: -6, upper: -4, type: log }
+  nonlinearity_lin: { list: [tanh, elu, selu, leaky_relu], type: choice }
+  bypass_n_steps: { list: [2,4,6,8,10], type: choice }

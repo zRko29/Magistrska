@@ -3,17 +3,22 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 import warnings
+import os
 
 from src.mapping_helper import StandardMap
 
 
 class Data(pl.LightningDataModule):
+
     def __init__(
         self,
-        map_object: StandardMap,
-        params: dict,
+        map_object: Optional[StandardMap] = None,
+        data_path: Optional[str] = None,
+        K: List[float] | float = None,
+        binary: bool = False,
+        params: dict = None,
         train_size: float = 1.0,
         plot_data: bool = False,
     ) -> None:
@@ -27,11 +32,32 @@ class Data(pl.LightningDataModule):
         val_reg_preds: int = params.get("val_reg_preds")
         self.rng: np.random.Generator = np.random.default_rng(seed=42)
 
-        map_object.generate_data()
+        # generate new data
+        if map_object is not None:
+            map_object.generate_data()
+            thetas, ps = map_object.retrieve_data()
 
-        thetas: np.ndarray
-        ps: np.ndarray
-        thetas, ps = map_object.retrieve_data()
+            # fake spectrum
+            self.spectrum = self.rng.choice([0, 1], size=thetas.shape[1])
+            self.reverse_indices = None
+
+        # load data
+        elif data_path is not None:
+            thetas, ps, self.spectrum = self._load_data(data_path, K, binary)
+
+            indices = np.arange(len(self.spectrum))
+            self.rng.shuffle(indices)
+            thetas = thetas[:, indices]
+            ps = ps[:, indices]
+            self.spectrum = self.spectrum[indices]
+
+            self.reverse_indices = np.empty_like(indices)
+            self.reverse_indices[indices] = np.arange(len(self.spectrum))
+
+            init_points = params.get("init_points")
+            steps = params.get("steps")
+            thetas = thetas[:steps, :init_points]
+            ps = ps[:steps, :init_points]
 
         if plot_data:
             map_object.plot_data()
@@ -131,9 +157,9 @@ class Data(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=self.shuffle_within_batches,
             drop_last=self.drop_last,
-            pin_memory=True,
-            num_workers=8,
-            persistent_workers=True,
+            # pin_memory=True,
+            # num_workers=8,
+            # persistent_workers=True,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -147,12 +173,58 @@ class Data(pl.LightningDataModule):
         )
 
     def predict_dataloader(self) -> torch.Tensor:
-        return torch.tensor(self.data).unsqueeze(0)
+        return DataLoader(
+            InferenceDataset(torch.tensor(self.data), self.spectrum),
+            batch_size=int(1e6),
+            shuffle=False,
+        )
+
+    @staticmethod
+    def _load_data(
+        path: str, K: List[float] | float, binary: bool
+    ) -> Tuple[np.ndarray]:
+        if not isinstance(K, list):
+            K = [K]
+
+        directories: List[str] = _get_subdirectories(path, K)
+
+        thetas_list = [
+            np.load(os.path.join(directory, "theta_values.npy"))
+            for directory in directories
+        ]
+        ps_list = [
+            np.load(os.path.join(directory, "p_values.npy"))
+            for directory in directories
+        ]
+        spectrum_list = [
+            np.load(os.path.join(directory, "spectrum.npy"))
+            for directory in directories
+        ]
+
+        thetas = np.concatenate(thetas_list, axis=1)
+        ps = np.concatenate(ps_list, axis=1)
+        spectrum = np.concatenate(spectrum_list)
+
+        if binary:
+            spectrum = (spectrum * 1e5 > 11).astype(int)
+
+        return thetas, ps, spectrum
+
+
+def _get_subdirectories(directory: str, K: List[float]) -> List[str]:
+    subdirectories = []
+    for d in os.listdir(directory):
+        if os.path.isdir(os.path.join(directory, d)):
+            if float(d) in K:
+                subdirectories.append(os.path.join(directory, d))
+
+    subdirectories.sort()
+    return subdirectories
 
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data: List[Tuple[np.ndarray]]):
-        self.data: List[Tuple[np.ndarray]] = data
+        self.data = data
 
     def __len__(self) -> int:
         return len(self.data)
@@ -161,4 +233,19 @@ class Dataset(torch.utils.data.Dataset):
         x, y = self.data[idx]
         x = torch.tensor(x)
         y = torch.tensor(y)
+        return x, y
+
+
+class InferenceDataset(torch.utils.data.Dataset):
+    def __init__(self, data: List[Tuple[np.ndarray]], spectrum: np.ndarray):
+        self.data = data
+        self.spectrum = spectrum
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor]:
+        x, y = self.data[idx], self.spectrum[idx]
+        # x = torch.tensor(x)
+        # y = torch.tensor(y)
         return x, y
